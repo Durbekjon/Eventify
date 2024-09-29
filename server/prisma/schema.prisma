@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  email        String   @unique
+  password     String
+  isAdmin      Boolean  @default(false)
+  selectedRole String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  companies     Company[]
+  roles         Role[]
+  members       Member[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model VerificationCodes {
+  id        String   @id @default(uuid())
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String   @unique
+  otp       String
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("verification_codes")
+}
+
+model RestoreCodes {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  otp       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("restore_codes")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  author            User           @relation(fields: [authorId], references: [id])
+  authorId          String         @map("author_id")
+  roles             Role[]
+  members           Member[]
+  sentNotifications Notification[]
+  workspaces        Workspace[]
+  sheets            Sheet[]
+
+  @@map("companies")
+}
+
+model Role {
+  id        String    @id @default(uuid())
+  type      RoleTypes
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String  @map("company_id")
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @map("user_id")
+  access    Member? @relation(fields: [memberId], references: [id])
+  memberId  String? @unique @map("member_id")
+
+  @@map("roles")
+}
+
+enum RoleTypes {
+  AUTHOR
+  MEMBER
+  VIEWER
+}
+
+model Member {
+  id             String              @id @default(uuid())
+  type           MemberTypes
+  permissions    MemberPermissions[]
+  view           ViewType
+  status         MemberStatus        @default(NEW)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  company        Company             @relation(fields: [companyId], references: [id])
+  companyId      String              @map("company_id")
+  user           User                @relation(fields: [userId], references: [id])
+  userId         String              @map("user_id")
+  role           Role?
+  notification   Notification?       @relation(fields: [notificationId], references: [id])
+  notificationId String?             @unique @map("notification_id")
+  workspaces     Workspace[]         @relation("MemberWorkspaces")
+
+  @@map("members")
+}
+
+enum MemberTypes {
+  MEMBER
+  VIEWER
+}
+
+enum MemberPermissions {
+  ALL
+  READ
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum ViewType {
+  ALL
+  OWN
+}
+
+enum MemberStatus {
+  NEW
+  ACTIVE
+  REJECTED
+  CANCELLED
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  isRead      Boolean          @default(false)
+  type        NotificationType
+  text        String
+  from        NotificationFrom
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  fromCompany Company?         @relation(fields: [companyId], references: [id])
+  companyId   String?          @map("company_id")
+  toUser      User             @relation(fields: [userId], references: [id])
+  userId      String           @map("user_id")
+  member      Member?
+
+  @@map("notifications")
+}
+
+enum NotificationFrom {
+  APPLICATION_TEAM
+  COMPANY
+}
+
+enum NotificationType {
+  NOTIFICATION
+  INVITATION
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  order     Int      @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?  @map("company_id")
+  sheets    Sheet[]
+  members   Member[] @relation("MemberWorkspaces")
+
+  @@map("workspaces")
+}
+
+model Sheet {
+  id          String    @id @default(uuid())
+  name        String
+  order       Int       @default(autoincrement())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspaceId String    @map("workspace_id")
+  company     Company   @relation(fields: [companyId], references: [id])
+  companyId   String    @map("company_id")
+
+  @@map("sheets")
+}

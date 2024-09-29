@@ -1,0 +1,3 @@
+export const ACCESS_TOKEN_EXPIRATION_TIME = '1d';
+export const REFRESH_TOKEN_EXPIRATION_TIME = '30d';
+export const OTP_VALID_DURATION_MINUTES = 15;
