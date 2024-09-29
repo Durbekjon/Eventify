@@ -12,7 +12,7 @@ import { WorkspaceService } from './workspace.service'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '@auth/jwt-auth.guard'
 import { User } from '@decorators/user.decorator'
-import { IUser } from '@auth/dto/IUser'
+import { IUser } from '@/modules/user/dto/IUser'
 import { CreateWorkspaceDto } from './dto/create-workspace.dto'
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto'
 @ApiBearerAuth()

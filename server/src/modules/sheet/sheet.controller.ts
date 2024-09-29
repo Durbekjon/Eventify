@@ -13,7 +13,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { SheetService } from './sheet.service'
 import { CreateSheetDto } from './dto/create-sheet.dto'
 import { User } from '@/decorators/user.decorator'
-import { IUser } from '../auth/dto/IUser'
+import { IUser } from '../user/dto/IUser'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
 
 @ApiBearerAuth()

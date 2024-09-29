@@ -3,7 +3,7 @@ import { NotificationRepository } from './notification.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { CreateNotificationDto } from './dto/create-notification.dto'
 import { Prisma } from '@prisma/client'
-import { IUser } from '@auth/dto/IUser'
+import { IUser } from '@/modules/user/dto/IUser'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 
 @Injectable()

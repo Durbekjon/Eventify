@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { SheetRepository } from './sheet.repository'
-import { IUser } from '@auth/dto/IUser'
+import { IUser } from '@/modules/user/dto/IUser'
 import { CreateSheetDto } from './dto/create-sheet.dto'
 import { UserService } from '@user/user.service'
 import { HTTP_MESSAGES } from '@consts/http-messages'

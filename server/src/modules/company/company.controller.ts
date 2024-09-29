@@ -14,7 +14,7 @@ import { CreateCompanyDto } from './dto/create-company.dto'
 import { JwtAuthGuard } from '@auth/jwt-auth.guard'
 import { UpdateCompanyDto } from './dto/update-company.dto'
 import { User } from '@decorators/user.decorator'
-import { IUser } from '@auth/dto/IUser'
+import { IUser } from '@/modules/user/dto/IUser'
 
 @ApiBearerAuth()
 @ApiTags('Company')

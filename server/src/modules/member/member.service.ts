@@ -14,7 +14,7 @@ import {
   RoleTypes,
 } from '@prisma/client'
 import { APP_MESSAGES } from '@consts/app-messages'
-import { IUser } from '@auth/dto/IUser'
+import { IUser } from '@/modules/user/dto/IUser'
 import { UserService } from '@user/user.service'
 import { RoleService } from '@role/role.service'
 import { HTTP_MESSAGES } from '@consts/http-messages'

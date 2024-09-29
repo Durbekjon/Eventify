@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '@auth/jwt-auth.guard'
 import { NotificationService } from '@notification/notification.service'
 import { User } from '@decorators/user.decorator'
-import { IUser } from '@auth/dto/IUser'
+import { IUser } from '@/modules/user/dto/IUser'
 
 @ApiBearerAuth()
 @ApiTags('Notification')

@@ -23,7 +23,7 @@ import {
 } from './dto/registration.dto'
 import { UserService } from '@user/user.service'
 import { ChangeRoleDto } from './dto/change-role.dto'
-import { IUser } from './dto/IUser'
+import { IUser } from '../user/dto/IUser'
 
 @Injectable()
 export class AuthService {

@@ -11,7 +11,7 @@ import {
 import { MemberService } from './member.service'
 import { CreateMemberDto } from './dto/create-member.dto'
 import { User } from '@decorators/user.decorator'
-import { IUser } from '@auth/dto/IUser'
+import { IUser } from '@/modules/user/dto/IUser'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '@auth/jwt-auth.guard'
 import { StatusUpdateDto } from './dto/status-update.dto'

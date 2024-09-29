@@ -1,5 +1,6 @@
 import { PrismaService } from '@core/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
+import { IUser } from './dto/IUser'
 
 @Injectable()
 export class UserRepository {
@@ -19,5 +20,9 @@ export class UserRepository {
         members: true,
       },
     })
+  }
+
+  getUserInfo(user: IUser) {
+    return this.prisma.user.findUnique({ where: { id: user.id } })
   }
 }

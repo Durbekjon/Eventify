@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common'
 import { WorkspaceRepository } from './workspace.repository'
 import { CreateWorkspaceDto } from './dto/create-workspace.dto'
-import { IUser } from '../auth/dto/IUser'
+import { IUser } from '../user/dto/IUser'
 import { UserService } from '../user/user.service'
 import { RoleService } from '../role/role.service'
 import { HTTP_MESSAGES } from '@/consts/http-messages'
