@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard'
 import { SheetService } from './sheet.service'
 import { CreateSheetDto } from './dto/create-sheet.dto'
 import { User } from '@/decorators/user.decorator'
