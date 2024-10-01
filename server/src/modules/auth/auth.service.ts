@@ -115,6 +115,7 @@ export class AuthService {
     }
 
     const otp = this.utils.generateOtp()
+    console.log(otp);
     await this.emailService.sendRegistrationOtp(email, otp)
 
     const result = await this.prisma.verificationCodes.upsert({

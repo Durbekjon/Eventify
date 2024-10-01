@@ -3,7 +3,7 @@ import { UserService } from './user.service'
 import { User } from '@/decorators/user.decorator'
 import { IUser } from './dto/IUser'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard'
 @ApiBearerAuth()
 @ApiTags('User')
 @UseGuards(JwtAuthGuard)
@@ -13,5 +13,7 @@ export class UserController {
 
   @Get('info')
   @ApiOperation({ summary: 'Get user information' })
-  getUserInfo(@User() user: IUser) {}
+  getUserInfo(@User() user: IUser) {
+    return this.service.getUserInfo(user)
+  }
 }

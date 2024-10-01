@@ -55,11 +55,14 @@ model Company {
 
   author            User           @relation(fields: [authorId], references: [id])
   authorId          String         @map("author_id")
+  plan              Plan?          @relation(fields: [planId], references: [id])
+  planId            String?        @map("plan_id")
   roles             Role[]
   members           Member[]
   sentNotifications Notification[]
   workspaces        Workspace[]
   sheets            Sheet[]
+  selects           Select[]
 
   @@map("companies")
 }
@@ -180,4 +183,29 @@ model Sheet {
   companyId   String    @map("company_id")
 
   @@map("sheets")
+}
+
+model Plan {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  price         Int
+  maxWorkspaces Int       @map("max_workspaces")
+  maxSheets     Int       @map("max_sheets")
+  maxMembers    Int       @map("max_members")
+  maxViewers    Int       @map("max_viewers")
+  order         Int       @default(autoincrement())
+  companies     Company[]
+
+  @@map("plans")
+}
+
+model Select {
+  id        String  @id @default(uuid())
+  value     String  @default("untitled")
+  color     String
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String  @map("company_id")
+
+  @@map("selects")
 }

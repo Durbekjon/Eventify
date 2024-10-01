@@ -13,7 +13,7 @@ import {
 import { User } from '@decorators/user.decorator'
 import { IUser } from '../user/dto/IUser'
 import { ChangeRoleDto } from './dto/change-role.dto'
-import { JwtAuthGuard } from './jwt-auth.guard'
+import { JwtAuthGuard } from '../../guards/jwt-auth.guard'
 
 @ApiTags('Auth')
 @Controller({ path: 'auth', version: '1' })

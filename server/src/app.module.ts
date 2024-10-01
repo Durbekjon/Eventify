@@ -8,6 +8,8 @@ import { MemberModule } from './modules/member/member.module'
 import { UserModule } from './modules/user/user.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { SheetModule } from './modules/sheet/sheet.module';
+import { PlanModule } from './modules/plan/plan.module';
+import { SelectModule } from './modules/select/select.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { SheetModule } from './modules/sheet/sheet.module';
     UserModule,
     WorkspaceModule,
     SheetModule,
+    PlanModule,
+    SelectModule,
   ],
 })
 export class AppModule {}

@@ -26,7 +26,7 @@ export const HTTP_MESSAGES = {
   // General
   ACTION_SUCCESS: 'Action completed successfully',
   ACTION_FAILED: 'Action could not be completed',
-
+  ACCESS_DENIED: 'Access denied: Admins only',
   //Member
   MEMBER_NOT_FOUND: 'Member not found',
   MEMBER_BLOCKED: 'Member blocked',
@@ -37,4 +37,7 @@ export const HTTP_MESSAGES = {
 
   // Sheet
   SHEET_NOT_FOUND: 'Sheet not found',
+
+  // Plan
+  PLAN_NOT_FOUND: 'Plan not found',
 }
