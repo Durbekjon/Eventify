@@ -40,4 +40,9 @@ export const HTTP_MESSAGES = {
 
   // Plan
   PLAN_NOT_FOUND: 'Plan not found',
+
+  // Select
+  SELECT_NOT_FOUND: 'Select not found',
+  SELECT_DELETE_SUCCESS: 'Select deleted successfully',
+  SELECT_DELETE_MULTIPLE_SUCCESS: 'Multiple selects deleted successfully',
 }

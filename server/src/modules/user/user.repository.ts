@@ -22,7 +22,14 @@ export class UserRepository {
     })
   }
 
-  getUserInfo(user: IUser) {
-    return this.prisma.user.findUnique({ where: { id: user.id } })
+  async getUserInfo(iUser: IUser) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: iUser.id },
+      include: { roles: true },
+    })
+
+    delete user.password
+
+    return user
   }
 }
