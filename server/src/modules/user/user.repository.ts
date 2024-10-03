@@ -32,4 +32,11 @@ export class UserRepository {
 
     return user
   }
+
+  changeRole(userId: string, roleId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { selectedRole: roleId },
+    })
+  }
 }

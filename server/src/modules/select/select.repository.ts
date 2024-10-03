@@ -1,14 +1,12 @@
-import { PrismaService } from '@/core/prisma/prisma.service'
+import { PrismaService } from '@core/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { CreateSelectDto } from './dto/create-select.dto'
 import { UpdateSelectDto } from './dto/update-select.dto'
 import { UUID } from 'crypto'
-import { DeleteSelectsDto } from './dto/delete-selects.dto'
 
 @Injectable()
 export class SelectRepository {
   constructor(private readonly prisma: PrismaService) {}
-
   createSelect(body: CreateSelectDto, companyId: string) {
     return this.prisma.select.create({
       data: {

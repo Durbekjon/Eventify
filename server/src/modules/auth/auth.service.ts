@@ -22,7 +22,7 @@ import {
   VerifyRegistrationOtp,
 } from './dto/registration.dto'
 import { UserService } from '@user/user.service'
-import { ChangeRoleDto } from './dto/change-role.dto'
+import { ChangeRoleDto } from '../user/dto/change-role.dto'
 import { IUser } from '../user/dto/IUser'
 
 @Injectable()
@@ -115,7 +115,7 @@ export class AuthService {
     }
 
     const otp = this.utils.generateOtp()
-    console.log(otp);
+    console.log(otp)
     await this.emailService.sendRegistrationOtp(email, otp)
 
     const result = await this.prisma.verificationCodes.upsert({
@@ -251,20 +251,5 @@ export class AuthService {
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST)
     }
-  }
-  async changeRole(body: ChangeRoleDto, iUser: IUser) {
-    const { roleId } = body
-    const user = await this.users.getUser(iUser.id)
-    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND)
-
-    const hasRole = user.roles.some((role) => role.id === roleId)
-    if (!hasRole) throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { selectedRole: roleId },
-    })
-
-    return { result: 'OK' }
   }
 }

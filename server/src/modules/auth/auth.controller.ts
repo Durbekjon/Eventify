@@ -12,7 +12,7 @@ import {
 } from './dto/registration.dto'
 import { User } from '@decorators/user.decorator'
 import { IUser } from '../user/dto/IUser'
-import { ChangeRoleDto } from './dto/change-role.dto'
+import { ChangeRoleDto } from '../user/dto/change-role.dto'
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard'
 
 @ApiTags('Auth')
@@ -54,12 +54,5 @@ export class AuthController {
   @ApiOperation({ summary: 'Restore account verify' })
   restoreAccountVerify(@Body() body: RestoreAccountVerifyDto) {
     return this.service.restoreAccountVerify(body)
-  }
-  @Patch('change-role')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Change user current role' })
-  selectRole(@User() user: IUser, @Body() body: ChangeRoleDto) {
-    return this.service.changeRole(body, user)
   }
 }

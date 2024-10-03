@@ -11,16 +11,22 @@
     "outDir": "./dist",
     "baseUrl": "./src/",
     "paths": {
-      "@/*": ["*"],
       "@consts/*": ["./consts/*"],
-      "@decorators/*": ["./decorators/*"], // Ensure this path is correct
-      "@auth/*": ["./modules/auth/*"], // Ensure this path is correct
+      "@decorators/*": ["./decorators/*"],
+      "@guards/*": ["./guards/*"],
+      "@auth/*": ["./modules/auth/*"],
       "@company/*": ["./modules/company/*"],
       "@role/*": ["./modules/role/*"],
       "@member/*": ["./modules/member/*"],
       "@notification/*": ["./modules/notification/*"],
       "@user/*": ["./modules/user/*"],
-      "@core/*": ["./core/*"]
+      "@task/*": ["./modules/task/*"],
+      "@select/*": ["./modules/select/*"],
+      "@sheet/*": ["./modules/sheet/*"],
+      "@plan/*": ["./modules/plan/*"],
+      "@workspace/*": ["./modules/workspace/*"],
+      "@core/*": ["./core/*"],
+      "@/*": ["*"]
     },
 
     "incremental": true,

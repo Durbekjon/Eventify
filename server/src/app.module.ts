@@ -5,25 +5,27 @@ import { CompanyModule } from './modules/company/company.module'
 import { RoleModule } from './modules/role/role.module'
 import { NotificationModule } from './modules/notification/notification.module'
 import { MemberModule } from './modules/member/member.module'
-import { UserModule } from './modules/user/user.module';
-import { WorkspaceModule } from './modules/workspace/workspace.module';
-import { SheetModule } from './modules/sheet/sheet.module';
-import { PlanModule } from './modules/plan/plan.module';
-import { SelectModule } from './modules/select/select.module';
+import { UserModule } from './modules/user/user.module'
+import { WorkspaceModule } from './modules/workspace/workspace.module'
+import { SheetModule } from './modules/sheet/sheet.module'
+import { PlanModule } from './modules/plan/plan.module'
+import { SelectModule } from './modules/select/select.module'
+import { TaskModule } from './modules/task/task.module'
 
 @Module({
   imports: [
     CoreModule,
     AuthModule,
-    CompanyModule,
-    RoleModule,
-    NotificationModule,
-    MemberModule,
     UserModule,
+    PlanModule,
+    NotificationModule,
+    CompanyModule,
     WorkspaceModule,
     SheetModule,
-    PlanModule,
+    TaskModule,
     SelectModule,
+    MemberModule,
+    RoleModule,
   ],
 })
 export class AppModule {}

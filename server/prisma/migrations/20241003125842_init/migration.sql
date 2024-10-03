@@ -19,6 +19,9 @@ CREATE TYPE "NotificationFrom" AS ENUM ('APPLICATION_TEAM', 'COMPANY');
 -- CreateEnum
 CREATE TYPE "NotificationType" AS ENUM ('NOTIFICATION', 'INVITATION');
 
+-- CreateEnum
+CREATE TYPE "ColumnType" AS ENUM ('SELECT', 'TEXT', 'NUMBER', 'LINK', 'MEMBER', 'DATE', 'DUEDATE', 'FILE', 'CHECK');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -93,6 +96,7 @@ CREATE TABLE "members" (
     "company_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "notification_id" TEXT,
+    "taskId" TEXT,
 
     CONSTRAINT "members_pkey" PRIMARY KEY ("id")
 );
@@ -118,7 +122,7 @@ CREATE TABLE "workspaces" (
     "name" TEXT NOT NULL,
     "order" SERIAL NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "company_id" TEXT,
+    "company_id" TEXT NOT NULL,
 
     CONSTRAINT "workspaces_pkey" PRIMARY KEY ("id")
 );
@@ -155,8 +159,63 @@ CREATE TABLE "selects" (
     "value" TEXT NOT NULL DEFAULT 'untitled',
     "color" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
+    "select_id" TEXT,
 
     CONSTRAINT "selects_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "columns" (
+    "id" TEXT NOT NULL,
+    "name" TEXT,
+    "key" TEXT NOT NULL,
+    "show" BOOLEAN NOT NULL DEFAULT true,
+    "type" "ColumnType" NOT NULL DEFAULT 'SELECT',
+    "selected_select" TEXT,
+    "company_id" TEXT NOT NULL,
+    "sheet_id" TEXT NOT NULL,
+
+    CONSTRAINT "columns_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tasks" (
+    "id" TEXT NOT NULL,
+    "status" TEXT,
+    "priority" TEXT,
+    "link" TEXT,
+    "price" INTEGER,
+    "paid" BOOLEAN,
+    "text1" TEXT,
+    "text2" TEXT,
+    "text3" TEXT,
+    "text4" TEXT,
+    "text5" TEXT,
+    "number1" TEXT,
+    "number2" TEXT,
+    "number3" TEXT,
+    "number4" TEXT,
+    "number5" TEXT,
+    "checkbox1" BOOLEAN,
+    "checkbox2" BOOLEAN,
+    "checkbox3" BOOLEAN,
+    "checkbox4" BOOLEAN,
+    "checkbox5" BOOLEAN,
+    "select1" TEXT,
+    "select2" TEXT,
+    "select3" TEXT,
+    "select4" TEXT,
+    "select5" TEXT,
+    "date1" TIMESTAMP(3),
+    "date2" TIMESTAMP(3),
+    "date3" TIMESTAMP(3),
+    "date4" TIMESTAMP(3),
+    "date5" TIMESTAMP(3),
+    "workspace_id" TEXT NOT NULL,
+    "sheet_id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+
+    CONSTRAINT "tasks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -211,13 +270,16 @@ ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_i
 ALTER TABLE "members" ADD CONSTRAINT "members_notification_id_fkey" FOREIGN KEY ("notification_id") REFERENCES "notifications"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "members" ADD CONSTRAINT "members_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "tasks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "workspaces" ADD CONSTRAINT "workspaces_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "workspaces" ADD CONSTRAINT "workspaces_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "sheets" ADD CONSTRAINT "sheets_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -227,6 +289,24 @@ ALTER TABLE "sheets" ADD CONSTRAINT "sheets_company_id_fkey" FOREIGN KEY ("compa
 
 -- AddForeignKey
 ALTER TABLE "selects" ADD CONSTRAINT "selects_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "selects" ADD CONSTRAINT "selects_select_id_fkey" FOREIGN KEY ("select_id") REFERENCES "columns"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "columns" ADD CONSTRAINT "columns_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "columns" ADD CONSTRAINT "columns_sheet_id_fkey" FOREIGN KEY ("sheet_id") REFERENCES "sheets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_sheet_id_fkey" FOREIGN KEY ("sheet_id") REFERENCES "sheets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_MemberWorkspaces" ADD CONSTRAINT "_MemberWorkspaces_A_fkey" FOREIGN KEY ("A") REFERENCES "members"("id") ON DELETE CASCADE ON UPDATE CASCADE;
