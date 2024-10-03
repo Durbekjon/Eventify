@@ -186,8 +186,8 @@ model Sheet {
   workspaceId String    @map("workspace_id")
   company     Company   @relation(fields: [companyId], references: [id])
   companyId   String    @map("company_id")
-  Column      Column[]
-  Task        Task[]
+  columns      Column[]
+  tasks        Task[]
 
   @@map("sheets")
 }
@@ -213,20 +213,16 @@ model Select {
   color     String
   company   Company @relation(fields: [companyId], references: [id])
   companyId String  @map("company_id")
-  Column    Column? @relation(fields: [columnId], references: [id])
-  columnId  String? @map("select_id")
 
   @@map("selects")
 }
 
 model Column {
   id        String     @id @default(uuid())
-  name      String?
+  name      String
   key       String
   show      Boolean    @default(true)
-  type      ColumnType @default(SELECT)
-  selects   Select[]
-  selected  String?    @map("selected_select") // Is this correct?
+  type      ColumnType
   company   Company    @relation(fields: [companyId], references: [id])
   companyId String     @map("company_id")
   sheet     Sheet      @relation(fields: [sheetId], references: [id])

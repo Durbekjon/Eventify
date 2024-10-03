@@ -11,6 +11,7 @@ import { SheetModule } from './modules/sheet/sheet.module'
 import { PlanModule } from './modules/plan/plan.module'
 import { SelectModule } from './modules/select/select.module'
 import { TaskModule } from './modules/task/task.module'
+import { ColumnModule } from './modules/column/column.module'
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TaskModule } from './modules/task/task.module'
     SelectModule,
     MemberModule,
     RoleModule,
+    ColumnModule,
   ],
 })
 export class AppModule {}

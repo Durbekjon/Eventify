@@ -48,6 +48,7 @@ export const HTTP_MESSAGES = {
 
   // Column
   COLUMN_NOT_FOUND: 'Column not found',
+  COLUMN_DELETE_SUCCESS: 'Column deleted successfully',
 
   // Task
   TASK_NOT_FOUND: 'Task not found',

@@ -24,7 +24,10 @@ export class SheetRepository {
   }
 
   findById(id: string) {
-    return this.prisma.sheet.findUnique({ where: { id } })
+    return this.prisma.sheet.findUnique({
+      where: { id },
+      include: { Column: true, Task: true },
+    })
   }
 
   getSheetsByWorkspace(workspaceId: string) {

@@ -46,4 +46,12 @@ export class TaskRepository {
   findById(taskId: string) {
     return this.prisma.task.findUnique({ where: { id: taskId } })
   }
+
+  findBySheet(sheetId: string) {
+    return this.prisma.task.findMany({ where: { sheetId } })
+  }
+
+  updateMany(args: Prisma.TaskUpdateManyArgs) {
+    return this.prisma.task.updateMany(args)
+  }
 }

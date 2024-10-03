@@ -9,7 +9,7 @@ import { IUser } from '@user/dto/IUser'
 import { TaskRepository } from './task.repository'
 import { UserService } from '@user/user.service'
 import { RoleService } from '@role/role.service'
-import { MemberPermissions, Task } from '@prisma/client'
+import { MemberPermissions, Prisma, Task } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 
 @Injectable()
@@ -55,10 +55,15 @@ export class TaskService {
     }
   }
 
-  private async validateUserAccess(
-    iUser: IUser,
-    permission: MemberPermissions,
-  ) {
+  findBySheet(sheet: string) {
+    return this.repository.findBySheet(sheet)
+  }
+
+  updateMany(args: Prisma.TaskUpdateManyArgs) {
+    return this.repository.updateMany(args)
+  }
+
+  async validateUserAccess(iUser: IUser, permission: MemberPermissions) {
     const { id } = iUser
     const user = await this.user.getUser(id)
 
