@@ -6,7 +6,7 @@ import { createTransport } from 'nodemailer'
 export class EmailService {
   private transporter = createTransport({
     host: process.env.EMAIL_HOST,
-    port: 587,
+    port: 465,
     secure: true,
     auth: {
       user: process.env.EMAIL_USER,
