@@ -28,7 +28,7 @@ export class ColumnController {
   createColumn(
     @Body() body: CreateColumnDto,
     @User() user: IUser,
-  ): Promise<Column> {
+  ) {
     return this.service.createColumn(body, user)
   }
 

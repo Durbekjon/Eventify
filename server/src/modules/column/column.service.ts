@@ -20,7 +20,7 @@ export class ColumnService {
     private readonly role: RoleService,
   ) {}
 
-  async createColumn(body: CreateColumnDto, user: IUser): Promise<Column> {
+  async createColumn(body: CreateColumnDto, user: IUser){
     const role = await this.validateUserRole(user)
 
     return this.repository.createColumn(body, role.companyId)

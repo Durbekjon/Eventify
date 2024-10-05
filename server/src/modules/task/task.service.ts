@@ -21,13 +21,9 @@ export class TaskService {
   ) {}
 
   async createTask(body: CreateTaskDto, user: IUser): Promise<Task> {
-    try {
       const role = await this.validateUserAccess(user, MemberPermissions.CREATE)
 
       return this.repository.createTask(body, role.companyId)
-    } catch (e) {
-      console.log(e)
-    }
   }
 
   async updateTask(
