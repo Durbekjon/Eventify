@@ -26,7 +26,7 @@ export class SheetRepository {
   findById(id: string) {
     return this.prisma.sheet.findUnique({
       where: { id },
-      include: { Column: true, Task: true },
+      include: { columns: true, tasks: true },
     })
   }
 
