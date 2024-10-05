@@ -18,7 +18,6 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app .
 
 RUN npm install --omit=dev
-RUN npm run seed
 
 EXPOSE 4000
 
