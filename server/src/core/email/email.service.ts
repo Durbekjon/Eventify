@@ -6,8 +6,8 @@ import { createTransport } from 'nodemailer'
 export class EmailService {
   private transporter = createTransport({
     host: process.env.EMAIL_HOST,
-    port: 25, //
-    secure: false, //
+    port: 587, 
+    secure: false,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
@@ -17,14 +17,7 @@ export class EmailService {
   })
 
   sendRegistrationOtp = async (email: string, otp: string) => {
-    console.log({
-       host: process.env.EMAIL_HOST,
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      }})
+
     return this.transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: email,
