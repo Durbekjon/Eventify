@@ -12,7 +12,8 @@ import { PlanModule } from './modules/plan/plan.module'
 import { SelectModule } from './modules/select/select.module'
 import { TaskModule } from './modules/task/task.module'
 import { ColumnModule } from './modules/column/column.module'
-
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path'
 @Module({
   imports: [
     CoreModule,
@@ -28,6 +29,9 @@ import { ColumnModule } from './modules/column/column.module'
     MemberModule,
     RoleModule,
     ColumnModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..','..', '..', 'client'),
+    }),
   ],
 })
 export class AppModule {}

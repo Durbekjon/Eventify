@@ -28,17 +28,10 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config)
 
-  app.use(serveStatic(join(__dirname, '..', 'public')))
-
   if (APP_MODE === 'development') {
     SwaggerModule.setup('public/docs', app, document)
   }
-
-  // Fallback route to serve index.html for any unmatched routes
-  app.use('*', (req, res) => {
-    res.sendFile(join(__dirname, '..', 'public', 'index.html'))
-  })
-
+  
   await app.listen(4000)
 }
 bootstrap()
