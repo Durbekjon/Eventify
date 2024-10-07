@@ -30,7 +30,8 @@ import { join } from 'path'
     RoleModule,
     ColumnModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..','..', '..', 'client'),
+      rootPath: join(__dirname, '..', 'client'),
+      exclude: ['api*'], // agar API route'larini exclude qilishni istasangiz
     }),
   ],
 })

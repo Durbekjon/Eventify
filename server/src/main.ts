@@ -28,6 +28,12 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config)
 
+  app.useStaticAssets(join(__dirname, '..','..', 'client'));
+
+  // Barcha noto'g'ri route'lar uchun index.html ni serve qilish
+  app.use('*', express.static(join(__dirname, '..','..', 'client', 'index.html')));
+
+
   if (APP_MODE === 'development') {
     SwaggerModule.setup('public/docs', app, document)
   }
