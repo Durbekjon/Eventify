@@ -24,7 +24,7 @@ export class EmailService {
       subject: 'Eventify',
       html: `<body><p>Your OTP: <b>${otp}</b></p><p>It expires in ${OTP_VALID_DURATION_MINUTES} minutes.</p></body>`,
     })
-  }
+  }//
 
   sendRestoreAccountOtp = async (email: string, otp: string) => {
     return this.transporter.sendMail({
