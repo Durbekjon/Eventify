@@ -14,7 +14,6 @@ import { TaskModule } from './modules/task/task.module'
 import { ColumnModule } from './modules/column/column.module'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
-import { PaymentModule } from './modules/payment/payment.module'
 import { ConfigModule } from '@nestjs/config'
 @Module({
   imports: [
@@ -34,9 +33,8 @@ import { ConfigModule } from '@nestjs/config'
     ColumnModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client'),
-      exclude: ['api*'], // agar API route'larini exclude qilishni istasangiz
+      exclude: ['api*'],
     }),
-    PaymentModule,
   ],
 })
 export class AppModule {}
