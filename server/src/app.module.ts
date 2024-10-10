@@ -12,10 +12,13 @@ import { PlanModule } from './modules/plan/plan.module'
 import { SelectModule } from './modules/select/select.module'
 import { TaskModule } from './modules/task/task.module'
 import { ColumnModule } from './modules/column/column.module'
-import { ServeStaticModule } from '@nestjs/serve-static';
+import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
+import { PaymentModule } from './modules/payment/payment.module'
+import { ConfigModule } from '@nestjs/config'
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     CoreModule,
     AuthModule,
     UserModule,
@@ -33,6 +36,7 @@ import { join } from 'path'
       rootPath: join(__dirname, '..', 'client'),
       exclude: ['api*'], // agar API route'larini exclude qilishni istasangiz
     }),
+    PaymentModule,
   ],
 })
 export class AppModule {}

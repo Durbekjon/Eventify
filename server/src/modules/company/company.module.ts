@@ -10,6 +10,7 @@ import { NotificationService } from '@notification/notification.service'
 import { UserService } from '@user/user.service'
 import { NotificationRepository } from '@notification/notification.repository'
 import { UserRepository } from '@user/user.repository'
+import { StripeService } from '@core/stripe/stripe.service'
 
 @Module({
   controllers: [CompanyController],
@@ -23,6 +24,9 @@ import { UserRepository } from '@user/user.repository'
     NotificationService,
     UserService,
     NotificationRepository,
+    UserRepository,
+    StripeService,
+    UserService,
     UserRepository,
   ],
 })

@@ -12,8 +12,6 @@ export class EmailService {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
-    logger:true,
-    debug:true
   })
 
   sendRegistrationOtp = async (email: string, otp: string) => {

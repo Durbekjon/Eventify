@@ -12,6 +12,8 @@ import { RoleTypes } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UpdateCompanyDto } from './dto/update-company.dto'
 import { MemberService } from '@member/member.service'
+import { StripeService } from '@core/stripe/stripe.service'
+import { UserService } from '@user/user.service'
 
 @Injectable()
 export class CompanyService {
@@ -20,6 +22,8 @@ export class CompanyService {
     private readonly role: RoleService,
     private readonly member: MemberService,
     private readonly prisma: PrismaService,
+    private readonly user: UserService,
+    private readonly stripe: StripeService,
   ) {}
   async create(body: CreateCompanyDto, user: IUser) {
     const company = await this.prisma.company.create({
@@ -34,6 +38,10 @@ export class CompanyService {
     }
 
     await this.role.createRole(roleOptions)
+    
+    const u = await this.user.getUser(user.id)
+    
+    // await this.stripe.createCustomer(u.email, u.firstName)
 
     return {
       status: 'OK',
