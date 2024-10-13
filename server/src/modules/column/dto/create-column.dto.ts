@@ -10,11 +10,6 @@ export class CreateColumnDto {
   @IsString()
   name?: string | null
 
-  @ApiProperty({ description: 'The key of the column', example: 'unique_key' })
-  @IsNotEmpty()
-  @IsString()
-  key: string
-
   @ApiPropertyOptional({
     description: 'Whether the column should be shown',
     example: true,

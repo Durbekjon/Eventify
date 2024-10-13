@@ -8,7 +8,7 @@ import { UserService } from '@user/user.service'
 import { RoleService } from '@role/role.service'
 import { CreateColumnDto } from './dto/create-column.dto'
 import { IUser } from '@user/dto/IUser'
-import { Column, RoleTypes } from '@prisma/client'
+import { RoleTypes } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UpdateColumnDto } from './dto/update-column.dto'
 
@@ -20,7 +20,7 @@ export class ColumnService {
     private readonly role: RoleService,
   ) {}
 
-  async createColumn(body: CreateColumnDto, user: IUser){
+  async createColumn(body: CreateColumnDto, user: IUser) {
     const role = await this.validateUserRole(user)
 
     return this.repository.createColumn(body, role.companyId)
