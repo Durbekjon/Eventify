@@ -12,65 +12,73 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL
 const prisma = new PrismaClient()
 async function main() {
   try {
-    console.log(ADMIN_EMAIL)
-    const customer = await stripe.customers.create({
-      email: ADMIN_EMAIL,
-      name: 'Admin',
+    const existDatas = await prisma.user.findUnique({
+      where: { email: ADMIN_EMAIL },
     })
-    const user = await prisma.user.create({
-      data: {
-        firstName: 'Admin',
-        lastName: 'Eventify',
+    if (!existDatas) {
+      const customer = await stripe.customers.create({
         email: ADMIN_EMAIL,
-        password: await bcrypt.hash(process.env.ADMIN_PASSWORD, PASSWORD_SALT),
-        isAdmin: true,
-        customerId: customer.id,
-      },
-    })
+        name: 'Admin',
+      })
+      const user = await prisma.user.create({
+        data: {
+          firstName: 'Admin',
+          lastName: 'Eventify',
+          email: ADMIN_EMAIL,
+          password: await bcrypt.hash(
+            process.env.ADMIN_PASSWORD,
+            PASSWORD_SALT,
+          ),
+          isAdmin: true,
+          customerId: customer.id,
+        },
+      })
 
-    const company = await prisma.company.create({
-      data: {
-        name: 'EVENTIFY',
-        authorId: user.id,
-      },
-    })
+      const company = await prisma.company.create({
+        data: {
+          name: 'EVENTIFY',
+          authorId: user.id,
+        },
+      })
 
-    const role = await prisma.role.create({
-      data: {
-        company: {
-          connect: { id: company.id },
+      const role = await prisma.role.create({
+        data: {
+          company: {
+            connect: { id: company.id },
+          },
+          user: {
+            connect: { id: user.id },
+          },
+          type: 'AUTHOR',
         },
-        user: {
-          connect: { id: user.id },
-        },
-        type: 'AUTHOR',
-      },
-    })
+      })
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { selectedRole: role.id },
-    })
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { selectedRole: role.id },
+      })
 
-    const workspace = await prisma.workspace.create({
-      data: {
-        name: 'companies',
-        company: {
-          connect: { id: company.id },
+      const workspace = await prisma.workspace.create({
+        data: {
+          name: 'companies',
+          company: {
+            connect: { id: company.id },
+          },
         },
-      },
-    })
-    const sheet = await prisma.sheet.create({
-      data: {
-        name: 'List of companies',
-        company: {
-          connect: { id: company.id },
+      })
+      const sheet = await prisma.sheet.create({
+        data: {
+          name: 'List of companies',
+          company: {
+            connect: { id: company.id },
+          },
+          workspace: {
+            connect: { id: workspace.id },
+          },
         },
-        workspace: {
-          connect: { id: workspace.id },
-        },
-      },
-    })
+      })
+    }
+    return
   } catch (error) {
     console.log(error)
   }
