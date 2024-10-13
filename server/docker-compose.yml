@@ -4,21 +4,27 @@ services:
   postgres:
     image: postgres:15
     ports:
-      - "3500:5432"
+      - '3500:5432'
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', '${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
   book-api:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - postgres
-    env_file:
-      - .env
+      postgres:
+        condition: service_healthy
+    env_file: .env
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
@@ -28,7 +34,8 @@ services:
       EMAIL_PASSWORD: ${EMAIL_PASSWORD}
     ports:
       - '4000:4000'
-    command: /bin/sh -c "npm run migrate && npm run start:prod"
+    command: >
+      /bin/sh -c "npm run migrate && npm run seed && npm run start:prod"
 
 volumes:
   postgres_data:

@@ -9,8 +9,8 @@ datasource db {
 
 model User {
   id           String   @id @default(uuid())
-  firstName    String   @map("first_name")
-  lastName     String   @map("last_name")
+  firstName    String?   @map("first_name")
+  lastName     String?   @map("last_name")
   email        String   @unique
   password     String
   isAdmin      Boolean  @default(false)

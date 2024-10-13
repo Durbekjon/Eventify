@@ -103,8 +103,6 @@ export class AuthService {
   }
 
   async registration({
-    firstName,
-    lastName,
     email,
     password,
   }: RegistrationDto): Promise<{ token: string }> {
@@ -120,15 +118,11 @@ export class AuthService {
     const result = await this.prisma.verificationCodes.upsert({
       where: { email },
       update: {
-        firstName,
-        lastName,
         otp,
         password: await this.utils.generateBcrypt(password),
         createdAt: new Date(),
       },
       create: {
-        firstName,
-        lastName,
         otp,
         email,
         password: await this.utils.generateBcrypt(password),
