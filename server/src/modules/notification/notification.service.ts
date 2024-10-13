@@ -42,26 +42,6 @@ export class NotificationService {
   }
 
   async getNotificationsByUser(user: IUser) {
-    // "status": "string",
-    // "priority": "HIGH",
-    // "price": 99999,
-    // "paid": true,
-    // "sheetId": "90608ede-76dd-4d74-ba41-fefaf28ea2d3",
-    // "workspaceId": "00e8efe8-9190-47b1-8ed0-ca018166ba6e"
-    // }
-    await this.prisma.task.create({
-      data: {
-        status: 'HIGH',
-        priority: 'HIGH',
-        sheet: {
-          connect: { id: '90608ede-76dd-4d74-ba41-fefaf28ea2d3' },
-        },
-        workspace: {
-          connect: { id: '00e8efe8-9190-47b1-8ed0-ca018166ba6e' },
-        },
-        company: { connect: { id: 'cc961461-6be0-4d84-80fe-dcead7a21769' } },
-      },
-    })
     const notifications = await this.prisma.notification.findMany({
       where: { userId: user.id },
     })
