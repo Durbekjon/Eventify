@@ -12,10 +12,10 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL
 const prisma = new PrismaClient()
 async function main() {
   try {
-    const existDatas = await prisma.user.findUnique({
+    const existData = await prisma.user.findUnique({
       where: { email: ADMIN_EMAIL },
     })
-    if (!existDatas) {
+    if (!existData) {
       const customer = await stripe.customers.create({
         email: ADMIN_EMAIL,
         name: 'Admin',
@@ -66,7 +66,7 @@ async function main() {
           },
         },
       })
-      const sheet = await prisma.sheet.create({
+      await prisma.sheet.create({
         data: {
           name: 'List of companies',
           company: {
