@@ -41,7 +41,7 @@ export class UserRepository {
       return {
         id: role.id,
         type: role.type,
-        company: { name: role.company.name },
+        company: { id: role.companyId, name: role.company.name },
         member: role?.access,
         createdAt: role.createdAt,
       }
