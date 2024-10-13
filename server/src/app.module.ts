@@ -32,7 +32,7 @@ import { ConfigModule } from '@nestjs/config'
     RoleModule,
     ColumnModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'client'),
+      rootPath: join(__dirname, '..', '..', 'client'),
       exclude: ['api*'],
     }),
   ],
