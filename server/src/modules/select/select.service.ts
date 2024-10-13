@@ -15,7 +15,6 @@ import { RoleTypes } from '@prisma/client'
 import {
   DeleteResponseDto,
   SelectResponseDto,
-  SelectsResponseDto,
   UpdateSelectResponseDto,
 } from './dto/select-response.dto'
 
@@ -32,18 +31,12 @@ export class SelectService {
     user: IUser,
   ): Promise<SelectResponseDto> {
     const { companyId } = await this.validateUserRole(user)
-    const createdSelect = await this.repository.createSelect(body, companyId)
-
-    return this.mapSelectToResponseDto(createdSelect)
+    return await this.repository.createSelect(body, companyId)
   }
 
-  async getSelects(user: IUser): Promise<SelectsResponseDto> {
+  async getSelects(user: IUser) {
     const { companyId } = await this.validateUserRole(user)
-    const selects = await this.repository.getSelects(companyId)
-
-    return {
-      selects: selects.map(this.mapSelectToResponseDto),
-    }
+    return await this.repository.getSelects(companyId)
   }
 
   async getSelect(user: IUser, id: string): Promise<SelectResponseDto> {
@@ -58,9 +51,7 @@ export class SelectService {
   ): Promise<UpdateSelectResponseDto> {
     const { companyId } = await this.validateUserRole(user)
     await this.findSelectById(id, companyId)
-    const updatedSelect = await this.repository.updateSelect(id, body)
-
-    return this.mapSelectToUpdateResponseDto(updatedSelect)
+    return await this.repository.updateSelect(id, body)
   }
 
   async deleteSelect(user: IUser, id: string): Promise<DeleteResponseDto> {
@@ -106,25 +97,6 @@ export class SelectService {
     if (!select || select.companyId !== companyId) {
       throw new NotFoundException(HTTP_MESSAGES.SELECT_NOT_FOUND)
     }
-    return this.mapSelectToResponseDto(select)
-  }
-
-  private mapSelectToResponseDto(select: any): SelectResponseDto {
-    return {
-      id: select.id,
-      name: select.value,
-      description: select.color,
-      companyId: select.companyId,
-      createdAt: select.createdAt,
-      updatedAt: select.updatedAt,
-    }
-  }
-
-  private mapSelectToUpdateResponseDto(select: any): UpdateSelectResponseDto {
-    return {
-      id: select.id,
-      name: select.value,
-      description: select.color,
-    }
+    return select
   }
 }

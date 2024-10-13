@@ -10,7 +10,7 @@ export class UpdateSelectDto {
   })
   @IsOptional()
   @IsString()
-  value: string | null
+  title: string | null
 
   @ApiProperty({
     description: 'Hex color code for the select option',

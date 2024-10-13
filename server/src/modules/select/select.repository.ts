@@ -10,7 +10,7 @@ export class SelectRepository {
   createSelect(body: CreateSelectDto, companyId: string) {
     return this.prisma.select.create({
       data: {
-        value: body.value,
+        title: body.title,
         color: body.color,
         company: {
           connect: {
@@ -25,7 +25,7 @@ export class SelectRepository {
     return this.prisma.select.update({
       where: { id },
       data: {
-        value: body.value,
+        title: body.title,
         color: body.color,
       },
     })

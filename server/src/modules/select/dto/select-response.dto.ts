@@ -1,28 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 export class SelectResponseDto {
-  @ApiProperty({ example: '123' })
+  @ApiProperty({ example: 'uuid' })
   id: string
 
-  @ApiProperty({ example: 'Select Name' })
-  name: string
+  @ApiProperty({ example: 'Select title' })
+  title: string
 
-  @ApiProperty({ example: 'Select Description' })
-  description: string
+  @ApiProperty({ example: 'Select color' })
+  color: string
 
-  @ApiProperty({ example: '123' })
+  @ApiProperty({ example: 'company uuid' })
   companyId: string
-
-  @ApiProperty({ example: new Date().toISOString() })
-  createdAt: Date
-
-  @ApiProperty({ example: new Date().toISOString() })
-  updatedAt: Date
-}
-
-export class SelectsResponseDto {
-  @ApiProperty({ type: [SelectResponseDto] })
-  selects: SelectResponseDto[]
 }
 
 export class DeleteResponseDto {
@@ -34,12 +23,15 @@ export class DeleteResponseDto {
 }
 
 export class UpdateSelectResponseDto {
-  @ApiProperty({ example: '123' })
+  @ApiProperty({ example: 'uuid' })
   id: string
 
-  @ApiProperty({ example: 'Updated Select Name' })
-  name: string
+  @ApiProperty({ example: 'Select title' })
+  title: string
 
-  @ApiProperty({ example: 'Updated Select Description' })
-  description: string
+  @ApiProperty({ example: 'Select color' })
+  color: string
+
+  @ApiProperty({ example: 'company uuid' })
+  companyId: string
 }

@@ -19,7 +19,6 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import {
   DeleteResponseDto,
   SelectResponseDto,
-  SelectsResponseDto,
   UpdateSelectResponseDto,
 } from './dto/select-response.dto'
 
@@ -41,17 +40,14 @@ export class SelectController {
 
   @Get()
   @ApiOperation({ summary: 'Get all selects' })
-  getSelects(@User() user: IUser): Promise<SelectsResponseDto> {
+  getSelects(@User() user: IUser) {
     return this.service.getSelects(user)
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific select' })
   @ApiParam({ name: 'id', description: 'Select ID' })
-  getSelect(
-    @User() user: IUser,
-    @Param('id') id: string,
-  ): Promise<SelectResponseDto> {
+  getSelect(@User() user: IUser, @Param('id') id: string) {
     return this.service.getSelect(user, id)
   }
 
