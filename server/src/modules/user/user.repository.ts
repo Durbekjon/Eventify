@@ -25,12 +25,28 @@ export class UserRepository {
   async getUserInfo(iUser: IUser) {
     const user = await this.prisma.user.findUnique({
       where: { id: iUser.id },
-      include: { roles: true },
+      include: {
+        roles: {
+          include: {
+            company: true,
+            access: true,
+          },
+        },
+      },
     })
 
     delete user.password
 
-    return user
+    const roles = user.roles.map((role) => {
+      return {
+        id: role.id,
+        type: role.type,
+        company: { name: role.company.name },
+        member: role?.access,
+        createdAt: role.createdAt,
+      }
+    })
+    return { ...user, roles }
   }
 
   changeRole(userId: string, roleId: string) {
