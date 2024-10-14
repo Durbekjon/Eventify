@@ -13,9 +13,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD', 'pg_isready', '-U', '${POSTGRES_USER}']
-      interval: 5s
-      timeout: 5s
-      retries: 3
 
   book-api:
     build:
