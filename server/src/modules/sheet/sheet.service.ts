@@ -51,6 +51,10 @@ export class SheetService {
     return sheet
   }
 
+  findOne(id: string) {
+    return this.repository.findOne(id)
+  }
+
   async updateSheet(sheetId: string, user: IUser, body: UpdateSheetDto) {
     const role = await this.validateUserRole(user)
 
