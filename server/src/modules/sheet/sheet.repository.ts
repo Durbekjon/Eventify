@@ -45,6 +45,10 @@ export class SheetRepository {
     })
   }
 
+  findOne(id: string) {
+    return this.prisma.sheet.findUnique({ where: { id } })
+  }
+
   updateSheet(id: string, body: UpdateSheetDto) {
     return this.prisma.sheet.update({
       where: { id },
