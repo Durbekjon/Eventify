@@ -2,6 +2,7 @@ import { PrismaService } from '@/core/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { CreateWorkspaceDto } from './dto/create-workspace.dto'
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto'
+import { WorkspaceReorderDto } from './dto/reorder-workspaces.dto'
 @Injectable()
 export class WorkspaceRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -19,6 +20,17 @@ export class WorkspaceRepository {
     })
   }
 
+  reorder(body: WorkspaceReorderDto) {
+    return this.prisma.$transaction(
+      body.workspaceIds.map((id, index) =>
+        this.prisma.workspace.update({
+          where: { id },
+          data: { order: body.orders[index] },
+        }),
+      ),
+    )
+  }
+
   getWorkspaces(companyId: string) {
     return this.prisma.workspace.findMany({
       where: {
@@ -27,9 +39,10 @@ export class WorkspaceRepository {
       orderBy: {
         order: 'asc',
       },
-      include: {
-        sheets: true,
-        members: true,
+      select: {
+        id: true,
+        name: true,
+        order: true,
       },
     })
   }
@@ -37,6 +50,7 @@ export class WorkspaceRepository {
   deleteWorkspace(id: string) {
     return this.prisma.workspace.delete({ where: { id }, select: { id: true } })
   }
+
   findById(id: string) {
     return this.prisma.workspace.findUnique({
       where: { id },
@@ -46,6 +60,7 @@ export class WorkspaceRepository {
       },
     })
   }
+
   getOwnMemberWorkspaces(memberId: string) {
     return this.prisma.workspace.findMany({
       where: { members: { some: { id: memberId } } },

@@ -9,12 +9,18 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { WorkspaceService } from './workspace.service'
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger'
 import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { User } from '@decorators/user.decorator'
 import { IUser } from '@/modules/user/dto/IUser'
 import { CreateWorkspaceDto } from './dto/create-workspace.dto'
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto'
+import { WorkspaceReorderDto } from './dto/reorder-workspaces.dto'
 @ApiBearerAuth()
 @ApiTags('Workspace')
 @UseGuards(JwtAuthGuard)
@@ -40,6 +46,11 @@ export class WorkspaceController {
     return this.service.getWorkspace(user, id)
   }
 
+  @Put()
+  @ApiOperation({ summary: 'Reorder workspaces' })
+  reorderWorkspaces(@User() user: IUser, @Body() body: WorkspaceReorderDto) {
+    return this.service.reorderWorkspaces(user, body)
+  }
   @Put(':id')
   @ApiOperation({ summary: 'Update workspace' })
   updateWorkspace(

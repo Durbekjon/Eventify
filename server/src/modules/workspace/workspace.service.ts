@@ -13,8 +13,10 @@ import { UserService } from '../user/user.service'
 import { RoleService } from '../role/role.service'
 import { HTTP_MESSAGES } from '@/consts/http-messages'
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto'
-import { RoleTypes, ViewType, Workspace } from '@prisma/client'
+import { Prisma, Role, RoleTypes, ViewType, Workspace } from '@prisma/client'
 import { SheetService } from '../sheet/sheet.service'
+import { WorkspaceReorderDto } from './dto/reorder-workspaces.dto'
+import { RoleDto } from '@role/dto/role.dto'
 
 @Injectable()
 export class WorkspaceService {
@@ -42,6 +44,17 @@ export class WorkspaceService {
     await this.validateWorkspaceOwnership(workspaceId, role.companyId)
 
     return this.repository.updateWorkspace(workspaceId, body)
+  }
+
+  async reorderWorkspaces(user: IUser, body: WorkspaceReorderDto) {
+    await this.validateUserRole(user)
+
+    await this.repository.reorder(body)
+
+    return {
+      status: 'OK',
+      result: HTTP_MESSAGES.WORKSPACES_REORDERED,
+    }
   }
 
   async getWorkspaces(user: IUser) {
@@ -85,7 +98,7 @@ export class WorkspaceService {
     return this.repository.getOwnMemberWorkspaces(memberId)
   }
 
-  private async validateUserRole(user: IUser) {
+  private async validateUserRole(user: IUser): Promise<RoleDto> {
     const currentUser = await this.user.getUser(user.id)
 
     if (!currentUser) {
@@ -109,8 +122,6 @@ export class WorkspaceService {
     }
 
     return selectedRole
-
-    // throw new ForbiddenException(HTTP_MESSAGES.ACTION_FAILED)
   }
 
   findWorkspaceById(id: string) {
