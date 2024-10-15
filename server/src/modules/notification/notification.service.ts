@@ -55,6 +55,7 @@ export class NotificationService {
   async getOne(notificationId: string, user: IUser) {
     const notification = await this.prisma.notification.findUnique({
       where: { id: notificationId },
+      include: { member: true },
     })
 
     if (!notification) {

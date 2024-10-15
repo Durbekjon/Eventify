@@ -33,10 +33,12 @@ export const HTTP_MESSAGES = {
 
   //Workspace
   WORKSPACE_NOT_FOUND: 'Workspace not found',
+  WORKSPACES_REORDERED: 'Workspaces reordered successfully',
   INCORRECT_WORKSPACE_ID: 'Incorrect workspace id',
 
   // Sheet
   SHEET_NOT_FOUND: 'Sheet not found',
+  SHEETS_REORDERED: 'Sheets reordered successfully',
 
   // Plan
   PLAN_NOT_FOUND: 'Plan not found',
@@ -53,4 +55,5 @@ export const HTTP_MESSAGES = {
   // Task
   TASK_NOT_FOUND: 'Task not found',
   TASK_DELETE_SUCCESS: 'Task deleted successfully',
+  TASKS_REORDERED: 'Tasks reordered successfully',
 }
