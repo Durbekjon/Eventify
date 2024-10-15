@@ -15,6 +15,7 @@ import { CreateSheetDto } from './dto/create-sheet.dto'
 import { User } from '@/decorators/user.decorator'
 import { IUser } from '../user/dto/IUser'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
+import { SheetReorderDto } from './dto/reorder-sheets.dto'
 
 @ApiBearerAuth()
 @ApiTags('Sheet')
@@ -37,6 +38,12 @@ export class SheetController {
   @ApiOperation({ summary: 'Get sheet' })
   getSheet(@Param('id') id: string, @User() user: IUser) {
     return this.service.getSheet(id, user)
+  }
+
+  @Put()
+  @ApiOperation({ summary: 'Reorder sheets' })
+  reorderSheets(@User() user: IUser, @Body() body: SheetReorderDto) {
+    return this.service.reorderSheets(user, body)
   }
 
   @Put(':id')

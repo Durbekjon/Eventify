@@ -15,6 +15,7 @@ import { RoleTypes } from '@prisma/client'
 import { WorkspaceService } from '../workspace/workspace.service'
 import { RoleDto } from '@role/dto/role.dto'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
+import { SheetReorderDto } from './dto/reorder-sheets.dto'
 
 @Injectable()
 export class SheetService {
@@ -23,7 +24,7 @@ export class SheetService {
     private readonly user: UserService,
     private readonly role: RoleService,
     @Inject(forwardRef(() => WorkspaceService))
-    private readonly workspace: WorkspaceService, // Inject WorkspaceService
+    private readonly workspace: WorkspaceService,
   ) {}
 
   async createSheet(user: IUser, body: CreateSheetDto) {
@@ -56,6 +57,17 @@ export class SheetService {
     await this.isExistSheetInCompany(sheetId, role.companyId)
 
     return this.repository.updateSheet(sheetId, body)
+  }
+
+  async reorderSheets(user: IUser, body: SheetReorderDto) {
+    await this.validateUserRole(user)
+
+    await this.repository.reorder(body)
+
+    return {
+      status: 'OK',
+      result: HTTP_MESSAGES.SHEETS_REORDERED,
+    }
   }
 
   async deleteSheet(sheetId: string, user: IUser) {

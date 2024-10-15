@@ -2,6 +2,7 @@ import { PrismaService } from '@core/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { CreateSheetDto } from './dto/create-sheet.dto'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
+import { SheetReorderDto } from './dto/reorder-sheets.dto'
 @Injectable()
 export class SheetRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -34,7 +35,12 @@ export class SheetRepository {
     return this.prisma.sheet.findMany({
       where: { workspaceId },
       orderBy: {
-        order: 'desc',
+        order: 'asc',
+      },
+      select: {
+        id: true,
+        name: true,
+        order: true,
       },
     })
   }
@@ -48,6 +54,18 @@ export class SheetRepository {
       },
     })
   }
+
+  reorder(body: SheetReorderDto) {
+    return this.prisma.$transaction(
+      body.sheetIds.map((id, index) =>
+        this.prisma.sheet.update({
+          where: { id },
+          data: { order: body.orders[index] },
+        }),
+      ),
+    )
+  }
+
   deleteSheet(id: string) {
     return this.prisma.sheet.delete({ where: { id } })
   }
