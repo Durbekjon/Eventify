@@ -77,6 +77,17 @@ async function main() {
           },
         },
       })
+      await prisma.sheet.create({
+        data: {
+          name: 'Wedding list',
+          company: {
+            connect: { id: company.id },
+          },
+          workspace: {
+            connect: { id: workspace.id },
+          },
+        },
+      })
     }
     return
   } catch (error) {

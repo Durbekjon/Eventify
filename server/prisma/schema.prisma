@@ -282,13 +282,14 @@ enum ColumnType {
 }
 
 model Task {
-  id       String   @id @default(uuid())
-  status   String?
-  priority String?
-  link     String?
-  price    Int?
-  paid     Boolean?
-
+  id          String    @id @default(uuid())
+  name        String
+  status      String?
+  priority    String?
+  link        String?
+  price       Int?
+  paid        Boolean?
+  order       Int       @default(autoincrement())
   text1       String?
   text2       String?
   text3       String?
@@ -314,6 +315,7 @@ model Task {
   date3       DateTime?
   date4       DateTime?
   date5       DateTime?
+  createdAt   DateTime  @default(now()) @map("created_at")
   members     Member[]
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
   workspaceId String    @map("workspace_id")
