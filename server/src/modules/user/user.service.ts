@@ -20,6 +20,13 @@ export class UserService {
   getUserInfo(user: IUser) {
     return this.repository.getUserInfo(user)
   }
+
+  async getUserByEmail(email: string) {
+    const user = await this.repository.getUserByEmail(email)
+    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND)
+
+    return user
+  }
   async changeRole(body: ChangeRoleDto, iUser: IUser) {
     const { roleId } = body
 

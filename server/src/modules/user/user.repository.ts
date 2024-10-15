@@ -49,6 +49,13 @@ export class UserRepository {
     return { ...user, roles }
   }
 
+  getUserByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true },
+    })
+  }
+
   changeRole(userId: string, roleId: string) {
     return this.prisma.user.update({
       where: { id: userId },

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
 import { UserService } from './user.service'
 import { User } from '@/decorators/user.decorator'
 import { IUser } from './dto/IUser'
@@ -16,6 +16,12 @@ export class UserController {
   @ApiOperation({ summary: 'Get user information' })
   getUserInfo(@User() user: IUser) {
     return this.service.getUserInfo(user)
+  }
+
+  @Get(':email')
+  @ApiOperation({ summary: 'Get user by email' })
+  getUserByEmail(@Param('email') email: string) {
+    return this.service.getUserByEmail(email)
   }
 
   @Patch('change-role')
