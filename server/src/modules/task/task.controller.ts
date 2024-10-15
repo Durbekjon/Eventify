@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  Put,
+  Query,
 } from '@nestjs/common'
 import { TaskService } from './task.service'
 import { CreateTaskDto } from './dto/create-task.dto'
@@ -22,6 +24,9 @@ import { IUser } from '@user/dto/IUser'
 import { JwtAuthGuard } from '@guards/jwt-auth.guard'
 import { Task } from '@prisma/client'
 import { DeleteTaskResponseDto, TaskResponseDto } from './dto/task-reponse.dto'
+import { TaskReorderDto } from './dto/reorder-tasks.dto'
+import { TaskQueryDto } from './dto/query.task.dto'
+import { MoveTaskDto } from './dto/move-task.dto'
 
 @ApiBearerAuth()
 @ApiTags('Task')
@@ -30,11 +35,27 @@ import { DeleteTaskResponseDto, TaskResponseDto } from './dto/task-reponse.dto'
 export class TaskController {
   constructor(private readonly service: TaskService) {}
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get tasks by sheet id' })
+  getTasksBySheet(
+    @User() user: IUser,
+    @Param('id') id: string,
+    @Query() query: TaskQueryDto,
+  ) {
+    return this.service.getTasksBySheet(user, id, query)
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create task' })
   @ApiResponse({ type: () => TaskResponseDto })
   createTask(@User() user: IUser, @Body() body: CreateTaskDto): Promise<Task> {
     return this.service.createTask(body, user)
+  }
+
+  @Patch('move')
+  @ApiOperation({ summary: 'Move task to another workspace' })
+  move(@User() user: IUser, @Body() body: MoveTaskDto) {
+    return this.service.moveTask(user, body)
   }
 
   @Patch(':id')
@@ -46,6 +67,12 @@ export class TaskController {
     @Body() body: UpdateTaskDto,
   ): Promise<Task> {
     return this.service.updateTask(id, body, user)
+  }
+
+  @Put('reorder')
+  @ApiOperation({ summary: 'Reorder tasks' })
+  reorderTasks(@User() user: IUser, @Body() body: TaskReorderDto) {
+    return this.service.reorderTasks(user, body)
   }
 
   @Delete(':id')

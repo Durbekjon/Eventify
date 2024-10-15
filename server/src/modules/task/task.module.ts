@@ -1,14 +1,29 @@
-import { Module } from '@nestjs/common';
-import { TaskService } from './task.service';
-import { TaskController } from './task.controller';
-import { TaskRepository } from './task.repository';
-import { UserService } from '@user/user.service';
-import { RoleService } from '@role/role.service';
-import { UserRepository } from '@user/user.repository';
-import { PrismaService } from '@core/prisma/prisma.service';
+import { Module } from '@nestjs/common'
+import { TaskService } from './task.service'
+import { TaskController } from './task.controller'
+import { TaskRepository } from './task.repository'
+import { UserService } from '@user/user.service'
+import { RoleService } from '@role/role.service'
+import { UserRepository } from '@user/user.repository'
+import { PrismaService } from '@core/prisma/prisma.service'
+import { SheetService } from '@sheet/sheet.service'
+import { SheetRepository } from '@sheet/sheet.repository'
+import { WorkspaceService } from '@workspace/workspace.service'
+import { WorkspaceRepository } from '@workspace/workspace.repository'
 
 @Module({
   controllers: [TaskController],
-  providers: [TaskService,TaskRepository,UserService,RoleService,UserRepository,PrismaService],
+  providers: [
+    TaskService,
+    TaskRepository,
+    UserService,
+    RoleService,
+    UserRepository,
+    PrismaService,
+    SheetService,
+    SheetRepository,
+    WorkspaceService,
+    WorkspaceRepository,
+  ],
 })
 export class TaskModule {}

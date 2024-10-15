@@ -12,12 +12,18 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class CreateTaskDto {
   @ApiPropertyOptional({
+    description: 'The name of the task',
+  })
+  @IsString()
+  name: string
+
+  @ApiPropertyOptional({
     description: 'The status of the task',
     nullable: true,
   })
   @IsOptional()
   @IsString()
-  status: string | null
+  status?: string
 
   @ApiPropertyOptional({
     description: 'Members assigned to the task',
@@ -26,7 +32,7 @@ export class CreateTaskDto {
   })
   @IsOptional()
   @IsArray()
-  members: null | string[]
+  members?: string[]
 
   @ApiPropertyOptional({
     description: 'The priority of the task',
@@ -34,15 +40,15 @@ export class CreateTaskDto {
   })
   @IsOptional()
   @IsString()
-  priority: string | null
+  priority?: string
 
   @ApiPropertyOptional({
     description: 'A link associated with the task',
     nullable: true,
   })
   @IsOptional()
-  @IsUrl()
-  link: string | null
+  @IsString()
+  link?: string
 
   @ApiPropertyOptional({
     description: 'Price associated with the task',
@@ -51,18 +57,14 @@ export class CreateTaskDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  price: number | null
+  price?: number
 
   @ApiPropertyOptional({ description: 'Is the task paid?', nullable: true })
   @IsOptional()
   @IsBoolean()
-  paid: boolean | null
+  paid?: boolean
 
   @ApiProperty({ description: 'ID of the sheet to which the task belongs' })
   @IsUUID()
   sheetId: string
-
-  @ApiProperty({ description: 'ID of the workspace to which the task belongs' })
-  @IsUUID()
-  workspaceId: string
 }
