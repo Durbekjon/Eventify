@@ -22,6 +22,7 @@
       "@user/*": ["./modules/user/*"],
       "@task/*": ["./modules/task/*"],
       "@select/*": ["./modules/select/*"],
+      "@option/*": ["./modules/option/*"],
       "@sheet/*": ["./modules/sheet/*"],
       "@plan/*": ["./modules/plan/*"],
       "@workspace/*": ["./modules/workspace/*"],
