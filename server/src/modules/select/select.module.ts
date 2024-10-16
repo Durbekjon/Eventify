@@ -6,6 +6,7 @@ import { PrismaService } from '@/core/prisma/prisma.service'
 import { UserRepository } from '../user/user.repository'
 import { UserService } from '../user/user.service'
 import { RoleService } from '../role/role.service'
+import { OptionRepository } from '../option/option.repository'
 
 @Module({
   controllers: [SelectController],
@@ -16,6 +17,7 @@ import { RoleService } from '../role/role.service'
     UserService,
     UserRepository,
     RoleService,
+    OptionRepository,
   ],
 })
 export class SelectModule {}
