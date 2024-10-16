@@ -10,7 +10,13 @@ import { IUser } from '@user/dto/IUser'
 import { TaskRepository } from './task.repository'
 import { UserService } from '@user/user.service'
 import { RoleService } from '@role/role.service'
-import { MemberPermissions, Prisma, Task, ViewType } from '@prisma/client'
+import {
+  MemberPermissions,
+  Prisma,
+  RoleTypes,
+  Task,
+  ViewType,
+} from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { TaskReorderDto } from './dto/reorder-tasks.dto'
 import { TaskQueryDto } from './dto/query.task.dto'
@@ -28,12 +34,13 @@ export class TaskService {
   ) {}
 
   async getTasksBySheet(user: IUser, sheetId: string, query: TaskQueryDto) {
-    const role = await this.validateUserAccess(user, 'READ')
+    const role = await this.validateUserAccess(user, MemberPermissions.READ)
 
     let memberId = null
 
-    if (role.type !== 'AUTHOR' && role.access.view === ViewType.OWN)
+    if (role.type !== RoleTypes.AUTHOR && role.access.view === ViewType.OWN) {
       memberId = role.access.id
+    }
 
     return this.repository.getTasksBySheet({ sheetId, memberId }, query)
   }
@@ -71,10 +78,9 @@ export class TaskService {
     const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
 
     const sheet = await this.sheet.findOne(body.sheetId)
-    //  check user access
     if (
-      role.type !== 'AUTHOR' &&
-      role.access.view === 'OWN' &&
+      role.type !== RoleTypes.AUTHOR &&
+      role.access.view === ViewType.OWN &&
       !role.access.workspaces.some(
         (workspace) => workspace.id === sheet.workspaceId,
       )
@@ -128,13 +134,13 @@ export class TaskService {
     if (!selectedRole)
       throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
 
-    if ((selectedRole.type = 'AUTHOR')) return selectedRole
+    if (selectedRole.type === RoleTypes.AUTHOR) return selectedRole
 
     const userPermissions = selectedRole.access.permissions
 
     if (
-      !userPermissions.inludes(permission) ||
-      !userPermissions.inludes(MemberPermissions.ALL)
+      !userPermissions.includes(permission) &&
+      !userPermissions.includes(MemberPermissions.ALL)
     )
       throw new ForbiddenException(HTTP_MESSAGES.ACCESS_DENIED)
 
