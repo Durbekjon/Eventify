@@ -249,6 +249,7 @@ model Select {
 model Option {
   id       String @id @default(uuid())
   name     String
+  color    String
   select   Select @relation(fields: [selectId], references: [id])
   selectId String @map("select_id")
 

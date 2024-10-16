@@ -56,4 +56,10 @@ export const HTTP_MESSAGES = {
   TASK_NOT_FOUND: 'Task not found',
   TASK_DELETE_SUCCESS: 'Task deleted successfully',
   TASKS_REORDERED: 'Tasks reordered successfully',
+
+  // Option
+  OPTION_NOT_FOUND: 'Option not found',
+  OPTION_DELETE_SUCCESS: 'Option deleted successfully',
+
+  
 }

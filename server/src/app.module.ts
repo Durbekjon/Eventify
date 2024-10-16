@@ -15,6 +15,7 @@ import { ColumnModule } from './modules/column/column.module'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
 import { ConfigModule } from '@nestjs/config'
+import { OptionModule } from './modules/option/option.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -35,6 +36,7 @@ import { ConfigModule } from '@nestjs/config'
       rootPath: join(__dirname, '..', '..', 'client'),
       exclude: ['api*'],
     }),
+    OptionModule,
   ],
 })
 export class AppModule {}
