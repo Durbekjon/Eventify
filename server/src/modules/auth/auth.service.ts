@@ -43,13 +43,13 @@ export class AuthService {
         roles: true,
       },
     })
-    if (!user) throw new BadRequestException(HTTP_MESSAGES.USER_NOT_FOUND)
+    if (!user) throw new BadRequestException(HTTP_MESSAGES.USER.NOT_FOUND)
     const isCorrectPassword = await this.utils.compareHash(
       body.password,
       user.password,
     )
     if (!isCorrectPassword) {
-      throw new BadRequestException(HTTP_MESSAGES.WRONG_PASSWORD)
+      throw new BadRequestException(HTTP_MESSAGES.AUTH.WRONG_PASSWORD)
     }
     delete user.password
 
@@ -90,7 +90,7 @@ export class AuthService {
       const user = await this.prisma.user.findUnique({
         where: { id },
       })
-      if (!user) throw new Error(HTTP_MESSAGES.USER_NOT_FOUND)
+      if (!user) throw new Error(HTTP_MESSAGES.USER.NOT_FOUND)
 
       const payload = { id: user.id, email: user.email }
 
@@ -109,7 +109,7 @@ export class AuthService {
     const existingUser = await this.repository.getUserByEmail(email)
 
     if (existingUser) {
-      throw new BadRequestException(HTTP_MESSAGES.USER_EXISTS)
+      throw new BadRequestException(HTTP_MESSAGES.USER.EXISTS)
     }
 
     const otp = this.utils.generateOtp()
@@ -184,7 +184,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: body.email },
     })
-    if (!user) throw new BadRequestException(HTTP_MESSAGES.USER_NOT_FOUND)
+    if (!user) throw new BadRequestException(HTTP_MESSAGES.USER.NOT_FOUND)
 
     const otp = this.utils.generateOtp()
 

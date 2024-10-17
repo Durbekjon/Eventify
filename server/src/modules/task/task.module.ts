@@ -10,6 +10,7 @@ import { SheetService } from '@sheet/sheet.service'
 import { SheetRepository } from '@sheet/sheet.repository'
 import { WorkspaceService } from '@workspace/workspace.service'
 import { WorkspaceRepository } from '@workspace/workspace.repository'
+import { LogRepository } from '@log/log.repository'
 
 @Module({
   controllers: [TaskController],
@@ -24,6 +25,7 @@ import { WorkspaceRepository } from '@workspace/workspace.repository'
     SheetRepository,
     WorkspaceService,
     WorkspaceRepository,
+    LogRepository,
   ],
 })
 export class TaskModule {}

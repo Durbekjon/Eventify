@@ -16,6 +16,7 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { join } from 'path'
 import { ConfigModule } from '@nestjs/config'
 import { OptionModule } from './modules/option/option.module';
+import { LogModule } from './modules/log/log.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -37,6 +38,7 @@ import { OptionModule } from './modules/option/option.module';
       exclude: ['api*'],
     }),
     OptionModule,
+    LogModule,
   ],
 })
 export class AppModule {}

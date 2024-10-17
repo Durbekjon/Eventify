@@ -22,6 +22,9 @@ import { StatusUpdateDto } from './dto/status-update.dto'
 import { CreateRoleDto } from '@role/dto/create-role.dto'
 import { MemberDto } from './dto/member.dto'
 import { UpdateMemberDto } from './dto/update-member.dto'
+import { LogRepository } from '@log/log.repository'
+import { CreateLogDto } from '@log/dto/create-log.dto'
+import { RoleDto } from '@role/dto/role.dto'
 
 @Injectable()
 export class MemberService {
@@ -30,6 +33,7 @@ export class MemberService {
     private readonly notification: NotificationService,
     private readonly user: UserService,
     private readonly role: RoleService,
+    private readonly log: LogRepository,
   ) {}
 
   async createMember(dto: CreateMemberDto, user: IUser) {
@@ -50,7 +54,7 @@ export class MemberService {
     }
 
     await this.notification.createNotification(notificationData)
-
+    await this.createLog(user.id, selectedRole.companyId, '')
     return {
       status: 'OK',
       result: member,
@@ -91,7 +95,7 @@ export class MemberService {
     const member = await this.findMemberAndValidateUser(user, memberId)
 
     if (member.status !== 'NEW')
-      throw new BadRequestException(HTTP_MESSAGES.MEMBER_BLOCKED)
+      throw new BadRequestException(HTTP_MESSAGES.MEMBER.BLOCKED)
 
     await this.repository.statusMember(body, memberId)
 
@@ -122,12 +126,12 @@ export class MemberService {
     const member = await this.repository.getMember(memberId)
 
     if (!member || member.companyId !== companyId)
-      throw new NotFoundException(HTTP_MESSAGES.MEMBER_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.MEMBER.NOT_FOUND)
 
     return member
   }
 
-  private async validateUserRole(user: IUser) {
+  private async validateUserRole(user: IUser): Promise<RoleDto> {
     const userId = user.id
     const currentUser = await this.user.getUser(userId)
 
@@ -137,7 +141,7 @@ export class MemberService {
     })
 
     if (!selectedRole || selectedRole.type !== RoleTypes.AUTHOR)
-      throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
+      throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
 
     return selectedRole
   }
@@ -148,7 +152,7 @@ export class MemberService {
     const member = await this.repository.getMember(memberId)
 
     if (!member || member.userId !== userId)
-      throw new NotFoundException(HTTP_MESSAGES.MEMBER_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.MEMBER.NOT_FOUND)
 
     return member
   }
@@ -163,9 +167,8 @@ export class MemberService {
     await this.role.createRole(createRoleData)
   }
 
-  // private sanitizeMember(member: any) {
-  //   if (member.user && member.user.password) {
-  //     delete member.user.password
-  //   }
-  // }
+  private createLog(userId: string, companyId: string, message: string) {
+    const logOptions: CreateLogDto = { userId, companyId, message }
+    return this.log.create(logOptions)
+  }
 }

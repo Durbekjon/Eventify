@@ -33,7 +33,7 @@ export class OptionRepository {
 
     return {
       status: 'OK',
-      result: HTTP_MESSAGES.OPTION_DELETE_SUCCESS,
+      result: HTTP_MESSAGES.OPTION.DELETE_SUCCESS,
     }
   }
 

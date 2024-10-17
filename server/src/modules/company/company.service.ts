@@ -12,8 +12,9 @@ import { RoleTypes } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UpdateCompanyDto } from './dto/update-company.dto'
 import { MemberService } from '@member/member.service'
-import { StripeService } from '@core/stripe/stripe.service'
-import { UserService } from '@user/user.service'
+import { LogRepository } from '@log/log.repository'
+import { CreateLogDto } from '@log/dto/create-log.dto'
+import { LOG_MESSAGES } from '@consts/log.messages'
 
 @Injectable()
 export class CompanyService {
@@ -22,8 +23,7 @@ export class CompanyService {
     private readonly role: RoleService,
     private readonly member: MemberService,
     private readonly prisma: PrismaService,
-    private readonly user: UserService,
-    private readonly stripe: StripeService,
+    private readonly log: LogRepository,
   ) {}
   async create(body: CreateCompanyDto, user: IUser) {
     const company = await this.prisma.company.create({
@@ -38,11 +38,8 @@ export class CompanyService {
     }
 
     await this.role.createRole(roleOptions)
-    
-    const u = await this.user.getUser(user.id)
-    
-    // await this.stripe.createCustomer(u.email, u.firstName)
 
+    await this.createLog(user.id, company.id, LOG_MESSAGES.CREATED_COMPANY)
     return {
       status: 'OK',
       result: company.id,
@@ -53,7 +50,7 @@ export class CompanyService {
     const company = await this.repository.findById(id)
 
     if (!company || company.authorId !== user.id)
-      throw new NotFoundException(HTTP_MESSAGES.COMPANY_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.COMPANY.NOT_FOUND)
 
     return company
   }
@@ -62,7 +59,7 @@ export class CompanyService {
     const company = await this.repository.findById(id)
 
     if (!company || company.authorId !== user.id)
-      throw new NotFoundException(HTTP_MESSAGES.COMPANY_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.COMPANY.NOT_FOUND)
 
     const data = { name: body.name }
     return await this.prisma.company.update({
@@ -75,7 +72,7 @@ export class CompanyService {
     const company = await this.repository.findById(id)
 
     if (!company || company.authorId !== user.id)
-      throw new NotFoundException(HTTP_MESSAGES.COMPANY_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.COMPANY.NOT_FOUND)
 
     await this.prisma.company.delete({ where: { id } })
 
@@ -84,5 +81,10 @@ export class CompanyService {
       await this.member.deleteManyMembersByCompany(company.id)
 
     return { status: 'OK' }
+  }
+
+  private async createLog(userId: string, companyId: string, message: string) {
+    const logOptions: CreateLogDto = { userId, companyId, message }
+    return this.log.create(logOptions)
   }
 }

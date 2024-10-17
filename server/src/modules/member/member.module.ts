@@ -8,6 +8,7 @@ import { UserService } from '@user/user.service'
 import { NotificationRepository } from '@notification/notification.repository'
 import { UserRepository } from '@user/user.repository'
 import { RoleService } from '@role/role.service'
+import { LogRepository } from '@log/log.repository'
 
 @Module({
   controllers: [MemberController],
@@ -20,6 +21,7 @@ import { RoleService } from '@role/role.service'
     UserService,
     UserRepository,
     RoleService,
+    LogRepository,
   ],
 })
 export class MemberModule {}

@@ -23,7 +23,7 @@ export class UserService {
 
   async getUserByEmail(email: string) {
     const user = await this.repository.getUserByEmail(email)
-    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND)
+    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND)
 
     return user
   }
@@ -42,7 +42,7 @@ export class UserService {
   private async findUserById(id: string) {
     const user = await this.repository.getUser(id)
 
-    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND)
+    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND)
 
     return user
   }
@@ -50,7 +50,7 @@ export class UserService {
   private async validateUserRole(user: User, roleId: string) {
     const hasRole = user.roles.some((role) => role.id === roleId)
 
-    if (!hasRole) throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
+    if (!hasRole) throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
 
     return true
   }

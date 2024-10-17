@@ -33,7 +33,7 @@ export class PlanService {
   private async getById(id: string) {
     const plan = await this.repository.getPlan(id)
 
-    if (!plan) throw new NotFoundException(HTTP_MESSAGES.PLAN_NOT_FOUND)
+    if (!plan) throw new NotFoundException(HTTP_MESSAGES.PLAN.NOT_FOUND)
 
     return plan
   }

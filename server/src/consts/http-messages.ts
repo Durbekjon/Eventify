@@ -1,65 +1,93 @@
 export const HTTP_MESSAGES = {
-  // Auth
-  WRONG_PASSWORD: 'Incorrect password',
-  WRONG_OLD_PASSWORD: 'Incorrect old password',
-  INVALID_TOKEN: 'The provided token is invalid',
-  TOKEN_EXPIRED: 'The token has expired',
+  // Authentication Messages
+  AUTH: {
+    WRONG_PASSWORD: 'Incorrect password',
+    WRONG_OLD_PASSWORD: 'Incorrect old password',
+    INVALID_TOKEN: 'The provided token is invalid',
+    TOKEN_EXPIRED: 'The token has expired',
+  },
 
-  // User
-  USER_NOT_FOUND: 'User not found',
-  PASSWORD_UPDATED: 'Password is updated',
-  USER_EXISTS: 'User exists with this email',
-  USER_NOT_ACTIVE: 'User account is not active',
+  // User Messages
+  USER: {
+    NOT_FOUND: 'User not found',
+    PASSWORD_UPDATED: 'Password updated successfully',
+    EXISTS: 'A user with this email already exists',
+    NOT_ACTIVE: 'User account is not active',
+  },
 
-  // Company
-  COMPANY_NOT_FOUND: 'Company not found',
-  NOT_AUTHOR: 'You are not the author of this company',
+  // Company Messages
+  COMPANY: {
+    NOT_FOUND: 'Company not found',
+    NOT_AUTHOR: 'You are not the author of this company',
+  },
 
-  // Notification
-  NOTIFICATION_NOT_FOUND: 'Notification not found',
-  NOTIFICATION_ALREADY_READ: 'Notifications have already been read',
+  // Notification Messages
+  NOTIFICATION: {
+    NOT_FOUND: 'Notification not found',
+    ALREADY_READ: 'Notification has already been read',
+  },
 
-  // Role
-  ROLE_NOT_EXIST: 'User does not have the required role.',
-  ROLE_UPDATE_SUCCESS: 'User role updated successfully',
+  // Role Messages
+  ROLE: {
+    NOT_EXIST: 'User does not have the required role',
+    UPDATE_SUCCESS: 'User role updated successfully',
+  },
 
-  // General
-  ACTION_SUCCESS: 'Action completed successfully',
-  ACTION_FAILED: 'Action could not be completed',
-  ACCESS_DENIED: 'Access denied: Admins only',
-  //Member
-  MEMBER_NOT_FOUND: 'Member not found',
-  MEMBER_BLOCKED: 'Member blocked',
+  // General Messages
+  GENERAL: {
+    SUCCESS: 'Action completed successfully',
+    FAILURE: 'Action could not be completed',
+    ACCESS_DENIED: 'Access denied: Admins only',
+  },
 
-  //Workspace
-  WORKSPACE_NOT_FOUND: 'Workspace not found',
-  WORKSPACES_REORDERED: 'Workspaces reordered successfully',
-  INCORRECT_WORKSPACE_ID: 'Incorrect workspace id',
+  // Member Messages
+  MEMBER: {
+    NOT_FOUND: 'Member not found',
+    BLOCKED: 'Member blocked',
+  },
 
-  // Sheet
-  SHEET_NOT_FOUND: 'Sheet not found',
-  SHEETS_REORDERED: 'Sheets reordered successfully',
+  // Workspace Messages
+  WORKSPACE: {
+    NOT_FOUND: 'Workspace not found',
+    REORDER_SUCCESS: 'Workspaces reordered successfully',
+    INVALID_ID: 'Incorrect workspace ID',
+  },
 
-  // Plan
-  PLAN_NOT_FOUND: 'Plan not found',
+  // Sheet Messages
+  SHEET: {
+    NOT_FOUND: 'Sheet not found',
+    REORDER_SUCCESS: 'Sheets reordered successfully',
+  },
 
-  // Select
-  SELECT_NOT_FOUND: 'Select not found',
-  SELECT_DELETE_SUCCESS: 'Select deleted successfully',
-  SELECT_DELETE_MULTIPLE_SUCCESS: 'Multiple selects deleted successfully',
+  // Plan Messages
+  PLAN: {
+    NOT_FOUND: 'Plan not found',
+  },
 
-  // Column
-  COLUMN_NOT_FOUND: 'Column not found',
-  COLUMN_DELETE_SUCCESS: 'Column deleted successfully',
+  // Select Messages
+  SELECT: {
+    NOT_FOUND: 'Select not found',
+    DELETE_SUCCESS: 'Select deleted successfully',
+    DELETE_MULTIPLE_SUCCESS: 'Multiple selects deleted successfully',
+  },
 
-  // Task
-  TASK_NOT_FOUND: 'Task not found',
-  TASK_DELETE_SUCCESS: 'Task deleted successfully',
-  TASKS_REORDERED: 'Tasks reordered successfully',
+  // Column Messages
+  COLUMN: {
+    NOT_FOUND: 'Column not found',
+    DELETE_SUCCESS: 'Column deleted successfully',
+  },
 
-  // Option
-  OPTION_NOT_FOUND: 'Option not found',
-  OPTION_DELETE_SUCCESS: 'Option deleted successfully',
+  // Task Messages
+  TASK: {
+    NOT_FOUND: 'Task not found',
+    DELETE_SUCCESS: 'Task deleted successfully',
+    REORDER_SUCCESS: 'Tasks reordered successfully',
+    MOVE_SUCCESS: 'Task moved successfully',
+  },
 
-  
+  // Option Messages
+  OPTION: {
+    NOT_FOUND: 'Option not found',
+    DELETE_SUCCESS: 'Option deleted successfully',
+  },
 }

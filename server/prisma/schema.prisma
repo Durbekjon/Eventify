@@ -23,6 +23,7 @@ model User {
   roles         Role[]
   members       Member[]
   notifications Notification[]
+  logs          Log[]
 
   @@map("users")
 }
@@ -49,30 +50,26 @@ model RestoreCodes {
 }
 
 model Company {
-  id        String   @id @default(uuid())
-  name      String
-  isBlocked Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  author   User   @relation(fields: [authorId], references: [id])
-  authorId String @map("author_id")
-
-  plan   Plan?   @relation(fields: [planId], references: [id]) // The company's chosen plan
-  planId String? @map("plan_id")
-
-  currentSubscriptionId String? @map("current_subscription_id")
-
-  subscriptions CompanySubscription[] @relation("companySubscriptions") // All subscriptions
-
-  roles             Role[]
-  members           Member[]
-  sentNotifications Notification[]
-  workspaces        Workspace[]
-  sheets            Sheet[]
-  selects           Select[]
-  columns           Column[]
-  tasks             Task[]
+  id                    String                @id @default(uuid())
+  name                  String
+  isBlocked             Boolean               @default(true)
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+  author                User                  @relation(fields: [authorId], references: [id])
+  authorId              String                @map("author_id")
+  plan                  Plan?                 @relation(fields: [planId], references: [id]) // The company's chosen plan
+  planId                String?               @map("plan_id")
+  currentSubscriptionId String?               @map("current_subscription_id")
+  subscriptions         CompanySubscription[] @relation("companySubscriptions") // All subscriptions
+  roles                 Role[]
+  members               Member[]
+  sentNotifications     Notification[]
+  workspaces            Workspace[]
+  sheets                Sheet[]
+  selects               Select[]
+  columns               Column[]
+  tasks                 Task[]
+  logs                  Log[]
 
   @@map("companies")
 }
@@ -326,4 +323,19 @@ model Task {
   companyId   String    @map("company_id")
 
   @@map("tasks")
+}
+
+model Log {
+  id         String   @id @default(uuid())
+  message    String
+  company    Company  @relation(fields: [companyId], references: [id])
+  companyId  String   @map("company_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?  @map("user_id")
+  updatedKey String?  @map("updated_key")
+  oldValue   String?  @map("old_value")
+  newValue   String?  @map("new_value")
+  createdAt  DateTime @default(now())
+
+  @@map("logs")
 }

@@ -11,6 +11,7 @@ import { UserService } from '@user/user.service'
 import { NotificationRepository } from '@notification/notification.repository'
 import { UserRepository } from '@user/user.repository'
 import { StripeService } from '@core/stripe/stripe.service'
+import { LogRepository } from '@log/log.repository'
 
 @Module({
   controllers: [CompanyController],
@@ -28,6 +29,7 @@ import { StripeService } from '@core/stripe/stripe.service'
     StripeService,
     UserService,
     UserRepository,
+    LogRepository,
   ],
 })
 export class CompanyModule {}

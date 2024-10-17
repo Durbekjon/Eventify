@@ -43,7 +43,7 @@ export class ColumnService {
 
     return {
       status: 'OK',
-      result: HTTP_MESSAGES.COLUMN_DELETE_SUCCESS,
+      result: HTTP_MESSAGES.COLUMN.DELETE_SUCCESS,
     }
   }
 
@@ -51,7 +51,7 @@ export class ColumnService {
     const column = await this.repository.findById(columnId)
 
     if (!column || column.companyId !== companyId)
-      throw new NotFoundException(HTTP_MESSAGES.COLUMN_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.COLUMN.NOT_FOUND)
 
     return column
   }
@@ -66,7 +66,7 @@ export class ColumnService {
     })
 
     if (!selectedRole || selectedRole.type !== RoleTypes.AUTHOR)
-      throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
+      throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
 
     return selectedRole
   }

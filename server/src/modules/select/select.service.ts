@@ -59,7 +59,7 @@ export class SelectService {
     await this.findSelectById(id, companyId)
     await this.repository.deleteSelect(id)
 
-    return { message: HTTP_MESSAGES.SELECT_DELETE_SUCCESS, success: true }
+    return { message: HTTP_MESSAGES.SELECT.DELETE_SUCCESS, success: true }
   }
 
   async deleteSelects(
@@ -70,7 +70,7 @@ export class SelectService {
     await this.repository.deleteSelects(body.ids)
 
     return {
-      message: HTTP_MESSAGES.SELECT_DELETE_MULTIPLE_SUCCESS,
+      message: HTTP_MESSAGES.SELECT.DELETE_MULTIPLE_SUCCESS,
       success: true,
     }
   }
@@ -83,7 +83,7 @@ export class SelectService {
     })
 
     if (!selectedRole || selectedRole.type !== RoleTypes.AUTHOR) {
-      throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
+      throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
     }
 
     return selectedRole
@@ -95,7 +95,7 @@ export class SelectService {
   ): Promise<SelectResponseDto> {
     const select = await this.repository.getSelect(selectId)
     if (!select || select.companyId !== companyId) {
-      throw new NotFoundException(HTTP_MESSAGES.SELECT_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.SELECT.NOT_FOUND)
     }
     return select
   }

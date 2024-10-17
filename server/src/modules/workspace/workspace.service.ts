@@ -53,7 +53,7 @@ export class WorkspaceService {
 
     return {
       status: 'OK',
-      result: HTTP_MESSAGES.WORKSPACES_REORDERED,
+      result: HTTP_MESSAGES.WORKSPACE.REORDER_SUCCESS,
     }
   }
 
@@ -102,7 +102,7 @@ export class WorkspaceService {
     const currentUser = await this.user.getUser(user.id)
 
     if (!currentUser) {
-      throw new BadRequestException(HTTP_MESSAGES.USER_NOT_FOUND)
+      throw new BadRequestException(HTTP_MESSAGES.USER.NOT_FOUND)
     }
 
     const selectedRole = this.role.getUserSelectedRole({
@@ -111,14 +111,14 @@ export class WorkspaceService {
     })
 
     if (!selectedRole) {
-      throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
+      throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
     }
 
     if (selectedRole.type === RoleTypes.AUTHOR) return selectedRole
 
     const member = selectedRole.access
     if (!member) {
-      throw new ForbiddenException(HTTP_MESSAGES.ACTION_FAILED)
+      throw new ForbiddenException(HTTP_MESSAGES.GENERAL.FAILURE)
     }
 
     return selectedRole
@@ -130,7 +130,7 @@ export class WorkspaceService {
 
   private checkWorkspaceAccess(workspaces: Workspace[], workspace: Workspace) {
     if (!workspaces.find((e) => e.id === workspace.id))
-      throw new NotFoundException(HTTP_MESSAGES.WORKSPACE_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.WORKSPACE.NOT_FOUND)
   }
 
   private async validateWorkspaceOwnership(
@@ -140,7 +140,7 @@ export class WorkspaceService {
     const workspace = await this.repository.findById(workspaceId)
 
     if (!workspace || workspace.companyId !== companyId) {
-      throw new NotFoundException(HTTP_MESSAGES.WORKSPACE_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.WORKSPACE.NOT_FOUND)
     }
 
     return workspace

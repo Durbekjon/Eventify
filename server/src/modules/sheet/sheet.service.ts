@@ -44,7 +44,7 @@ export class SheetService {
   async getSheet(sheetId: string, user: IUser) {
     const sheet = await this.repository.findById(sheetId)
 
-    if (!sheet) throw new NotFoundException(HTTP_MESSAGES.SHEET_NOT_FOUND)
+    if (!sheet) throw new NotFoundException(HTTP_MESSAGES.SHEET.NOT_FOUND)
 
     await this.verifyUserWorkspaceAccess(user, sheet.workspaceId)
 
@@ -70,7 +70,7 @@ export class SheetService {
 
     return {
       status: 'OK',
-      result: HTTP_MESSAGES.SHEETS_REORDERED,
+      result: HTTP_MESSAGES.SHEET.REORDER_SUCCESS,
     }
   }
 
@@ -90,7 +90,7 @@ export class SheetService {
     const sheet = await this.repository.findById(sheetId)
 
     if (!sheet || sheet.companyId !== companyId)
-      throw new NotFoundException(HTTP_MESSAGES.SHEET_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.SHEET.NOT_FOUND)
 
     return sheet
   }
@@ -105,7 +105,7 @@ export class SheetService {
     })
 
     if (!selectedRole || selectedRole.type !== RoleTypes.AUTHOR)
-      throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
+      throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
 
     return selectedRole
   }
@@ -135,7 +135,7 @@ export class SheetService {
       workspace &&
       !workspace.members.some((e) => e.id === selectedRole.access.id) // Fixed the equality check here
     ) {
-      throw new NotFoundException(HTTP_MESSAGES.COMPANY_NOT_FOUND)
+      throw new NotFoundException(HTTP_MESSAGES.COMPANY.NOT_FOUND)
     }
 
     return selectedRole
@@ -148,6 +148,6 @@ export class SheetService {
     const workspace = await this.workspace.findWorkspaceById(workspaceId)
 
     if (workspace.companyId !== companyId)
-      throw new BadRequestException(HTTP_MESSAGES.INCORRECT_WORKSPACE_ID)
+      throw new BadRequestException(HTTP_MESSAGES.WORKSPACE.INVALID_ID)
   }
 }

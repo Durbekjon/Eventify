@@ -23,10 +23,10 @@ export class AdminGuard extends JwtAuthGuard implements CanActivate {
 
     const currentUser = await this.userService.getUser(user.id)
     if (!currentUser)
-      throw new UnauthorizedException(HTTP_MESSAGES.USER_NOT_FOUND)
+      throw new UnauthorizedException(HTTP_MESSAGES.USER.NOT_FOUND)
 
     if (!currentUser.isAdmin)
-      throw new ForbiddenException(HTTP_MESSAGES.ACCESS_DENIED)
+      throw new ForbiddenException(HTTP_MESSAGES.GENERAL.ACCESS_DENIED)
 
     request.user = currentUser
     return true

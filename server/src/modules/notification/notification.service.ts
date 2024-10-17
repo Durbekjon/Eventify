@@ -59,7 +59,7 @@ export class NotificationService {
     })
 
     if (!notification) {
-      throw new BadRequestException(HTTP_MESSAGES.NOTIFICATION_NOT_FOUND)
+      throw new BadRequestException(HTTP_MESSAGES.NOTIFICATION.NOT_FOUND)
     }
 
     await this.prisma.notification.update({
@@ -79,7 +79,7 @@ export class NotificationService {
     })
 
     if (unreadNotifications.length === 0) {
-      throw new BadRequestException(HTTP_MESSAGES.NOTIFICATION_ALREADY_READ)
+      throw new BadRequestException(HTTP_MESSAGES.NOTIFICATION.ALREADY_READ)
     }
 
     await this.repository.readAll({ userId: user.id, isRead: false })

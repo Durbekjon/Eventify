@@ -53,20 +53,20 @@ export class OptionService {
   private async findOne(id: string) {
     const option = await this.repository.findOne(id)
 
-    if (!option) throw new NotFoundException(HTTP_MESSAGES.OPTION_NOT_FOUND)
+    if (!option) throw new NotFoundException(HTTP_MESSAGES.OPTION.NOT_FOUND)
   }
 
   private async validateUserRole(iUser: IUser): Promise<RoleDto> {
     const { id } = iUser
     const user = await this.user.getUser(id)
-    if (!user) throw new BadRequestException(HTTP_MESSAGES.USER_NOT_FOUND)
+    if (!user) throw new BadRequestException(HTTP_MESSAGES.USER.NOT_FOUND)
 
     const selectedRole: RoleDto = await this.role.getUserSelectedRole(user)
     if (!selectedRole)
-      throw new BadRequestException(HTTP_MESSAGES.ROLE_NOT_EXIST)
+      throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
 
     if (selectedRole.type !== RoleTypes.AUTHOR)
-      throw new ForbiddenException(HTTP_MESSAGES.ACCESS_DENIED)
+      throw new ForbiddenException(HTTP_MESSAGES.GENERAL.ACCESS_DENIED)
 
     return selectedRole
   }
