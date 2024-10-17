@@ -198,6 +198,7 @@ model Workspace {
   sheets    Sheet[]
   members   Member[] @relation("MemberWorkspaces")
   tasks     Task[]
+  logs      Log[]
 
   @@map("workspaces")
 }
@@ -212,6 +213,7 @@ model Sheet {
   companyId   String    @map("company_id")
   columns     Column[]
   tasks       Task[]
+  logs        Log[]
 
   @@map("sheets")
 }
@@ -326,16 +328,20 @@ model Task {
 }
 
 model Log {
-  id         String   @id @default(uuid())
-  message    String
-  company    Company  @relation(fields: [companyId], references: [id])
-  companyId  String   @map("company_id")
-  user       User?    @relation(fields: [userId], references: [id])
-  userId     String?  @map("user_id")
-  updatedKey String?  @map("updated_key")
-  oldValue   String?  @map("old_value")
-  newValue   String?  @map("new_value")
-  createdAt  DateTime @default(now())
+  id          String     @id @default(uuid())
+  message     String
+  updatedKey  String?    @map("updated_key")
+  oldValue    String?    @map("old_value")
+  newValue    String?    @map("new_value")
+  createdAt   DateTime   @default(now())
+  company     Company    @relation(fields: [companyId], references: [id])
+  companyId   String     @map("company_id")
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  workspaceId String?    @map("workspace_id")
+  sheet       Sheet?     @relation(fields: [sheetId], references: [id])
+  sheetId     String?
+  user        User?      @relation(fields: [userId], references: [id])
+  userId      String?    @map("user_id")
 
   @@map("logs")
 }
