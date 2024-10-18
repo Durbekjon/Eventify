@@ -6,9 +6,14 @@ import { PrismaService } from '@core/prisma/prisma.service'
 import { UserService } from '../user/user.service'
 import { UserRepository } from '../user/user.repository'
 import { RoleService } from '../role/role.service'
-import { SheetModule } from '../sheet/sheet.module' // Import SheetModule
+import { SheetModule } from '../sheet/sheet.module' // Import SheetModule with forwardRef
+import { LogModule } from '@log/log.module' // Import LogModule to provide LogRepository
 
 @Module({
+  imports: [
+    forwardRef(() => SheetModule), // Handle potential circular dependency
+    LogModule, // Import LogModule to make LogRepository available
+  ],
   controllers: [WorkspaceController],
   providers: [
     WorkspaceService,
@@ -18,7 +23,6 @@ import { SheetModule } from '../sheet/sheet.module' // Import SheetModule
     UserRepository,
     RoleService,
   ],
-  imports: [forwardRef(() => SheetModule)], // Import SheetModule with forwardRef
-  exports: [WorkspaceService], // Export WorkspaceService if needed in other modules
+  exports: [WorkspaceService], // Export WorkspaceService for use in other modules
 })
 export class WorkspaceModule {}

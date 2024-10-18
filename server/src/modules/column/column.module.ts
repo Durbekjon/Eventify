@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import { ColumnService } from './column.service'
 import { ColumnController } from './column.controller'
 import { ColumnRepository } from './column.repository'
@@ -12,8 +12,12 @@ import { WorkspaceService } from '@workspace/workspace.service'
 import { WorkspaceRepository } from '@workspace/workspace.repository'
 import { TaskService } from '@task/task.service'
 import { TaskRepository } from '@task/task.repository'
+import { LogModule } from '@log/log.module' // Import LogModule for LogRepository
 
 @Module({
+  imports: [
+    forwardRef(() => LogModule), // Import LogModule to ensure LogRepository is available
+  ],
   controllers: [ColumnController],
   providers: [
     ColumnService,
@@ -27,7 +31,8 @@ import { TaskRepository } from '@task/task.repository'
     WorkspaceService,
     WorkspaceRepository,
     TaskService,
-    TaskRepository
+    TaskRepository,
   ],
+  exports: [ColumnService], // Export ColumnService if other modules need access
 })
 export class ColumnModule {}

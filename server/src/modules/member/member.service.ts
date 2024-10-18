@@ -11,6 +11,7 @@ import {
   MemberStatus,
   NotificationFrom,
   NotificationType,
+  Prisma,
   RoleTypes,
 } from '@prisma/client'
 import { APP_MESSAGES } from '@consts/app-messages'
@@ -168,7 +169,11 @@ export class MemberService {
   }
 
   private createLog(userId: string, companyId: string, message: string) {
-    const logOptions: CreateLogDto = { userId, companyId, message }
-    return this.log.create(logOptions)
+    const data: Prisma.LogCreateInput = {
+      user: { connect: { id: userId } },
+      company: { connect: { id: companyId } },
+      message,
+    }
+    return this.log.create(data)
   }
 }

@@ -9,7 +9,7 @@ import { CompanyRepository } from './company.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { IUser } from '@/modules/user/dto/IUser'
 import { RoleService } from '@role/role.service'
-import { Company, RoleTypes } from '@prisma/client'
+import { Company, Prisma, RoleTypes } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UpdateCompanyDto } from './dto/update-company.dto'
 import { LogRepository } from '@log/log.repository'
@@ -118,8 +118,12 @@ export class CompanyService {
   }
 
   private async createLog(userId: string, companyId: string, message: string) {
-    const logOptions: CreateLogDto = { userId, companyId, message }
-    return this.log.create(logOptions)
+    const data: Prisma.LogCreateInput = {
+      user: { connect: { id: userId } },
+      company: { connect: { id: companyId } },
+      message,
+    }
+    return this.log.create(data)
   }
 
   private async validateUserRole(iUser: IUser): Promise<RoleDto> {

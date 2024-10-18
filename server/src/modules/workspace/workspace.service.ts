@@ -13,11 +13,20 @@ import { UserService } from '../user/user.service'
 import { RoleService } from '../role/role.service'
 import { HTTP_MESSAGES } from '@/consts/http-messages'
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto'
-import { Prisma, Role, RoleTypes, ViewType, Workspace } from '@prisma/client'
+import {
+  Company,
+  Log,
+  Prisma,
+  Role,
+  RoleTypes,
+  User,
+  ViewType,
+  Workspace,
+} from '@prisma/client'
 import { SheetService } from '../sheet/sheet.service'
 import { WorkspaceReorderDto } from './dto/reorder-workspaces.dto'
 import { RoleDto } from '@role/dto/role.dto'
-
+import { LogRepository } from '@log/log.repository'
 @Injectable()
 export class WorkspaceService {
   constructor(
@@ -26,31 +35,47 @@ export class WorkspaceService {
     private readonly role: RoleService,
     @Inject(forwardRef(() => SheetService))
     private readonly sheet: SheetService,
+    private readonly log: LogRepository,
   ) {}
 
-  async createWorkspace(body: CreateWorkspaceDto, user: IUser) {
-    const role = await this.validateUserRole(user)
+  async createWorkspace(body: CreateWorkspaceDto, iUser: IUser) {
+    const { user, role } = await this.validateUserRole(iUser)
+    const workspace: Workspace = await this.repository.createWorkspace(
+      body,
+      role.companyId,
+    )
 
-    return this.repository.createWorkspace(body, role.companyId)
+    // Fix: Use logical OR (||) for fallback
+    const logMessage = `${user.firstName || user.email} created new workspace: ${workspace.name}`
+    await this.createLog(user.id, role.companyId, logMessage, workspace.id)
+
+    return workspace
   }
 
   async updateWorkspace(
     workspaceId: string,
     body: UpdateWorkspaceDto,
-    user: IUser,
+    iUser: IUser,
   ) {
-    const role = await this.validateUserRole(user)
+    const { user, role } = await this.validateUserRole(iUser)
 
     await this.validateWorkspaceOwnership(workspaceId, role.companyId)
+
+    // Fix: Use logical OR (||) for fallback
+    const logMessage = `${user.firstName || user.email} updated workspace`
+    await this.createLog(user.id, role.companyId, logMessage, workspaceId)
 
     return this.repository.updateWorkspace(workspaceId, body)
   }
 
-  async reorderWorkspaces(user: IUser, body: WorkspaceReorderDto) {
-    await this.validateUserRole(user)
+  async reorderWorkspaces(iUser: IUser, body: WorkspaceReorderDto) {
+    const { user, role } = await this.validateUserRole(iUser)
 
     await this.repository.reorder(body)
 
+    // Fix: Use logical OR (||) for fallback
+    const logMessage = `${user.firstName || user.email} reordered workspaces`
+    await this.createLog(user.id, role.companyId, logMessage)
     return {
       status: 'OK',
       result: HTTP_MESSAGES.WORKSPACE.REORDER_SUCCESS,
@@ -58,15 +83,15 @@ export class WorkspaceService {
   }
 
   async getWorkspaces(user: IUser) {
-    const role = await this.validateUserRole(user)
-    if (role.access?.view === ViewType.OWN)
+    const { role } = await this.validateUserRole(user)
+    if (role.access?.view === ViewType.OWN) {
       return this.getOwnMemberWorkspaces(role.access.id)
-
+    }
     return this.repository.getWorkspaces(role.companyId)
   }
 
   async getWorkspace(user: IUser, workspaceId: string) {
-    const role = await this.validateUserRole(user)
+    const { role } = await this.validateUserRole(user)
 
     const workspace = await this.validateWorkspaceOwnership(
       workspaceId,
@@ -80,13 +105,17 @@ export class WorkspaceService {
     return workspace
   }
 
-  async deleteWorkspace(user: IUser, workspaceId: string) {
-    const role = await this.validateUserRole(user)
+  async deleteWorkspace(iUser: IUser, workspaceId: string) {
+    const { user, role } = await this.validateUserRole(iUser)
 
     const workspace = await this.validateWorkspaceOwnership(
       workspaceId,
       role.companyId,
     )
+
+    // Fix: Use logical OR (||) for fallback
+    const logMessage = `${user.firstName || user.email} deleted workspace: ${workspace.name}`
+    await this.createLog(user.id, role.companyId, logMessage, workspace.id)
 
     if (workspace.sheets.length > 0)
       await this.sheet.deleteMultipleSheetsByWorkspace(workspace.id)
@@ -94,11 +123,29 @@ export class WorkspaceService {
     return this.repository.deleteWorkspace(workspaceId)
   }
 
+  private async createLog(
+    userId: string,
+    companyId: string,
+    message: string,
+    workspaceId?: string | null,
+  ): Promise<Log> {
+    const data: Prisma.LogCreateInput = {
+      user: { connect: { id: userId } },
+      company: { connect: { id: companyId } },
+      message,
+      ...(workspaceId ? { workspace: { connect: { id: workspaceId } } } : {}), // Conditionally connect workspace if provided
+    }
+
+    return this.log.create(data)
+  }
+
   private async getOwnMemberWorkspaces(memberId: string) {
     return this.repository.getOwnMemberWorkspaces(memberId)
   }
 
-  private async validateUserRole(user: IUser): Promise<RoleDto> {
+  private async validateUserRole(
+    user: IUser,
+  ): Promise<{ user: User; role: RoleDto }> {
     const currentUser = await this.user.getUser(user.id)
 
     if (!currentUser) {
@@ -114,14 +161,15 @@ export class WorkspaceService {
       throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
     }
 
-    if (selectedRole.type === RoleTypes.AUTHOR) return selectedRole
+    if (selectedRole.type === RoleTypes.AUTHOR)
+      return { user: currentUser, role: selectedRole }
 
     const member = selectedRole.access
     if (!member) {
       throw new ForbiddenException(HTTP_MESSAGES.GENERAL.FAILURE)
     }
 
-    return selectedRole
+    return { user: currentUser, role: selectedRole }
   }
 
   findWorkspaceById(id: string) {
