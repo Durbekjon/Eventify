@@ -6,7 +6,7 @@ import { Injectable } from '@nestjs/common'
 import { TaskReorderDto } from './dto/reorder-tasks.dto'
 import { TaskQueryDto } from './dto/query.task.dto'
 import { MoveTaskDto } from './dto/move-task.dto'
-
+import { IPagination } from '@/types/pagination'
 @Injectable()
 export class TaskRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -18,7 +18,7 @@ export class TaskRepository {
   async getTasksBySheet(
     options: { sheetId: string; memberId: string | null },
     reqQuery: TaskQueryDto,
-  ): Promise<Task[]> {
+  ): Promise<{ tasks: Task[]; pagination: IPagination }> {
     const { sheetId, memberId } = options
     const {
       name,
@@ -28,38 +28,61 @@ export class TaskRepository {
       maxPrice,
       paid,
       new: isNew,
+      page = '1', // Default to string '1'
+      limit = '12', // Default to string '12'
     } = reqQuery
+
+    // Parse page and limit to numbers
+    const parsedPage = Number(page)
+    const parsedLimit = Number(limit)
 
     const booleanPaid =
       String(paid) === 'true' ? true : String(paid) === 'false' ? false : null
 
-    // Build the base query
-    const query: Prisma.TaskFindManyArgs = {
-      where: {
-        sheetId,
-        ...(name && { name: { contains: name } }),
-        ...(status && { status }),
-        ...(priority && { priority }),
-        ...(minPrice !== undefined && { price: { gte: Number(minPrice) } }),
-        ...(maxPrice !== undefined && { price: { lte: Number(maxPrice) } }),
-        ...(paid !== undefined && { paid: booleanPaid }), // Make sure paid is a boolean
-        ...(memberId && {
-          members: {
-            some: {
-              id: memberId,
-            },
+    // Build the base query with conditions
+    const whereConditions: Prisma.TaskWhereInput = {
+      sheetId,
+      ...(name && { name: { contains: name } }),
+      ...(status && { status }),
+      ...(priority && { priority }),
+      ...(minPrice !== undefined && { price: { gte: minPrice } }),
+      ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
+      ...(booleanPaid !== null && { paid: booleanPaid }),
+      ...(memberId && {
+        members: {
+          some: {
+            id: memberId,
           },
-        }),
-      },
-      orderBy: isNew ? { createdAt: 'desc' } : { order: 'asc' },
+        },
+      }),
     }
 
-    // Fetch and return the tasks
     try {
-      return await this.prisma.task.findMany(query)
+      const [tasks, count] = await Promise.all([
+        this.prisma.task.findMany({
+          where: whereConditions,
+          orderBy: isNew ? { createdAt: 'asc' } : { order: 'asc' },
+          skip: (parsedPage - 1) * parsedLimit,
+          take: parsedLimit,
+        }),
+        this.prisma.task.count({
+          where: whereConditions,
+        }),
+      ])
+
+      return {
+        tasks,
+        pagination: {
+          page: parsedPage,
+          pages: Math.ceil(count / parsedLimit), // Use Math.ceil to account for partial pages
+          limit: parsedLimit,
+          count,
+        },
+      }
     } catch (error) {
-      // Handle error (e.g., log it and throw a custom exception)
-      throw new Error('Failed to fetch tasks: ' + error.message)
+      throw new Error(
+        `Failed to fetch tasks for sheet ID ${sheetId}: ${error.message}`,
+      )
     }
   }
 
@@ -111,7 +134,7 @@ export class TaskRepository {
   }
 
   async reorder(body: TaskReorderDto) {
-    return this.prisma
+    const reorder = this.prisma
       .$transaction(
         body.taskId.map((id, index) =>
           this.prisma.task.update({
@@ -123,6 +146,11 @@ export class TaskRepository {
       .catch((error) => {
         throw new Error('Failed to reorder tasks: ' + error.message)
       })
+    const task = await this.prisma.task.findUnique({
+      where: { id: body.taskId[0] },
+    })
+
+    return task
   }
 
   async move(body: MoveTaskDto, workspaceId: string) {

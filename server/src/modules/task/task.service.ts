@@ -46,7 +46,18 @@ export class TaskService {
   // TASK CREATION
   async createTask(body: CreateTaskDto, user: IUser): Promise<Task> {
     const role = await this.validateUserAccess(user, MemberPermissions.CREATE)
-    return this.repository.createTask(body, role.companyId)
+    const task = await this.repository.createTask(body, role.companyId)
+
+    await this.logUserAction(
+      user.id,
+      role.companyId,
+      `Created task: ${body.name}`,
+      task.id,
+      task.workspaceId,
+      task.sheetId,
+    )
+
+    return task
   }
 
   // TASK UPDATING
@@ -58,10 +69,8 @@ export class TaskService {
     const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
     const task = await this.findById(id, role.companyId)
 
-    // Get the changes and the appropriate update data
     const { changes, updateData } = this.getTaskChanges(task, body)
-
-    if (changes.length === 0) return task // No changes to update
+    if (changes.length === 0) return task // No changes
 
     const updatedTask = await this.repository.updateTask(task.id, updateData)
     await this.logTaskChanges(changes, role.companyId, user.id)
@@ -70,8 +79,18 @@ export class TaskService {
 
   // TASK REORDERING
   async reorderTasks(user: IUser, body: TaskReorderDto) {
-    await this.validateUserAccess(user, MemberPermissions.UPDATE)
-    await this.repository.reorder(body)
+    const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
+    const result = await this.repository.reorder(body)
+
+    await this.logUserAction(
+      user.id,
+      role.companyId,
+      'Reordered tasks',
+      null,
+      result.workspaceId,
+      result.sheetId,
+    )
+
     return this.createResponse(HTTP_MESSAGES.TASK.REORDER_SUCCESS)
   }
 
@@ -79,16 +98,28 @@ export class TaskService {
   async moveTask(user: IUser, body: MoveTaskDto) {
     const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
     const sheet = await this.sheet.findOne(body.sheetId)
+
     this.validateMoveTaskAccess(role, sheet)
     await this.ensureTaskExists(body.taskId)
+
     await this.repository.move(body, sheet.workspaceId)
     return this.createResponse(HTTP_MESSAGES.TASK.MOVE_SUCCESS)
   }
 
   // TASK DELETION
-  async deleteTask(id: string, user: IUser) {
+  async deleteTask(id: string, user: IUser): Promise<any> {
     const role = await this.validateUserAccess(user, MemberPermissions.DELETE)
     const task = await this.findById(id, role.companyId)
+
+    await this.logUserAction(
+      user.id,
+      role.companyId,
+      `Task deleted: ${task.name}`,
+      task.id,
+      task.workspaceId,
+      task.sheetId,
+    )
+
     await this.repository.deleteTask(task.id)
     return this.createResponse(HTTP_MESSAGES.TASK.DELETE_SUCCESS)
   }
@@ -152,12 +183,11 @@ export class TaskService {
             newValue: body[field],
           })
 
-          // Correct update format for Prisma
-          acc.updateData[field] = { set: body[field] }
+          acc.updateData[field] = { set: body[field] } // Prisma format
         }
         return acc
       },
-      { changes: [], updateData: {}  },
+      { changes: [], updateData: {} },
     )
   }
 
@@ -196,5 +226,25 @@ export class TaskService {
 
   private createResponse(message: string) {
     return { status: 'OK', result: message }
+  }
+
+  private async logUserAction(
+    userId: string,
+    companyId: string,
+    logMessage: string,
+    relatedTaskId: string | null,
+    workspaceId: string | null,
+    sheetId: string | null,
+  ) {
+    const logData: Prisma.LogCreateInput = {
+      user: { connect: { id: userId } },
+      company: { connect: { id: companyId } },
+      message: logMessage,
+      ...(relatedTaskId && { task: { connect: { id: relatedTaskId } } }),
+      ...(workspaceId && { workspace: { connect: { id: workspaceId } } }),
+      ...(sheetId && { sheet: { connect: { id: sheetId } } }),
+    }
+
+    return this.prisma.log.create({ data: logData })
   }
 }

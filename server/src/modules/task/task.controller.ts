@@ -2,12 +2,12 @@ import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
   Param,
   Delete,
   UseGuards,
   Put,
+  Body,
   Query,
 } from '@nestjs/common'
 import { TaskService } from './task.service'
@@ -54,7 +54,7 @@ export class TaskController {
 
   @Patch('move')
   @ApiOperation({ summary: 'Move task to another workspace' })
-  move(@User() user: IUser, @Body() body: MoveTaskDto) {
+  moveTask(@User() user: IUser, @Body() body: MoveTaskDto) {
     return this.service.moveTask(user, body)
   }
 
