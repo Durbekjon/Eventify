@@ -11,11 +11,12 @@ import { CreateSheetDto } from './dto/create-sheet.dto'
 import { UserService } from '@user/user.service'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { RoleService } from '@role/role.service'
-import { RoleTypes } from '@prisma/client'
+import { Prisma, RoleTypes, User } from '@prisma/client'
 import { WorkspaceService } from '../workspace/workspace.service'
 import { RoleDto } from '@role/dto/role.dto'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
 import { SheetReorderDto } from './dto/reorder-sheets.dto'
+import { LogRepository } from '@log/log.repository'
 
 @Injectable()
 export class SheetService {
@@ -23,14 +24,18 @@ export class SheetService {
     private readonly repository: SheetRepository,
     private readonly user: UserService,
     private readonly role: RoleService,
+    private readonly log: LogRepository,
     @Inject(forwardRef(() => WorkspaceService))
     private readonly workspace: WorkspaceService,
   ) {}
 
-  async createSheet(user: IUser, body: CreateSheetDto) {
-    const role: RoleDto = await this.validateUserRole(user)
+  async createSheet(iUser: IUser, body: CreateSheetDto) {
+    const { user, role } = await this.validateUserRole(iUser)
 
     await this.isWorkspaceBelongToCompany(body.workspaceId, role.companyId)
+
+    const logMessage = `${user.email} created new sheet ${body.name}`
+    await this.createLog(user.id, role.companyId, null, logMessage)
 
     return this.repository.createSheet(body, role.companyId)
   }
@@ -55,18 +60,24 @@ export class SheetService {
     return this.repository.findOne(id)
   }
 
-  async updateSheet(sheetId: string, user: IUser, body: UpdateSheetDto) {
-    const role = await this.validateUserRole(user)
+  async updateSheet(sheetId: string, iUser: IUser, body: UpdateSheetDto) {
+    const { user, role } = await this.validateUserRole(iUser)
 
     await this.isExistSheetInCompany(sheetId, role.companyId)
+
+    const logMessage = `${user.email} updated sheet`
+    await this.createLog(user.id, role.companyId, sheetId, logMessage)
 
     return this.repository.updateSheet(sheetId, body)
   }
 
-  async reorderSheets(user: IUser, body: SheetReorderDto) {
-    await this.validateUserRole(user)
+  async reorderSheets(iUser: IUser, body: SheetReorderDto) {
+    const { user, role } = await this.validateUserRole(iUser)
 
     await this.repository.reorder(body)
+
+    const logMessage = `${user.email} reordered sheets`
+    await this.createLog(user.id, role.companyId, null, logMessage)
 
     return {
       status: 'OK',
@@ -74,15 +85,19 @@ export class SheetService {
     }
   }
 
-  async deleteSheet(sheetId: string, user: IUser) {
-    const role = await this.validateUserRole(user)
+  async deleteSheet(sheetId: string, iUser: IUser) {
+    const { user, role } = await this.validateUserRole(iUser)
 
-    await this.isExistSheetInCompany(sheetId, role.companyId)
+    const sheet = await this.isExistSheetInCompany(sheetId, role.companyId)
+
+    const logMessage = `${user.email} deleted sheet ${sheet.name}`
+    await this.createLog(user.id, role.companyId, null, logMessage)
 
     return this.repository.deleteSheet(sheetId)
   }
 
   deleteMultipleSheetsByWorkspace(workspaceId: string) {
+
     return this.repository.deleteMultipleSheetsByWorkspace(workspaceId)
   }
 
@@ -95,7 +110,9 @@ export class SheetService {
     return sheet
   }
 
-  private async validateUserRole(user: IUser) {
+  private async validateUserRole(
+    user: IUser,
+  ): Promise<{ user: User; role: RoleDto }> {
     const userId = user.id
     const currentUser = await this.user.getUser(userId)
 
@@ -107,7 +124,7 @@ export class SheetService {
     if (!selectedRole || selectedRole.type !== RoleTypes.AUTHOR)
       throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
 
-    return selectedRole
+    return { user: currentUser, role: selectedRole }
   }
 
   private async verifyUserWorkspaceAccess(
@@ -133,7 +150,7 @@ export class SheetService {
     if (
       selectedRole.view === 'OWN' &&
       workspace &&
-      !workspace.members.some((e) => e.id === selectedRole.access.id) // Fixed the equality check here
+      !workspace.members.some((e) => e.id === selectedRole.access.id) 
     ) {
       throw new NotFoundException(HTTP_MESSAGES.COMPANY.NOT_FOUND)
     }
@@ -149,5 +166,21 @@ export class SheetService {
 
     if (workspace.companyId !== companyId)
       throw new BadRequestException(HTTP_MESSAGES.WORKSPACE.INVALID_ID)
+  }
+
+  private async createLog(
+    userId: string,
+    companyId: string,
+    sheetId: string | null,
+    message: string,
+  ) {
+    const options: Prisma.LogCreateInput = {
+      message,
+      user: { connect: { id: userId } },
+      company: { connect: { id: companyId } },
+      ...(sheetId && { sheet: { connect: { id: sheetId } } }),
+    }
+
+    return this.log.create(options)
   }
 }

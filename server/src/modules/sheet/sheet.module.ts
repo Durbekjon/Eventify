@@ -7,6 +7,7 @@ import { UserService } from '../user/user.service'
 import { UserRepository } from '../user/user.repository'
 import { RoleService } from '../role/role.service'
 import { WorkspaceModule } from '../workspace/workspace.module' // Import WorkspaceModule
+import { LogRepository } from '@log/log.repository'
 
 @Module({
   controllers: [SheetController],
@@ -17,6 +18,7 @@ import { WorkspaceModule } from '../workspace/workspace.module' // Import Worksp
     UserService,
     UserRepository,
     RoleService,
+    LogRepository,
   ],
   imports: [forwardRef(() => WorkspaceModule)], // Import WorkspaceModule with forwardRef
   exports: [SheetService], // Export SheetService if needed in other modules
