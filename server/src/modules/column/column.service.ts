@@ -11,6 +11,7 @@ import { IUser } from '@user/dto/IUser'
 import { RoleTypes } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UpdateColumnDto } from './dto/update-column.dto'
+import { RoleDto } from '@role/dto/role.dto'
 
 @Injectable()
 export class ColumnService {
@@ -60,11 +61,12 @@ export class ColumnService {
     const userId = iUser.id
     const user = await this.user.getUser(userId)
 
-    const selectedRole = this.role.getUserSelectedRole({
+    const selectedRole: RoleDto = this.role.getUserSelectedRole({
       roles: user.roles,
       selectedRole: user.selectedRole,
     })
 
+    // if (selectedRole.company.isBlocked === true) throw new BadRequestException()
     if (!selectedRole || selectedRole.type !== RoleTypes.AUTHOR)
       throw new BadRequestException(HTTP_MESSAGES.ROLE.NOT_EXIST)
 
