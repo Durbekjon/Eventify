@@ -12,6 +12,7 @@ export interface RoleDto {
   company: {
     id: string
     name: string
+    isBlocked: boolean
   }
   type: RoleTypes
   access: {
