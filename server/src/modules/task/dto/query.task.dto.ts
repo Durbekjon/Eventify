@@ -24,4 +24,18 @@ export class TaskQueryDto {
 
   @ApiProperty({ description: 'Filter for new tasks', required: true })
   new: boolean
+
+  @ApiProperty({
+    description: 'The page number for pagination',
+    default: 1,
+    required: true,
+  })
+  page: number = 1 // Default value
+
+  @ApiProperty({
+    description: 'Number of items per page',
+    default: 12,
+    required: true,
+  })
+  limit: number = 12 // Default value
 }
