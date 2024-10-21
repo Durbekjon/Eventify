@@ -40,7 +40,7 @@ export class CompanyService {
     }
 
     await this.role.createRole(roleOptions)
-
+    
     await this.createLog(user.id, company.id, LOG_MESSAGES.CREATED_COMPANY)
     return {
       status: 'OK',

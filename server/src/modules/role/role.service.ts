@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client'
 export class RoleService {
   constructor(private readonly prisma: PrismaService) {}
 
-  createRole(body: CreateRoleDto) {
+  async createRole(body: CreateRoleDto) {
     const data: Prisma.RoleCreateInput = {
       type: body.type,
       company: {
@@ -23,9 +23,16 @@ export class RoleService {
     }
 
     if (body.access) data.access = { connect: { id: body.access } }
-    return this.prisma.role.create({
+    const role = await this.prisma.role.create({
       data,
     })
+
+    await this.prisma.user.update({
+      where: { id: body.user },
+      data: { selectedRole: role.id },
+    })
+
+    return role
   }
 
   deleteCompanyRoles(companyId: string) {
