@@ -24,6 +24,7 @@ model User {
   members       Member[]
   notifications Notification[]
   logs          Log[]
+  transactions   Transaction[]
 
   @@map("users")
 }
@@ -70,6 +71,7 @@ model Company {
   columns               Column[]
   tasks                 Task[]
   logs                  Log[]
+  transactions           Transaction[]
 
   @@map("companies")
 }
@@ -228,8 +230,10 @@ model Plan {
   maxMembers           Int                   @map("max_members")
   maxViewers           Int                   @map("max_viewers")
   order                Int                   @default(autoincrement())
+  maxRequests          Int                   @map("max_requests")
   companies            Company[]
   companySubscriptions CompanySubscription[]
+  transactions          Transaction[]
 
   @@map("plans")
 }
@@ -340,11 +344,36 @@ model Log {
   workspace   Workspace? @relation(fields: [workspaceId], references: [id])
   workspaceId String?    @map("workspace_id")
   sheet       Sheet?     @relation(fields: [sheetId], references: [id])
-  sheetId     String?
+  sheetId     String?    @map("sheet_id")
   task        Task?      @relation(fields: [taskId], references: [id])
-  taskId      String?
+  taskId      String?    @map("task_id")
   user        User?      @relation(fields: [userId], references: [id])
   userId      String?    @map("user_id")
 
   @@map("logs")
+}
+
+model Transaction {
+  id         String            @id @default(uuid())
+  amount     Int
+  currency   String
+  status     TransactionStatus @default(PENDING)
+  sessionUrl String?           @map("session_url")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+  user       User              @relation(fields: [userId], references: [id])
+  userId     String            @map("user_id")
+  company    Company           @relation(fields: [companyId], references: [id])
+  companyId  String            @map("company_id")
+  plan       Plan              @relation(fields: [planId], references: [id])
+  planId     String            @map("plan_id")
+
+  @@map("transactions")
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
 }
