@@ -19,6 +19,7 @@ import { ColumnModule } from './modules/column/column.module'
 import { SelectModule } from './modules/select/select.module'
 import { OptionModule } from './modules/option/option.module'
 import { LogModule } from './modules/log/log.module'
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -58,6 +59,8 @@ import { LogModule } from './modules/log/log.module'
       rootPath: join(__dirname, '..', '..', 'client'),
       exclude: ['api*'],
     }),
+
+    PaymentModule,
   ],
 })
 export class AppModule {}
