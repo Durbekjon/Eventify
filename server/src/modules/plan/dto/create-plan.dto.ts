@@ -14,20 +14,24 @@ export class CreatePlanDto {
   @IsNotEmpty()
   price: number
   @ApiProperty({ description: 'Maximum workspaces count' })
-  @IsNotEmpty()
+  @IsNumber()
   @IsNotEmpty()
   maxWorkspaces: number
 
   @ApiProperty({ description: 'Maximum sheets count' })
-  @IsNotEmpty()
+  @IsNumber()
   @IsNotEmpty()
   maxSheets: number
   @ApiProperty({ description: 'Maximum members count' })
-  @IsNotEmpty()
+  @IsNumber()
   @IsNotEmpty()
   maxMembers: number
   @ApiProperty({ description: 'Maximum viewers count' })
-  @IsNotEmpty()
+  @IsNumber()
   @IsNotEmpty()
   maxViewers: number
+  @ApiProperty({ description: 'Maximum requests count' })
+  @IsNumber()
+  @IsNotEmpty()
+  maxRequests: number
 }

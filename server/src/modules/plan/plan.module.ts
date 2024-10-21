@@ -6,6 +6,7 @@ import { UserService } from '../user/user.service'
 import { UserRepository } from '../user/user.repository'
 import { RoleService } from '../role/role.service'
 import { PrismaService } from '@/core/prisma/prisma.service'
+import { StripeService } from '@stripe/stripe.service'
 
 @Module({
   controllers: [PlanController],
@@ -16,6 +17,7 @@ import { PrismaService } from '@/core/prisma/prisma.service'
     UserService,
     UserRepository,
     RoleService,
+    StripeService,
   ],
 })
 export class PlanModule {}
