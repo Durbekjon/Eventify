@@ -27,6 +27,7 @@
       "@plan/*": ["./modules/plan/*"],
       "@workspace/*": ["./modules/workspace/*"],
       "@log/*": ["./modules/log/*"],
+      "@stripe/*": ["./core/stripe/*"],
       "@core/*": ["./core/*"],
       "@/*": ["*"]
     },
