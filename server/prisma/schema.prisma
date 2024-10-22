@@ -24,7 +24,8 @@ model User {
   members       Member[]
   notifications Notification[]
   logs          Log[]
-  transactions   Transaction[]
+  transactions  Transaction[]
+  messages      Message[]
 
   @@map("users")
 }
@@ -61,7 +62,7 @@ model Company {
   plan                  Plan?                 @relation(fields: [planId], references: [id]) // The company's chosen plan
   planId                String?               @map("plan_id")
   currentSubscriptionId String?               @map("current_subscription_id")
-  subscriptions         CompanySubscription[] @relation("companySubscriptions")
+  subscriptions         CompanySubscription[] @relation("company_subscriptions")
   roles                 Role[]
   members               Member[]
   sentNotifications     Notification[]
@@ -71,7 +72,7 @@ model Company {
   columns               Column[]
   tasks                 Task[]
   logs                  Log[]
-  transactions           Transaction[]
+  transactions          Transaction[]
 
   @@map("companies")
 }
@@ -89,7 +90,7 @@ model CompanySubscription {
   plan   Plan   @relation(fields: [planId], references: [id])
   planId String
 
-  company   Company @relation("companySubscriptions", fields: [companyId], references: [id])
+  company   Company @relation("company_subscriptions", fields: [companyId], references: [id])
   companyId String  @map("company_id")
 
   @@map("company_subscriptions")
@@ -131,9 +132,11 @@ model Member {
   role           Role?
   notification   Notification?       @relation(fields: [notificationId], references: [id])
   notificationId String?             @unique @map("notification_id")
-  workspaces     Workspace[]         @relation("MemberWorkspaces")
+  workspaces     Workspace[]         @relation("member_workspaces")
   Task           Task?               @relation(fields: [taskId], references: [id])
   taskId         String?
+  Chat           Chat?               @relation(fields: [chatId], references: [id])
+  chatId         String?
 
   @@map("members")
 }
@@ -198,7 +201,7 @@ model Workspace {
   company   Company  @relation(fields: [companyId], references: [id])
   companyId String   @map("company_id")
   sheets    Sheet[]
-  members   Member[] @relation("MemberWorkspaces")
+  members   Member[] @relation("member_workspaces")
   tasks     Task[]
   logs      Log[]
 
@@ -233,7 +236,7 @@ model Plan {
   maxRequests          Int                   @map("max_requests")
   companies            Company[]
   companySubscriptions CompanySubscription[]
-  transactions          Transaction[]
+  transactions         Transaction[]
 
   @@map("plans")
 }
@@ -328,6 +331,7 @@ model Task {
   companyId   String    @map("company_id")
   members     Member[]
   logs        Log[]
+  chat        Chat?
 
   @@map("tasks")
 }
@@ -376,4 +380,45 @@ enum TransactionStatus {
   SUCCEEDED
   FAILED
   CANCELED
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  contenct  String
+  isUpdated Boolean  @default(false)
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @map("user_id")
+  Chat      Chat     @relation(fields: [chatId], references: [id])
+  chatId    String   @map("chat_id")
+  pinned    Boolean  @default(false)
+
+  @@map("messages")
+}
+
+model Chat {
+  id          String           @id @default(uuid())
+  name        String
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  task        Task?            @relation(fields: [taskId], references: [id])
+  taskId      String?          @unique @map("task_id")
+  messages    Message[]
+  members     Member[]
+  permissions ChatPermissions?
+
+  @@map("chats")
+}
+
+model ChatPermissions {
+  id            String  @id @default(uuid())
+  chat          Chat    @relation(fields: [chatId], references: [id])
+  chatId        String  @unique
+  sendMessage   Boolean @default(true) @map("send_message")
+  pinMessage    Boolean @default(false) @map("pin_message")
+  deleteMessage Boolean @default(true) @map("delete_message")
+
+  @@map("chat_permissions")
 }
