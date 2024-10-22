@@ -6,28 +6,36 @@ import { Cron } from '@nestjs/schedule'
 export class CompanySubscriptionService {
   constructor(private readonly prisma: PrismaService) {}
 
-  @Cron('1 0 * * *')
+  @Cron('1 0 * * *') // Har kuni yarim tun (00:01)
   async handleCron() {
+    const currentDate = new Date() // Hozirgi vaqtni bir marta oling
+
     const expiredSubscriptions = await this.prisma.companySubscription.findMany(
       {
         where: {
           endDate: {
-            lt: new Date(),
+            lt: currentDate,
           },
           isExpired: false,
         },
       },
     )
 
-    expiredSubscriptions.forEach(async (subscription) => {
-      await this.prisma.companySubscription.update({
-        where: { id: subscription.id },
-        data: { isExpired: true },
-      })
-      await this.prisma.company.update({
-        where: { id: subscription.companyId },
-        data: { isBlocked: true, currentSubscriptionId: '' },
-      })
-    })
+    if (expiredSubscriptions.length > 0) {
+      // Barcha yangilanishlarni bir vaqtda amalga oshirish
+      await Promise.all(
+        expiredSubscriptions.map(async (subscription) => {
+          // Subscription va kompaniyani yangilang
+          await this.prisma.companySubscription.update({
+            where: { id: subscription.id },
+            data: { isExpired: true },
+          })
+          await this.prisma.company.update({
+            where: { id: subscription.companyId },
+            data: { isBlocked: true, currentSubscriptionId: '' },
+          })
+        }),
+      )
+    }
   }
 }
