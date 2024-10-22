@@ -96,6 +96,17 @@ export class TaskRepository {
       workspace: { connect: { id: sheet.workspaceId } },
       sheet: { connect: { id: body.sheetId } },
       company: { connect: { id: companyId } },
+      chat: {
+        create: {
+          name: body.name,
+          ...(body.members && {
+            members: { connect: body.members.map((id) => ({ id })) },
+          }),
+          permissions: {
+            create: {},
+          },
+        },
+      },
       ...(body.status && { status: body.status }),
       ...(body.members && {
         members: { connect: body.members.map((id) => ({ id })) },
