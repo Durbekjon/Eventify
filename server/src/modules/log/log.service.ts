@@ -24,6 +24,27 @@ export class LogService {
     return this.repository.getByCompany(role.companyId)
   }
 
+  async getByWorkspace(user: IUser, workspaceId: string) {
+    const role = await this.validateUserRole(user)
+
+    // Check workspace belongs to company
+    await this.validateCheckWorkspace(workspaceId, role.companyId)
+
+    return this.repository.getByWorkspace(workspaceId)
+  }
+
+  async getBySheet(user: IUser, sheetId: string) {
+    await this.validateUserRole(user)
+
+    return this.repository.getBySheet(sheetId)
+  }
+
+  async getByTask(user: IUser, taskId: string) {
+    await this.validateUserRole(user)
+
+    return this.repository.getByTask(taskId)
+  }
+
   private async validateUserRole(iUser: IUser): Promise<RoleDto> {
     const { id } = iUser
     const user = await this.user.getUser(id)
@@ -37,5 +58,16 @@ export class LogService {
       throw new ForbiddenException(HTTP_MESSAGES.GENERAL.ACCESS_DENIED)
 
     return selectedRole
+  }
+
+  private async validateCheckWorkspace(wsid: string, companyId: string) {
+    const workspace = await this.repository.getWorkspace(wsid)
+
+    const isWorkspaceBelongsToCompany = workspace.companyId === companyId
+
+    if (!isWorkspaceBelongsToCompany)
+      throw new BadRequestException(HTTP_MESSAGES.WORKSPACE.INVALID_ID)
+
+    return workspace
   }
 }

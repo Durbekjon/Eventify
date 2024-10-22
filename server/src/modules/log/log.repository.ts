@@ -1,6 +1,5 @@
 import { PrismaService } from '@core/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
-import { CreateLogDto } from './dto/create-log.dto'
 import { Prisma } from '@prisma/client'
 
 @Injectable()
@@ -16,5 +15,33 @@ export class LogRepository {
       where: { companyId },
       orderBy: { createdAt: 'desc' },
     })
+  }
+
+  getByWorkspace(workspaceId: string) {
+    return this.prisma.log.findMany({
+      where: { workspaceId },
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+
+  getBySheet(sheetId: string) {
+    return this.prisma.log.findMany({
+      where: { sheetId },
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+  getByTask(taskId: string) {
+    return this.prisma.log.findMany({
+      where: { taskId },
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+
+  getWorkspace(workspaceId: string) {
+    return this.prisma.workspace.findUnique({ where: { id: workspaceId } })
+  }
+
+  async getSheet(sheetId: string) {
+    return await this.prisma.sheet.findUnique({ where: { id: sheetId } })
   }
 }
