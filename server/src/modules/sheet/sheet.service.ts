@@ -34,7 +34,7 @@ export class SheetService {
 
     await this.isWorkspaceBelongToCompany(body.workspaceId, role.companyId)
 
-    const logMessage = `${user.email} created new sheet ${body.name}`
+    const logMessage = `created new sheet ${body.name}`
     await this.createLog(user.id, role.companyId, null, logMessage)
 
     return this.repository.createSheet(body, role.companyId)
@@ -65,7 +65,7 @@ export class SheetService {
 
     await this.isExistSheetInCompany(sheetId, role.companyId)
 
-    const logMessage = `${user.email} updated sheet`
+    const logMessage = `updated sheet`
     await this.createLog(user.id, role.companyId, sheetId, logMessage)
 
     return this.repository.updateSheet(sheetId, body)
@@ -74,9 +74,12 @@ export class SheetService {
   async reorderSheets(iUser: IUser, body: SheetReorderDto) {
     const { user, role } = await this.validateUserRole(iUser)
 
+    if (body.sheetIds.length === 0 || body.sheetIds === null)
+      throw new BadRequestException(HTTP_MESSAGES.SHEET.INVALID_IDS)
+
     await this.repository.reorder(body)
 
-    const logMessage = `${user.email} reordered sheets`
+    const logMessage = `reordered sheets`
     await this.createLog(user.id, role.companyId, null, logMessage)
 
     return {
@@ -90,14 +93,13 @@ export class SheetService {
 
     const sheet = await this.isExistSheetInCompany(sheetId, role.companyId)
 
-    const logMessage = `${user.email} deleted sheet ${sheet.name}`
+    const logMessage = `deleted sheet ${sheet.name}`
     await this.createLog(user.id, role.companyId, null, logMessage)
 
     return this.repository.deleteSheet(sheetId)
   }
 
   deleteMultipleSheetsByWorkspace(workspaceId: string) {
-
     return this.repository.deleteMultipleSheetsByWorkspace(workspaceId)
   }
 
@@ -150,7 +152,7 @@ export class SheetService {
     if (
       selectedRole.view === 'OWN' &&
       workspace &&
-      !workspace.members.some((e) => e.id === selectedRole.access.id) 
+      !workspace.members.some((e) => e.id === selectedRole.access.id)
     ) {
       throw new NotFoundException(HTTP_MESSAGES.COMPANY.NOT_FOUND)
     }
