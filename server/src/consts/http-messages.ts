@@ -57,6 +57,9 @@ export const HTTP_MESSAGES = {
   SHEET: {
     NOT_FOUND: 'Sheet not found',
     REORDER_SUCCESS: 'Sheets reordered successfully',
+    DELETE_SUCCESS: 'Sheet deleted successfully',
+    DELETE_MULTIPLE_SUCCESS: 'Multiple sheets deleted successfully',
+    INVALID_IDS: 'Invalid sheet IDs',
   },
 
   // Plan Messages
