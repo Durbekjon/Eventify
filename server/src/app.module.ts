@@ -19,7 +19,7 @@ import { ColumnModule } from './modules/column/column.module'
 import { SelectModule } from './modules/select/select.module'
 import { OptionModule } from './modules/option/option.module'
 import { LogModule } from './modules/log/log.module'
-import { PaymentModule } from './modules/payment/payment.module';
+import { PaymentModule } from './modules/payment/payment.module'
 
 @Module({
   imports: [
