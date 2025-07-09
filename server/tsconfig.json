@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./src/",
+    "paths": {
+      "@consts/*": ["./consts/*"],
+      "@decorators/*": ["./decorators/*"],
+      "@guards/*": ["./guards/*"],
+      "@auth/*": ["./modules/auth/*"],
+      "@company/*": ["./modules/company/*"],
+      "@role/*": ["./modules/role/*"],
+      "@member/*": ["./modules/member/*"],
+      "@notification/*": ["./modules/notification/*"],
+      "@column/*": ["./modules/column/*"],
+      "@user/*": ["./modules/user/*"],
+      "@task/*": ["./modules/task/*"],
+      "@select/*": ["./modules/select/*"],
+      "@option/*": ["./modules/option/*"],
+      "@sheet/*": ["./modules/sheet/*"],
+      "@plan/*": ["./modules/plan/*"],
+      "@workspace/*": ["./modules/workspace/*"],
+      "@log/*": ["./modules/log/*"],
+      "@stripe/*": ["./core/stripe/*"],
+      "@core/*": ["./core/*"],
+      "@/*": ["*"]
+    },
+
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false
+  }
+}

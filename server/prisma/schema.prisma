@@ -1,0 +1,425 @@
+generator client {
+     provider      = "prisma-client-js"
+     binaryTargets = ["native", "linux-arm64-openssl-1.1.x"]
+   }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  firstName     String?        @map("first_name")
+  lastName      String?        @map("last_name")
+  email         String         @unique
+  password      String
+  isAdmin       Boolean        @default(false)
+  selectedRole  String?        @map("selected_role")
+  customerId    String?        @map("customer_id")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  companies     Company[]
+  logs          Log[]
+  members       Member[]
+  messages      Message[]
+  notifications Notification[]
+  roles         Role[]
+  transactions  Transaction[]
+
+  @@map("users")
+}
+
+model VerificationCodes {
+  id        String   @id @default(uuid())
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  email     String   @unique
+  otp       String
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("verification_codes")
+}
+
+model RestoreCodes {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  otp       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("restore_codes")
+}
+
+model Company {
+  id                    String                @id @default(uuid())
+  name                  String
+  isBlocked             Boolean               @default(true)
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+  authorId              String                @map("author_id")
+  planId                String?               @map("plan_id")
+  currentSubscriptionId String?               @map("current_subscription_id")
+  columns               Column[]
+  author                User                  @relation(fields: [authorId], references: [id])
+  plan                  Plan?                 @relation(fields: [planId], references: [id])
+  subscriptions         CompanySubscription[] @relation("company_subscriptions")
+  logs                  Log[]
+  members               Member[]
+  sentNotifications     Notification[]
+  roles                 Role[]
+  selects               Select[]
+  sheets                Sheet[]
+  tasks                 Task[]
+  transactions          Transaction[]
+  workspaces            Workspace[]
+
+  @@map("companies")
+}
+
+model CompanySubscription {
+  id            String   @id @default(uuid())
+  startDate     DateTime @map("start_date")
+  endDate       DateTime @map("end_date")
+  dueDate       Int      @default(30)
+  requestsCount Int      @default(0)
+  isExpired     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  planId        String
+  companyId     String   @map("company_id")
+  company       Company  @relation("company_subscriptions", fields: [companyId], references: [id], onDelete: Cascade)
+  plan          Plan     @relation(fields: [planId], references: [id])
+
+  @@map("company_subscriptions")
+}
+
+model Role {
+  id        String    @id @default(uuid())
+  type      RoleTypes
+  createdAt DateTime  @default(now()) @map("created_at")
+  companyId String    @map("company_id")
+  userId    String    @map("user_id")
+  memberId  String?   @unique @map("member_id")
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  access    Member?   @relation(fields: [memberId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("roles")
+}
+
+model Member {
+  id             String              @id @default(uuid())
+  type           MemberTypes
+  permissions    MemberPermissions[]
+  view           ViewType
+  status         MemberStatus        @default(NEW)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  companyId      String              @map("company_id")
+  userId         String              @map("user_id")
+  notificationId String?             @unique @map("notification_id")
+  taskId         String?
+  chatId         String?
+  chat           Chat?               @relation(fields: [chatId], references: [id])
+  company        Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  notification   Notification?       @relation(fields: [notificationId], references: [id])
+  Task           Task?               @relation(fields: [taskId], references: [id])
+  user           User                @relation(fields: [userId], references: [id])
+  role           Role?
+  workspaces     Workspace[]         @relation("member_workspaces")
+
+  @@map("members")
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  isRead      Boolean          @default(false)
+  type        NotificationType
+  text        String
+  from        NotificationFrom
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  companyId   String?          @map("company_id")
+  userId      String           @map("user_id")
+  member      Member?
+  fromCompany Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  toUser      User             @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  order     Int      @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+  companyId String   @map("company_id")
+  logs      Log[]
+  sheets    Sheet[]
+  tasks     Task[]
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members   Member[] @relation("member_workspaces")
+
+  @@map("workspaces")
+}
+
+model Sheet {
+  id          String    @id @default(uuid())
+  name        String
+  order       Int       @default(autoincrement())
+  workspaceId String    @map("workspace_id")
+  companyId   String    @map("company_id")
+  columns     Column[]
+  logs        Log[]
+  tasks       Task[]
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("sheets")
+}
+
+model Plan {
+  id                   String                @id @default(uuid())
+  name                 String
+  description          String?
+  price                Int
+  maxWorkspaces        Int                   @map("max_workspaces")
+  maxSheets            Int                   @map("max_sheets")
+  maxMembers           Int                   @map("max_members")
+  maxViewers           Int                   @map("max_viewers")
+  order                Int                   @default(autoincrement())
+  maxRequests          Int                   @map("max_requests")
+  companies            Company[]
+  companySubscriptions CompanySubscription[]
+  transactions         Transaction[]
+
+  @@map("plans")
+}
+
+model Select {
+  id        String   @id @default(uuid())
+  color     String
+  companyId String?   @map("company_id")
+  title     String   @default("untitled")
+  columnId  String?  @map("column_id")
+  column   Column?  @relation(fields: [columnId], references: [id])
+  company   Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  options   Option[]
+
+  @@map("selects")
+}
+
+model Option {
+  id       String @id @default(uuid())
+  name     String
+  selectId String @map("select_id")
+  color    String
+  select   Select @relation(fields: [selectId], references: [id], onDelete: Cascade)
+
+  @@map("options")
+}
+
+model Column {
+  id        String     @id @default(uuid())
+  name      String?    @default("untitled")
+  key       String
+  show      Boolean    @default(true)
+  type      ColumnType
+  companyId String     @map("company_id")
+  sheetId   String     @map("sheet_id")
+  selected  String?    @map("selected_select")
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sheet     Sheet      @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  selects   Select[]
+
+  @@map("columns")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  status      String?
+  priority    String?
+  link        String?
+  price       Int?
+  paid        Boolean?
+  text1       String?
+  text2       String?
+  text3       String?
+  text4       String?
+  text5       String?
+  number1     Int?
+  number2     Int?
+  number3     Int?
+  number4     Int?
+  number5     Int?
+  checkbox1   Boolean?
+  checkbox2   Boolean?
+  checkbox3   Boolean?
+  checkbox4   Boolean?
+  checkbox5   Boolean?
+  select1     String?
+  select2     String?
+  select3     String?
+  select4     String?
+  select5     String?
+  date1       DateTime?
+  date2       DateTime?
+  date3       DateTime?
+  date4       DateTime?
+  date5       DateTime?
+  workspaceId String    @map("workspace_id")
+  sheetId     String    @map("sheet_id")
+  companyId   String    @map("company_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  order       Int       @default(autoincrement())
+  name        String
+  chat        Chat?
+  logs        Log[]
+  members     Member[]
+  sheet       Sheet     @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
+}
+
+model Log {
+  id          String     @id @default(uuid())
+  message     String
+  companyId   String     @map("company_id")
+  userId      String?    @map("user_id")
+  createdAt   DateTime   @default(now())
+  newValue    String?    @map("new_value")
+  oldValue    String?    @map("old_value")
+  updatedKey  String?    @map("updated_key")
+  workspaceId String?    @map("workspace_id")
+  sheetId     String?    @map("sheet_id")
+  taskId      String?    @map("task_id")
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sheet       Sheet?     @relation(fields: [sheetId], references: [id])
+  task        Task?      @relation(fields: [taskId], references: [id])
+  user        User?      @relation(fields: [userId], references: [id])
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@map("logs")
+}
+
+model Transaction {
+  id         String            @id @default(uuid())
+  amount     Int
+  currency   String
+  status     TransactionStatus @default(PENDING)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+  userId     String            @map("user_id")
+  companyId  String            @map("company_id")
+  planId     String            @map("plan_id")
+  sessionUrl String?           @map("session_url")
+  company    Company           @relation(fields: [companyId], references: [id])
+  plan       Plan              @relation(fields: [planId], references: [id])
+  user       User              @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  isUpdated Boolean  @default(false)
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    String   @map("user_id")
+  chatId    String   @map("chat_id")
+  pinned    Boolean  @default(false)
+  content   String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("messages")
+}
+
+model Chat {
+  id          String           @id @default(uuid())
+  name        String
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  taskId      String?          @unique @map("task_id")
+  permissions ChatPermissions?
+  task        Task?            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  members     Member[]
+  messages    Message[]
+
+  @@map("chats")
+}
+
+model ChatPermissions {
+  id            String  @id @default(uuid())
+  chatId        String  @unique
+  sendMessage   Boolean @default(true) @map("send_message")
+  pinMessage    Boolean @default(false) @map("pin_message")
+  deleteMessage Boolean @default(true) @map("delete_message")
+  chat          Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@map("chat_permissions")
+}
+
+enum RoleTypes {
+  AUTHOR
+  MEMBER
+  VIEWER
+}
+
+enum MemberTypes {
+  MEMBER
+  VIEWER
+}
+
+enum MemberPermissions {
+  ALL
+  READ
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum ViewType {
+  ALL
+  OWN
+}
+
+enum MemberStatus {
+  NEW
+  ACTIVE
+  REJECTED
+  CANCELLED
+}
+
+enum NotificationFrom {
+  APPLICATION_TEAM
+  COMPANY
+}
+
+enum NotificationType {
+  NOTIFICATION
+  INVITATION
+}
+
+enum ColumnType {
+  SELECT
+  TEXT
+  NUMBER
+  LINK
+  MEMBER
+  DATE
+  DUEDATE
+  FILE
+  CHECK
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+}

@@ -1,0 +1,249 @@
+/* Remove scrollbar styles from here since they're now in index.css */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+  z-index: -1;
+}
+
+.profile-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  color: #e0e0e0;
+  background: rgba(28, 28, 28, 0.8);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #333;
+}
+
+.profile-image {
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  background: #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-icon {
+  font-size: 2rem;
+  color: #e0e0e0;
+}
+
+.profile-info h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+}
+
+.profile-info h2 {
+  font-size: 1rem;
+  color: #b3b3b3;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-info p {
+  margin: 0.25rem 0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-icon {
+  color: #666;
+}
+
+.profile-section {
+  background: rgba(38, 38, 38, 0.5);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.profile-section h3 {
+  font-size: 1rem;
+  color: #fff;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-icon {
+  color: #666;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item, .role-item {
+  padding: 0.75rem;
+  background: rgba(51, 51, 51, 0.3);
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.detail-item:hover, .role-item:hover {
+  background: rgba(51, 51, 51, 0.5);
+}
+
+.detail-label, .role-title {
+  display: block;
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value, .role-value {
+  display: block;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+}
+
+.role-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.back-button {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(119, 124, 157, 0.1);
+  border: 1px solid rgba(119, 124, 157, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #777C9D;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: rgba(119, 124, 157, 0.2);
+  border-color: rgba(119, 124, 157, 0.3);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.back-button .icon {
+  font-size: 1.25rem;
+  transition: transform 0.3s ease;
+  order: 2;
+}
+
+.back-button:hover .icon {
+  transform: translateX(4px);
+}
+
+.back-button span {
+  order: 1;
+}
+
+@media (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profile-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
