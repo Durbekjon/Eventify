@@ -1,4 +1,13 @@
-import { Dropdown, Input, Modal, Space } from "antd";
+import {
+  Dropdown,
+  Input,
+  Modal,
+  Space,
+  Tooltip,
+  Avatar,
+  Badge,
+  Popover,
+} from "antd";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { BsTable, BsThreeDotsVertical } from "react-icons/bs";
 import { IoAddCircleOutline, IoSearch } from "react-icons/io5";
@@ -13,6 +22,10 @@ import { FaListUl } from "react-icons/fa";
 import SheetTabel from "./SheetTabel";
 import CreateSheetFormModal from "./CreateEditSheetFormModal";
 import { AnimatePresence, motion } from "framer-motion";
+import Calendar from "react-calendar"; // You may need to install this or use a placeholder
+import "react-calendar/dist/Calendar.css";
+import SheetList from "./SheetList";
+import SheetCalendar from "./SheetCalendar";
 
 const Sheets = () => {
   const { id } = useParams(); // workspace ID
@@ -25,6 +38,14 @@ const Sheets = () => {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const { createTask } = useContext(AuthContext);
+  const [view, setView] = useState("table"); // 'table', 'list', 'calendar'
+  const [selectedDateTasks, setSelectedDateTasks] = useState([]);
+  const [calendarPopoverOpen, setCalendarPopoverOpen] = useState(false);
+  const [calendarPopoverPosition, setCalendarPopoverPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [calendarPopoverDate, setCalendarPopoverDate] = useState(null);
 
   const {
     isLoading,
@@ -264,15 +285,30 @@ const Sheets = () => {
                 </div>
               </div>
               <div className="items-center flex gap-[16px]">
-                <div className="text-white flex items-center gap-[6px] hover:cursor-pointer">
+                <div
+                  className={`text-white flex items-center gap-[6px] hover:cursor-pointer ${
+                    view === "table" ? "font-bold underline" : ""
+                  }`}
+                  onClick={() => setView("table")}
+                >
                   <BsTable />
                   <p>Table</p>
                 </div>
-                <div className="text-white flex items-center gap-[6px] hover:cursor-pointer">
+                <div
+                  className={`text-white flex items-center gap-[6px] hover:cursor-pointer ${
+                    view === "list" ? "font-bold underline" : ""
+                  }`}
+                  onClick={() => setView("list")}
+                >
                   <FaListUl className="text-[18px]" />
                   <p>List</p>
                 </div>
-                <div className="text-white flex items-center gap-[6px] hover:cursor-pointer">
+                <div
+                  className={`text-white flex items-center gap-[6px] hover:cursor-pointer ${
+                    view === "calendar" ? "font-bold underline" : ""
+                  }`}
+                  onClick={() => setView("calendar")}
+                >
                   <IoMdCalendar className="text-[21px]" />
                   <p>Calendar</p>
                 </div>
@@ -323,13 +359,15 @@ const Sheets = () => {
               </motion.div>
             ) : (
               <motion.div
-                key="table"
+                key={view}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
               >
-                <SheetTabel tasks={tasks} />
+                {view === "table" && <SheetTabel tasks={tasks} />}
+                {view === "list" && <SheetList tasks={tasks} />}
+                {view === "calendar" && <SheetCalendar tasks={tasks} />}
               </motion.div>
             )}
           </AnimatePresence>

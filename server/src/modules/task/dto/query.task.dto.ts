@@ -1,41 +1,56 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { IsArray, IsNumber, IsOptional, ValidateNested } from 'class-validator'
+
+class SearchFilter {
+  @ApiProperty({
+    example: 'title',
+    description: 'Filter key (e.g. title, status)',
+  })
+  key: string
+
+  @ApiProperty({ example: 'urgent', description: 'Filter value for the key' })
+  value: string
+}
 
 export class TaskQueryDto {
-  @ApiProperty({ description: 'The name of the task', required: false })
-  name?: string
-
-  @ApiProperty({ description: 'The status of the task', required: false })
-  status?: string
-
-  @ApiProperty({ description: 'The priority of the task', required: false })
-  priority?: string
-
-  @ApiProperty({ description: 'Minimum price of the task', required: false })
-  minPrice?: number
-
-  @ApiProperty({ description: 'Maximum price of the task', required: false })
-  maxPrice?: number
-
   @ApiProperty({
-    description: 'Indicates whether the task is paid',
+    description: 'Search filter list: key/value pairs',
+    type: [SearchFilter],
     required: false,
   })
-  paid?: boolean // Change from number to boolean
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SearchFilter)
+  search?: SearchFilter[]
 
-  @ApiProperty({ description: 'Filter for new tasks', required: true })
-  new: boolean
+  @ApiProperty({
+    description: 'Order',
+    required: false,
+    enum: ['asc', 'desc'],
+    type: String,
+    default: 'asc',
+  })
+  order: 'asc' | 'desc' = 'asc'
 
   @ApiProperty({
     description: 'The page number for pagination',
     default: 1,
-    required: true,
+    required: false,
   })
-  page: number = 1 // Default value
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  page: number = 1
 
   @ApiProperty({
     description: 'Number of items per page',
     default: 12,
-    required: true,
+    required: false,
   })
-  limit: number = 12 // Default value
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  limit: number = 12
 }

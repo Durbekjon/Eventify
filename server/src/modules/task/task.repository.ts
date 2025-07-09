@@ -25,41 +25,39 @@ class TaskRepository {
     reqQuery: TaskQueryDto,
   ): Promise<{ tasks: Task[]; pagination: IPagination }> {
     const { sheetId, memberId } = options
-    const {
-      name,
-      status,
-      priority,
-      minPrice,
-      maxPrice,
-      paid,
-      new: isNew,
-      page = '1', // Default to string '1'
-      limit = '12', // Default to string '12'
-    } = reqQuery
+    const { page = 1, limit = 12, search = [], order } = reqQuery
 
-    // Parse page and limit to numbers
     const parsedPage = Number(page)
     const parsedLimit = Number(limit)
 
-    const booleanPaid =
-      String(paid) === 'true' ? true : String(paid) === 'false' ? false : null
-
-    // Build the base query with conditions
-    const whereConditions: Prisma.TaskWhereInput = {
+    // ✅ Start with base filters
+    let whereConditions: Prisma.TaskWhereInput = {
       sheetId,
-      ...(name && { name: { contains: name } }),
-      ...(status && { status }),
-      ...(priority && { priority }),
-      ...(minPrice !== undefined && { price: { gte: minPrice } }),
-      ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
-      ...(booleanPaid !== null && { paid: booleanPaid }),
       ...(memberId && {
         members: {
-          some: {
-            id: memberId,
-          },
+          some: { id: memberId },
         },
       }),
+    }
+
+    // ✅ Add dynamic filters based on `search` array
+    if (Array.isArray(search) && search.length > 0) {
+      for (const filter of search) {
+        const { key, value } = filter
+
+        if (key && value) {
+          // Optionally sanitize or validate key/value
+
+          // Note: Adjust logic depending on field types
+          whereConditions = {
+            ...whereConditions,
+            [key]: {
+              contains: value,
+              mode: 'insensitive', // For case-insensitive match
+            },
+          }
+        }
+      }
     }
 
     try {
@@ -67,9 +65,9 @@ class TaskRepository {
         this.prisma.task.findMany({
           where: whereConditions,
           include: { members: true, chat: true },
-          orderBy: isNew ? { createdAt: 'asc' } : { order: 'asc' },
           skip: (parsedPage - 1) * parsedLimit,
           take: parsedLimit,
+          orderBy: { createdAt: order },
         }),
         this.prisma.task.count({
           where: whereConditions,
@@ -80,7 +78,7 @@ class TaskRepository {
         tasks,
         pagination: {
           page: parsedPage,
-          pages: Math.ceil(count / parsedLimit), // Use Math.ceil to account for partial pages
+          pages: Math.ceil(count / parsedLimit),
           limit: parsedLimit,
           count,
         },
@@ -157,7 +155,6 @@ class TaskRepository {
         },
       })
     } catch (error) {
-     
       throw new Error(`Failed to update task: ${error.message}`)
     }
   }
