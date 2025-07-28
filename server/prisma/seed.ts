@@ -2,7 +2,8 @@ import * as bcrypt from 'bcrypt'
 import { PrismaClient } from '@prisma/client'
 import { PASSWORD_SALT } from '../src/consts/password-salt'
 import Stripe from 'stripe'
-
+import { config } from 'dotenv'
+config() // Load environment variables from .env file
 const stripe: Stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-02-24.acacia',
 })
