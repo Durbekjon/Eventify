@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common'
-import { ServeStaticModule } from '@nestjs/serve-static'
+// import { ServeStaticModule } from '@nestjs/serve-static'
 import { ConfigModule } from '@nestjs/config'
-import { join } from 'path'
 
 // Core modules
 import { CoreModule } from './core/core.module'
@@ -55,11 +54,7 @@ import { ChatModule } from './modules/chat/chat.module'
     // Logging
     LogModule,
 
-    // Static assets serving
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'client'),
-      exclude: ['api*'],
-    }),
+    // Static assets serving removed
 
     PaymentModule,
 
