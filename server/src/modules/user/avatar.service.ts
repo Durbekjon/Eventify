@@ -65,7 +65,7 @@ export class AvatarService {
       companyId: file.companyId,
       taskId: file.taskId,
       sheetId: file.sheetId,
-      url: `/public/uploads/${file.filename}`,
+      url: `/uploads/${file.filename}`,
     }
   }
 }
