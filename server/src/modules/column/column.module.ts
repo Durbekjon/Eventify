@@ -3,7 +3,7 @@ import { ColumnService } from './column.service'
 import { ColumnController } from './column.controller'
 import { ColumnRepository } from './column.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
-import { UserService } from '@user/user.service'
+import { UserModule } from '../user/user.module'
 import { UserRepository } from '@user/user.repository'
 import { RoleService } from '@role/role.service'
 import { SheetService } from '@sheet/sheet.service'
@@ -21,14 +21,13 @@ import { NotificationRepository } from '@notification/notification.repository'
 @Module({
   imports: [
     forwardRef(() => LogModule), // Import LogModule to ensure LogRepository is available
+    UserModule,
   ],
   controllers: [ColumnController],
   providers: [
     ColumnService,
     ColumnRepository,
     PrismaService,
-    UserService,
-    UserRepository,
     RoleService,
     SheetService,
     SheetRepository,

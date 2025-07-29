@@ -1,10 +1,27 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { UserService } from './user.service'
 import { User } from '@/decorators/user.decorator'
 import { IUser } from './dto/IUser'
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+  ApiBody,
+} from '@nestjs/swagger'
 import { JwtAuthGuard } from '@guards/jwt-auth.guard'
 import { ChangeRoleDto } from './dto/change-role.dto'
+
 @ApiBearerAuth()
 @ApiTags('User')
 @UseGuards(JwtAuthGuard)
@@ -28,5 +45,29 @@ export class UserController {
   @ApiOperation({ summary: 'Change user current role' })
   selectRole(@User() user: IUser, @Body() body: ChangeRoleDto) {
     return this.service.changeRole(body, user)
+  }
+
+  @Patch('change-avatar')
+  @UseInterceptors(FileInterceptor('avatar'))
+  @ApiOperation({ summary: 'Change user avatar' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        avatar: {
+          type: 'string',
+          format: 'binary',
+          description: 'Avatar image file (JPEG, PNG, GIF, or WebP)',
+        },
+      },
+      required: ['avatar'],
+    },
+  })
+  changeAvatar(
+    @User() user: IUser,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<IUser> {
+    return this.service.changeAvatar(file, user)
   }
 }
