@@ -111,6 +111,8 @@ export class AuthService {
   async registration({
     email,
     password,
+    firstName,
+    lastName,
   }: RegistrationDto): Promise<{ token: string }> {
     const existingUser = await this.repository.getUserByEmail(email)
 
@@ -125,11 +127,15 @@ export class AuthService {
       where: { email },
       update: {
         otp,
+        firstName: firstName,
+        lastName: lastName,
         password: await this.utils.generateBcrypt(password),
         createdAt: new Date(),
       },
       create: {
         otp,
+        firstName: firstName,
+        lastName: lastName,
         email,
         password: await this.utils.generateBcrypt(password),
       },
@@ -145,7 +151,7 @@ export class AuthService {
           id: body.token,
         },
       })
-
+      console.log(verificationCode)
       if (!verificationCode) throw new Error('Incorrect OTP')
 
       if (this.utils.isOtpExpired(verificationCode.createdAt)) {
@@ -168,6 +174,7 @@ export class AuthService {
           lastName: verificationCode.lastName,
           email: verificationCode.email,
           password: verificationCode.password,
+          
         },
       })
       const result = await this.prisma.$transaction([

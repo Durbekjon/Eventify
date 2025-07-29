@@ -20,6 +20,7 @@ import { OptionModule } from './modules/option/option.module'
 import { LogModule } from './modules/log/log.module'
 import { PaymentModule } from './modules/payment/payment.module'
 import { ChatModule } from './modules/chat/chat.module'
+import { FileModule } from './modules/file/file.module'
 
 @Module({
   imports: [
@@ -59,6 +60,8 @@ import { ChatModule } from './modules/chat/chat.module'
     PaymentModule,
 
     ChatModule,
+
+    FileModule,
   ],
 })
 export class AppModule {}

@@ -19,6 +19,8 @@ model User {
   customerId    String?        @map("customer_id")
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
+  avatar        File?          @relation("user_avatars", fields: [avatarId], references: [id])
+  avatarId      String?        @map("avatar_id")
   companies     Company[]
   logs          Log[]
   members       Member[]
@@ -26,6 +28,7 @@ model User {
   notifications Notification[]
   roles         Role[]
   transactions  Transaction[]
+  files         File[]         @relation("user_files")
 
   @@map("users")
 }
@@ -73,6 +76,7 @@ model Company {
   tasks                 Task[]
   transactions          Transaction[]
   workspaces            Workspace[]
+  files                 File[]
 
   @@map("companies")
 }
@@ -175,6 +179,7 @@ model Sheet {
   tasks       Task[]
   company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  files       File[]
 
   @@map("sheets")
 }
@@ -280,6 +285,7 @@ model Task {
   sheet       Sheet     @relation(fields: [sheetId], references: [id], onDelete: Cascade)
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  files       File[]
 
   @@map("tasks")
 }
@@ -362,6 +368,29 @@ model ChatPermissions {
   chat          Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@map("chat_permissions")
+}
+
+model File {
+  id           String   @id @default(uuid())
+  filename     String   @unique
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  size         Int
+  path         String
+  uploadedBy   String   @map("uploaded_by")
+  companyId    String?   @map("company_id")
+  taskId       String?  @map("task_id")
+  sheetId      String?  @map("sheet_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  uploadedByUser User     @relation("user_files", fields: [uploadedBy], references: [id], onDelete: Cascade)
+  company        Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  task           Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  sheet          Sheet?   @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  userAvatars    User[]   @relation("user_avatars")
+
+  @@map("files")
 }
 
 enum RoleTypes {

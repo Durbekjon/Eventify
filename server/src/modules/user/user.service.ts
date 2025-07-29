@@ -8,10 +8,14 @@ import { IUser } from './dto/IUser'
 import { ChangeRoleDto } from './dto/change-role.dto'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { User } from './dto/User.interface'
+import { AvatarService } from './avatar.service'
 
 @Injectable()
 export class UserService {
-  constructor(private readonly repository: UserRepository) {}
+  constructor(
+    private readonly repository: UserRepository,
+    private readonly avatarService: AvatarService,
+  ) {}
 
   getUser(id: string) {
     return this.repository.getUser(id)
@@ -27,6 +31,16 @@ export class UserService {
 
     return user
   }
+
+  async changeAvatar(file: Express.Multer.File, user: IUser): Promise<IUser> {
+    const avatarFile = await this.avatarService.uploadAvatar(file, user)
+    const userWithAvatar = await this.repository.changeAvatar(
+      user.id,
+      avatarFile.id,
+    )
+    return userWithAvatar
+  }
+
   async changeRole(body: ChangeRoleDto, iUser: IUser) {
     const { roleId } = body
 

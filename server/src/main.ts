@@ -16,6 +16,12 @@ async function bootstrap() {
       transform: true,
     }),
   )
+
+  // Serve uploaded files BEFORE setting global prefix
+  app.useStaticAssets(join(__dirname, '..', '..', 'public', 'uploads'), {
+    prefix: '/uploads/',
+  })
+
   app.setGlobalPrefix('api')
 
   const config = new DocumentBuilder()
@@ -28,17 +34,6 @@ async function bootstrap() {
   if (APP_MODE === 'development') {
     SwaggerModule.setup('public/docs', app, document)
   }
-
-  // Serve static assets from the client directory
-  app.useStaticAssets(join(__dirname, '..', '..', 'client'))
-
-  app.use((req, res, next) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(join(__dirname, '..', '..', 'client', 'index.html'))
-    } else {
-      next()
-    }
-  })
 
   await app.listen(4000)
 }

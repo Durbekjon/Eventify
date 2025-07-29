@@ -1,21 +1,14 @@
 import { Module } from '@nestjs/common'
-import { OptionService } from './option.service'
 import { OptionController } from './option.controller'
+import { OptionService } from './option.service'
 import { OptionRepository } from './option.repository'
-import { PrismaService } from '@core/prisma/prisma.service'
+import { UserModule } from '../user/user.module'
 import { RoleService } from '@role/role.service'
-import { UserService } from '@user/user.service'
-import { UserRepository } from '@user/user.repository'
+import { PrismaService } from '@core/prisma/prisma.service'
 
 @Module({
+  imports: [UserModule],
   controllers: [OptionController],
-  providers: [
-    OptionService,
-    OptionRepository,
-    PrismaService,
-    RoleService,
-    UserService,
-    UserRepository,
-  ],
+  providers: [OptionService, OptionRepository, RoleService, PrismaService],
 })
 export class OptionModule {}

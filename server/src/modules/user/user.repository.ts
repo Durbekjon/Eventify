@@ -70,4 +70,33 @@ export class UserRepository {
       data: { selectedRole: roleId },
     })
   }
+
+  async changeAvatar(userId: string, avatarId: string) {
+    const { password, ...user } = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatar: { connect: { id: avatarId } } },
+      include: { avatar: true },
+    })
+    return user
+  }
+
+  async createAvatarFile(fileData: {
+    filename: string
+    originalName: string
+    mimeType: string
+    size: number
+    path: string
+    uploadedBy: string
+  }) {
+    return this.prisma.file.create({
+      data: fileData,
+    })
+  }
+
+  async updateFileAvatar(userId: string, fileId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+        data: { avatar: { connect: { id: fileId } } },
+    })
+  }
 }

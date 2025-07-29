@@ -5,12 +5,12 @@ import { RoleService } from '@role/role.service'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { CompanyController } from './company.controller'
 import { NotificationService } from '@notification/notification.service'
-import { UserService } from '@user/user.service'
 import { NotificationRepository } from '@notification/notification.repository'
-import { UserRepository } from '@user/user.repository'
 import { LogRepository } from '@log/log.repository'
+import { UserModule } from '../user/user.module'
 
 @Module({
+  imports: [UserModule],
   controllers: [CompanyController],
   providers: [
     CompanyService,
@@ -18,11 +18,7 @@ import { LogRepository } from '@log/log.repository'
     RoleService,
     PrismaService,
     NotificationService,
-    UserService,
     NotificationRepository,
-    UserRepository,
-    UserService,
-    UserRepository,
     LogRepository,
   ],
 })
