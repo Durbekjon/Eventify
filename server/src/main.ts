@@ -19,7 +19,7 @@ async function bootstrap() {
 
   // Serve uploaded files BEFORE setting global prefix
   app.useStaticAssets(join(__dirname, '..', '..', 'public', 'uploads'), {
-    prefix: '/uploads/',
+    prefix: '/public/uploads/',
   })
 
   app.setGlobalPrefix('api')
