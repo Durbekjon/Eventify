@@ -18,6 +18,12 @@ export class UserRepository {
           },
         },
         members: true,
+        avatar: {
+          select: {
+            id: true,
+            path: true,
+          },
+        },
       },
     })
   }
@@ -34,6 +40,12 @@ export class UserRepository {
               },
             },
             access: true,
+          },
+        },
+        avatar: {
+          select: {
+            id: true,
+            path: true,
           },
         },
       },
@@ -60,7 +72,11 @@ export class UserRepository {
   getUserByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true },
+      select: {
+        id: true,
+        email: true,
+        avatar: { select: { id: true, path: true } },
+      },
     })
   }
 
@@ -96,7 +112,7 @@ export class UserRepository {
   async updateFileAvatar(userId: string, fileId: string): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
-        data: { avatar: { connect: { id: fileId } } },
+      data: { avatar: { connect: { id: fileId } } },
     })
   }
 }
