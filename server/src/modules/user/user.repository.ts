@@ -64,6 +64,8 @@ export class UserRepository {
       select: {
         id: true,
         email: true,
+        firstName: true,
+        lastName: true,
         avatar: { select: { id: true, path: true } },
       },
     })
