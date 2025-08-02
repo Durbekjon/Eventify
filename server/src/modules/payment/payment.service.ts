@@ -9,6 +9,8 @@ import { RoleDto } from '@role/dto/role.dto'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UserService } from '@user/user.service'
 import { RoleService } from '@role/role.service'
+import Stripe from 'stripe'
+import { PaymentError } from './payment.error'
 
 @Injectable()
 export class PaymentService {
@@ -20,66 +22,68 @@ export class PaymentService {
     private readonly stripeService: StripeService,
   ) {}
 
-  // Creates a Stripe payment session after validating user and role
-  async createPaymentSession(iUser: IUser, body: CreatePaymentDto) {
-    const { user, role } = await this.validateUserRole(iUser)
-    const plan = await this.repository.getPlan(body.planId)
-    return this.stripeService.createCheckoutSession(
-      plan,
-      user.id,
-      role.companyId,
-    )
-  }
+  /**
+   * Creates a payment intent for inline/embedded payment processing
+   * @param user - The authenticated user
+   * @param body - Payment creation data
+   * @returns Payment intent with client secret for frontend integration
+   */
+  async createInlinePayment(user: IUser, body: CreatePaymentDto) {
+    try {
+      // 1. Validate user and role
+      const { user: validatedUser, role } = await this.validateUserRole(user)
 
-  // Handles checkout payment and updates transaction and company details
-  async checkoutPayment({
-    companyId,
-    transactionId,
-    sessionId,
-  }: {
-    companyId: string
-    transactionId: string
-    sessionId: string
-  }) {
-    const sessionStatus =
-      await this.stripeService.checkSessionPayment(sessionId)
+      // 2. Validate plan exists
+      const plan = await this.validatePlan(body.planId)
 
-    if (sessionStatus === 'paid') {
-      const transaction = await this.prisma.transaction.update({
-        where: { id: transactionId },
-        data: { status: TransactionStatus.SUCCEEDED },
-      })
+      // 3. Check for existing active subscription
+      const existingSubscription = await this.getActiveSubscription(role.companyId)
+      if (existingSubscription) {
+        throw PaymentError.activeSubscriptionExists()
+      }
 
-      const nextMonthDate = getNextMonthSameDay(new Date())
-      const newSubscription = await this.prisma.companySubscription.create({
-        data: {
-          companyId,
-          startDate: new Date(),
-          endDate: nextMonthDate,
-          planId: transaction.planId,
-        },
-      })
+      // 4. Create or get Stripe customer
+      const customer = await this.getOrCreateCustomer(validatedUser, role.companyId)
 
-      await this.prisma.company.update({
-        where: { id: companyId },
-        data: {
-          isBlocked: false,
-          plan: { connect: { id: transaction.planId } },
-          currentSubscriptionId: newSubscription.id,
-        },
-      })
-
-      return { status: 'OK', result: 'SUCCESS' }
+      // 5. Create payment intent
+      return await this.stripeService.createPaymentIntent(
+        plan,
+        validatedUser.id,
+        role.companyId,
+        customer.id,
+      )
+    } catch (error) {
+      if (error instanceof PaymentError) {
+        throw error
+      }
+      console.error('Error creating payment intent:', error.message)
+      throw PaymentError.paymentProcessingFailed(error.message)
     }
-
-    await this.prisma.transaction.update({
-      where: { id: transactionId },
-      data: { status: 'CANCELED', sessionUrl: '' },
-    })
-    return { status: 'OK', result: 'CANCELLED' }
   }
 
-  // Validates user role, ensuring it exists and is an AUTHOR
+  /**
+   * Confirms a payment intent and creates the subscription
+   * @param paymentIntentId - The Stripe payment intent ID
+   * @returns Confirmation status
+   */
+  async confirmInlinePayment(paymentIntentId: string) {
+    try {
+      await this.stripeService.confirmPaymentIntent(paymentIntentId)
+      return {
+        status: 'SUCCESS',
+        message: 'Payment confirmed successfully',
+      }
+    } catch (error) {
+      console.error('Error confirming payment intent:', error.message)
+      throw PaymentError.paymentProcessingFailed(error.message)
+    }
+  }
+
+  /**
+   * Validates user role, ensuring it exists and is an AUTHOR
+   * @param user - The user to validate
+   * @returns Validated user and role
+   */
   private async validateUserRole(
     user: IUser,
   ): Promise<{ user: User; role: RoleDto }> {
@@ -96,18 +100,73 @@ export class PaymentService {
 
     return { user: currentUser, role: selectedRole }
   }
-}
 
-// Utility function to calculate the same day of the next month at 00:00
-function getNextMonthSameDay(date: Date): Date {
-  const currentMonth = date.getMonth()
-  const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1 // Handle December to January transition
-  const year = nextMonth === 0 ? date.getFullYear() + 1 : date.getFullYear()
+  /**
+   * Handle webhook events from Stripe
+   * @param event - Stripe webhook event
+   */
+  async handleWebhookEvent(event: Stripe.Event): Promise<void> {
+    await this.stripeService.handleWebhookEvent(event)
+  }
 
-  const nextMonthSameDay = new Date(date)
-  nextMonthSameDay.setMonth(nextMonth)
-  nextMonthSameDay.setFullYear(year)
-  nextMonthSameDay.setHours(0, 0, 0, 0) // Set time to 00:00:00
+  /**
+   * Validate plan exists and is active
+   * @param planId - Plan ID to validate
+   * @returns Validated plan
+   */
+  private async validatePlan(planId: string) {
+    const plan = await this.repository.getPlan(planId)
+    if (!plan) {
+      throw PaymentError.planNotFound()
+    }
+    return plan
+  }
 
-  return nextMonthSameDay
+  /**
+   * Get active subscription for company
+   * @param companyId - Company ID
+   * @returns Active subscription if exists
+   */
+  private async getActiveSubscription(companyId: string) {
+    return this.prisma.companySubscription.findFirst({
+      where: {
+        companyId,
+        isExpired: false,
+        endDate: { gt: new Date() },
+      },
+    })
+  }
+
+  /**
+   * Get or create Stripe customer for the company
+   * @param user - User data
+   * @param companyId - Company ID
+   * @returns Stripe customer
+   */
+  private async getOrCreateCustomer(user: User, companyId: string) {
+    // Check if company already has a Stripe customer
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      select: { stripeCustomerId: true },
+    })
+
+    if (company?.stripeCustomerId) {
+      return { id: company.stripeCustomerId }
+    }
+
+    // Create new customer
+    const customer = await this.stripeService.createCustomer({
+      email: user.email,
+      name: `${user.firstName} ${user.lastName}`,
+      metadata: { companyId },
+    })
+
+    // Update company with customer ID
+    await this.prisma.company.update({
+      where: { id: companyId },
+      data: { stripeCustomerId: customer.id },
+    })
+
+    return customer
+  }
 }

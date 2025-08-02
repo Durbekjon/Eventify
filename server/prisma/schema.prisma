@@ -29,6 +29,7 @@ model User {
   roles         Role[]
   transactions  Transaction[]
   files         File[]         @relation("user_files")
+  paymentLogs   PaymentLog[]
 
   @@map("users")
 }
@@ -63,6 +64,7 @@ model Company {
   authorId              String                @map("author_id")
   planId                String?               @map("plan_id")
   currentSubscriptionId String?               @map("current_subscription_id")
+  stripeCustomerId      String?               @map("stripe_customer_id")
   columns               Column[]
   author                User                  @relation(fields: [authorId], references: [id])
   plan                  Plan?                 @relation(fields: [planId], references: [id])
@@ -77,23 +79,28 @@ model Company {
   transactions          Transaction[]
   workspaces            Workspace[]
   files                 File[]
+  paymentLogs           PaymentLog[]
 
   @@map("companies")
 }
 
 model CompanySubscription {
-  id            String   @id @default(uuid())
-  startDate     DateTime @map("start_date")
-  endDate       DateTime @map("end_date")
-  dueDate       Int      @default(30)
-  requestsCount Int      @default(0)
-  isExpired     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  planId        String
-  companyId     String   @map("company_id")
-  company       Company  @relation("company_subscriptions", fields: [companyId], references: [id], onDelete: Cascade)
-  plan          Plan     @relation(fields: [planId], references: [id])
+  id                   String   @id @default(uuid())
+  startDate            DateTime @map("start_date")
+  endDate              DateTime @map("end_date")
+  dueDate              Int      @default(30)
+  requestsCount        Int      @default(0)
+  isExpired            Boolean  @default(false)
+  stripeSubscriptionId String?  @map("stripe_subscription_id")
+  stripeItemId         String?  @map("stripe_item_id")
+  status               String   @default("ACTIVE")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  planId               String
+  companyId            String   @map("company_id")
+  company              Company  @relation("company_subscriptions", fields: [companyId], references: [id], onDelete: Cascade)
+  plan                 Plan     @relation(fields: [planId], references: [id])
+  paymentLogs          PaymentLog[]
 
   @@map("company_subscriptions")
 }
@@ -195,9 +202,11 @@ model Plan {
   maxViewers           Int                   @map("max_viewers")
   order                Int                   @default(autoincrement())
   maxRequests          Int                   @map("max_requests")
+  stripePriceId        String?               @map("stripe_price_id")
   companies            Company[]
   companySubscriptions CompanySubscription[]
   transactions         Transaction[]
+  paymentLogs          PaymentLog[]
 
   @@map("plans")
 }
@@ -312,21 +321,49 @@ model Log {
 }
 
 model Transaction {
-  id         String            @id @default(uuid())
-  amount     Int
-  currency   String
-  status     TransactionStatus @default(PENDING)
-  createdAt  DateTime          @default(now()) @map("created_at")
-  updatedAt  DateTime          @updatedAt @map("updated_at")
-  userId     String            @map("user_id")
-  companyId  String            @map("company_id")
-  planId     String            @map("plan_id")
-  sessionUrl String?           @map("session_url")
-  company    Company           @relation(fields: [companyId], references: [id])
-  plan       Plan              @relation(fields: [planId], references: [id])
-  user       User              @relation(fields: [userId], references: [id])
+  id              String            @id @default(uuid())
+  amount          Int
+  currency        String
+  status          TransactionStatus @default(PENDING)
+  errorCode       String?           @map("error_code")
+  errorMessage    String?           @map("error_message")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  userId          String            @map("user_id")
+  companyId       String            @map("company_id")
+  planId          String            @map("plan_id")
+  sessionUrl      String?           @map("session_url")
+  paymentIntentId String?           @map("payment_intent_id")
+  company         Company           @relation(fields: [companyId], references: [id])
+  plan            Plan              @relation(fields: [planId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
+  paymentLogs     PaymentLog[]
 
   @@map("transactions")
+}
+
+model PaymentLog {
+  id            String   @id @default(uuid())
+  event         String
+  companyId     String?  @map("company_id")
+  userId        String?  @map("user_id")
+  transactionId String?  @map("transaction_id")
+  subscriptionId String? @map("subscription_id")
+  planId        String?  @map("plan_id")
+  amount        Int?
+  currency      String?
+  status        String?
+  errorCode     String?  @map("error_code")
+  errorMessage  String?  @map("error_message")
+  metadata      String?
+  timestamp     DateTime @default(now())
+  company       Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  subscription  CompanySubscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  plan          Plan?    @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@map("payment_logs")
 }
 
 model Message {
