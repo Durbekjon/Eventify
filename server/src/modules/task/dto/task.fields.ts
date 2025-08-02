@@ -30,4 +30,9 @@ export const fieldsToCheck = [
   'date3',
   'date4',
   'date5',
+  'link1',
+  'link2',
+  'link3',
+  'link4',
+  'link5',
 ]

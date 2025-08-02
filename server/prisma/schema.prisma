@@ -282,6 +282,11 @@ model Task {
   date3       DateTime?
   date4       DateTime?
   date5       DateTime?
+  link1       String?
+  link2       String?
+  link3       String?
+  link4       String?
+  link5       String?
   workspaceId String    @map("workspace_id")
   sheetId     String    @map("sheet_id")
   companyId   String    @map("company_id")

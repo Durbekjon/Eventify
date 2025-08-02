@@ -259,4 +259,44 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsDateString()
   date5?: string
+
+  @ApiProperty({
+    description: 'Link field 1 for additional information',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  link1?: string
+
+  @ApiProperty({
+    description: 'Link field 2 for additional information',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  link2?: string
+
+  @ApiProperty({
+    description: 'Link field 3 for additional information',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  link3?: string
+
+  @ApiProperty({
+    description: 'Link field 4 for additional information',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  link4?: string
+
+  @ApiProperty({
+    description: 'Link field 5 for additional information',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  link5?: string
 }
