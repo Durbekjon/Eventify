@@ -21,6 +21,8 @@ import {
 } from '@nestjs/swagger'
 import { JwtAuthGuard } from '@guards/jwt-auth.guard'
 import { ChangeRoleDto } from './dto/change-role.dto'
+import { ChangePasswordDto } from './dto/change-password.dto'
+import { UpdateUserDto } from './dto/update-user.dto'
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -69,5 +71,17 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
   ): Promise<IUser> {
     return this.service.changeAvatar(file, user)
+  }
+
+  @Patch('change-password')
+  @ApiOperation({ summary: 'Change user password' })
+  changePassword(@User() user: IUser, @Body() body: ChangePasswordDto) {
+    return this.service.changePassword(body, user)
+  }
+
+  @Patch('update')
+  @ApiOperation({ summary: 'Update user' })
+  updateUser(@User() user: IUser, @Body() body: UpdateUserDto) {
+    return this.service.updateUser(body, user)
   }
 }

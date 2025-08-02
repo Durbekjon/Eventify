@@ -9,12 +9,16 @@ import { ChangeRoleDto } from './dto/change-role.dto'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { User } from './dto/User.interface'
 import { AvatarService } from './avatar.service'
+import { UpdateUserDto } from './dto/update-user.dto'
+import { ChangePasswordDto } from './dto/change-password.dto'
+import { UtilsService } from '@core/utils/utils.service'
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly repository: UserRepository,
     private readonly avatarService: AvatarService,
+    private readonly utils: UtilsService,
   ) {}
 
   getUser(id: string) {
@@ -49,6 +53,35 @@ export class UserService {
     await this.validateUserRole(user, roleId)
 
     await this.repository.changeRole(user.id, roleId)
+
+    return { result: 'OK' }
+  }
+
+  async updateUser(body: UpdateUserDto, user: IUser) {
+    const { password, ...updatedUser } = await this.repository.updateUser(
+      user.id,
+      body,
+    )
+    return updatedUser
+  }
+
+  async changePassword(body: ChangePasswordDto, iUser: IUser) {
+    const { oldPassword, newPassword } = body
+    const user = await this.findUserById(iUser.id)
+
+    if (!user.password)
+      throw new BadRequestException(HTTP_MESSAGES.USER.NOT_FOUND)
+
+    const isPasswordValid = await this.utils.compareHash(
+      oldPassword,
+      user.password,
+    )
+
+    if (!isPasswordValid)
+      throw new BadRequestException(HTTP_MESSAGES.AUTH.WRONG_PASSWORD)
+
+    const hashedPassword = await this.utils.generateBcrypt(newPassword)
+    await this.repository.changePassword(user.id, hashedPassword)
 
     return { result: 'OK' }
   }

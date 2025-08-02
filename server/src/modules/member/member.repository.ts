@@ -46,6 +46,14 @@ export class MemberRepository {
         user: {
           select: {
             email: true,
+            firstName: true,
+            lastName: true,
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
           },
         },
         notification: {
@@ -53,7 +61,7 @@ export class MemberRepository {
             isRead: true,
           },
         },
-        
+
         workspaces: true,
       },
     })

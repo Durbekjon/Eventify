@@ -1,54 +1,43 @@
 import { PrismaService } from '@core/prisma/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { IUser } from './dto/IUser'
-
+import { UpdateUserDto } from './dto/update-user.dto'
+import { Prisma } from '@prisma/client'
+const userInclude = {
+  roles: {
+    include: {
+      company: {
+        include: {
+          plan: true,
+        },
+      },
+      access: {
+        include: { workspaces: true },
+      },
+    },
+  },
+  members: true,
+  avatar: {
+    select: {
+      id: true,
+      path: true,
+    },
+  },
+}
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
   getUser(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      include: {
-        roles: {
-          include: {
-            company: true,
-            access: {
-              include: { workspaces: true },
-            },
-          },
-        },
-        members: true,
-        avatar: {
-          select: {
-            id: true,
-            path: true,
-          },
-        },
-      },
+      include: userInclude,
     })
   }
 
   async getUserInfo(iUser: IUser) {
     const user = await this.prisma.user.findUnique({
       where: { id: iUser.id },
-      include: {
-        roles: {
-          include: {
-            company: {
-              include: {
-                plan: true,
-              },
-            },
-            access: true,
-          },
-        },
-        avatar: {
-          select: {
-            id: true,
-            path: true,
-          },
-        },
-      },
+      include: userInclude,
     })
 
     delete user.password
@@ -113,6 +102,27 @@ export class UserRepository {
     await this.prisma.user.update({
       where: { id: userId },
       data: { avatar: { connect: { id: fileId } } },
+    })
+  }
+
+  async updateUser(userId: string, body: UpdateUserDto) {
+    const { firstName, lastName } = body
+    const data: Prisma.UserUpdateInput = {}
+    if (firstName) data.firstName = firstName
+    if (lastName) data.lastName = lastName
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+      include: userInclude,
+    })
+  }
+
+  async changePassword(userId: string, hashedPassword: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+      include: userInclude,
     })
   }
 }

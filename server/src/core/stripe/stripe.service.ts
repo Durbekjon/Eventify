@@ -10,12 +10,14 @@ export class StripeService {
   private stripe: Stripe
 
   constructor(private readonly prisma: PrismaService) {
-    this.stripe = new Stripe(
-      'sk_test_51Q1Q38CNk2DfIGoIys6U9hiV9p3qwjb4TuZvIe5tpAaMjIM3mTRO9o02pjT5pSnPK39tnIL6JMF1s7DthagTAzvI00QSYDKOb0',
-      {
-        apiVersion: '2025-02-24.acacia',
-      },
-    )
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is required')
+    }
+
+    this.stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2025-02-24.acacia',
+    })
   }
 
   // Creates a product and price in Stripe based on a given plan
@@ -48,6 +50,18 @@ export class StripeService {
   // Deactivates all prices associated with the product and deletes the product from Stripe
   async deleteProduct(planId: string): Promise<void> {
     try {
+      // First check if the product exists in Stripe
+      try {
+        await this.stripe.products.retrieve(planId)
+      } catch (error) {
+        // If product doesn't exist in Stripe, just return (already deleted or never existed)
+        console.log(
+          `Product ${planId} doesn't exist in Stripe, skipping deletion`,
+        )
+        return
+      }
+
+      // If product exists, proceed with deletion
       const prices = await this.stripe.prices.list({ product: planId })
       await Promise.all(
         prices.data.map((price) =>
@@ -56,7 +70,9 @@ export class StripeService {
       )
       await this.stripe.products.del(planId)
     } catch (error) {
-      throw new Error(`Unable to delete product: ${error.message}`)
+      // Log the error but don't throw - this allows the database deletion to proceed
+      console.error(`Error deleting Stripe product ${planId}:`, error.message)
+      // Don't throw error to allow database cleanup to continue
     }
   }
 
@@ -85,6 +101,7 @@ export class StripeService {
     plan: Plan,
     userId: string,
     companyId: string,
+    customerId: string,
   ): Promise<Stripe.Checkout.Session> {
     const transactionUuid = randomUUID()
 
@@ -100,6 +117,7 @@ export class StripeService {
     ]
 
     const session = await this.stripe.checkout.sessions.create({
+      customer: customerId,
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
@@ -126,25 +144,329 @@ export class StripeService {
 
   // Retrieves the payment status of a specific checkout session
   async checkSessionPayment(sessionId: string): Promise<string> {
-    const session = await this.stripe.checkout.sessions.retrieve(sessionId)
-    return session.payment_status
-  }
-
-  // Handles Stripe webhooks, particularly focusing on completed checkout sessions
-  async handleWebhook(payload: any): Promise<{
-    session: Stripe.Checkout.Session
-    planId: string
-    userId: string
-  } | null> {
-    const event = payload
-
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object
-      const { planId, userId } = session.metadata
-      return { session, planId, userId }
+    if (!sessionId) {
+      throw new Error('Session ID is required')
     }
 
-    return null
+    try {
+      const session = await this.stripe.checkout.sessions.retrieve(sessionId)
+      return session.payment_status
+    } catch (error) {
+      console.error(
+        `Error checking session payment for ${sessionId}:`,
+        error.message,
+      )
+      throw new Error(`Unable to retrieve session: ${error.message}`)
+    }
+  }
+
+  // Handles Stripe webhooks with comprehensive event processing
+  async handleWebhookEvent(event: Stripe.Event): Promise<void> {
+    switch (event.type) {
+      case 'checkout.session.completed':
+        await this.handleCheckoutSessionCompleted(
+          event.data.object as Stripe.Checkout.Session,
+        )
+        break
+      case 'invoice.payment_succeeded':
+        await this.handleInvoicePaymentSucceeded(
+          event.data.object as Stripe.Invoice,
+        )
+        break
+      case 'invoice.payment_failed':
+        await this.handleInvoicePaymentFailed(
+          event.data.object as Stripe.Invoice,
+        )
+        break
+      case 'customer.subscription.deleted':
+        await this.handleSubscriptionDeleted(
+          event.data.object as Stripe.Subscription,
+        )
+        break
+      case 'customer.subscription.updated':
+        await this.handleSubscriptionUpdated(
+          event.data.object as Stripe.Subscription,
+        )
+        break
+      default:
+        console.log(`Unhandled event type: ${event.type}`)
+    }
+  }
+
+  private async handleCheckoutSessionCompleted(
+    session: Stripe.Checkout.Session,
+  ): Promise<void> {
+    const { planId, userId, companyId } = session.metadata
+
+    if (session.payment_status === 'paid') {
+      await this.prisma.$transaction(async (tx) => {
+        // Update transaction status
+        await tx.transaction.update({
+          where: { id: session.metadata.transactionId },
+          data: { status: 'SUCCEEDED' },
+        })
+
+        // Create subscription
+        const subscription = await tx.companySubscription.create({
+          data: {
+            companyId,
+            planId,
+            startDate: new Date(),
+            endDate: this.calculateEndDate(),
+            stripeSubscriptionId: session.subscription as string,
+            requestsCount: 0,
+            isExpired: false,
+          },
+        })
+
+        // Update company
+        await tx.company.update({
+          where: { id: companyId },
+          data: {
+            isBlocked: false,
+            planId,
+            currentSubscriptionId: subscription.id,
+          },
+        })
+      })
+    }
+  }
+
+  private async handleInvoicePaymentSucceeded(
+    invoice: Stripe.Invoice,
+  ): Promise<void> {
+    if (invoice.subscription) {
+      const subscription = await this.prisma.companySubscription.findFirst({
+        where: { stripeSubscriptionId: invoice.subscription as string },
+      })
+
+      if (subscription) {
+        await this.prisma.companySubscription.update({
+          where: { id: subscription.id },
+          data: {
+            endDate: this.calculateEndDate(),
+            isExpired: false,
+          },
+        })
+
+        await this.prisma.company.update({
+          where: { id: subscription.companyId },
+          data: { isBlocked: false },
+        })
+      }
+    }
+  }
+
+  private async handleInvoicePaymentFailed(
+    invoice: Stripe.Invoice,
+  ): Promise<void> {
+    if (invoice.subscription) {
+      const subscription = await this.prisma.companySubscription.findFirst({
+        where: { stripeSubscriptionId: invoice.subscription as string },
+      })
+
+      if (subscription) {
+        await this.prisma.company.update({
+          where: { id: subscription.companyId },
+          data: { isBlocked: true },
+        })
+      }
+    }
+  }
+
+  private async handleSubscriptionDeleted(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
+    const dbSubscription = await this.prisma.companySubscription.findFirst({
+      where: { stripeSubscriptionId: subscription.id },
+    })
+
+    if (dbSubscription) {
+      await this.prisma.company.update({
+        where: { id: dbSubscription.companyId },
+        data: { isBlocked: true, currentSubscriptionId: null },
+      })
+    }
+  }
+
+  private async handleSubscriptionUpdated(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
+    const dbSubscription = await this.prisma.companySubscription.findFirst({
+      where: { stripeSubscriptionId: subscription.id },
+    })
+
+    if (dbSubscription) {
+      await this.prisma.companySubscription.update({
+        where: { id: dbSubscription.id },
+        data: {
+          endDate: new Date(subscription.current_period_end * 1000),
+          isExpired: subscription.status === 'canceled',
+        },
+      })
+    }
+  }
+
+  private calculateEndDate(): Date {
+    const endDate = new Date()
+    endDate.setMonth(endDate.getMonth() + 1)
+    endDate.setHours(0, 0, 0, 0)
+    return endDate
+  }
+
+  // Create a new Stripe customer
+  async createCustomer(customerData: {
+    email: string
+    name: string
+    metadata?: Record<string, string>
+  }): Promise<Stripe.Customer> {
+    return this.stripe.customers.create({
+      email: customerData.email,
+      name: customerData.name,
+      metadata: customerData.metadata,
+    })
+  }
+
+  // Create a subscription
+  async createSubscription(subscriptionData: {
+    customerId: string
+    priceId: string
+    trialDays?: number
+    metadata?: Record<string, string>
+  }): Promise<Stripe.Subscription> {
+    const params: Stripe.SubscriptionCreateParams = {
+      customer: subscriptionData.customerId,
+      items: [{ price: subscriptionData.priceId }],
+      metadata: subscriptionData.metadata,
+    }
+
+    if (subscriptionData.trialDays) {
+      params.trial_period_days = subscriptionData.trialDays
+      params.trial_settings = {
+        end_behavior: {
+          missing_payment_method: 'cancel',
+        },
+      }
+    }
+
+    return this.stripe.subscriptions.create(params)
+  }
+
+  // Update a subscription
+  async updateSubscription(
+    subscriptionId: string,
+    updateParams: Stripe.SubscriptionUpdateParams,
+  ): Promise<Stripe.Subscription> {
+    return this.stripe.subscriptions.update(subscriptionId, updateParams)
+  }
+
+  // Cancel a subscription
+  async cancelSubscription(
+    subscriptionId: string,
+  ): Promise<Stripe.Subscription> {
+    return this.stripe.subscriptions.cancel(subscriptionId)
+  }
+
+  // Test Stripe connection
+  async testConnection(): Promise<void> {
+    await this.stripe.accounts.list({ limit: 1 })
+  }
+
+  // Creates a payment intent for inline/embedded payment
+  async createPaymentIntent(
+    plan: Plan,
+    userId: string,
+    companyId: string,
+    customerId: string,
+  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+    const transactionUuid = randomUUID()
+
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount: plan.price * 100, // Convert to cents
+      currency: 'usd',
+      customer: customerId,
+      metadata: {
+        planId: plan.id,
+        userId,
+        companyId,
+        transactionId: transactionUuid,
+      },
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    })
+
+    // Store transaction in database
+    await this.prisma.transaction.create({
+      data: {
+        id: transactionUuid,
+        userId,
+        companyId,
+        planId: plan.id,
+        amount: plan.price * 100,
+        currency: 'usd',
+        status: 'PENDING',
+        paymentIntentId: paymentIntent.id,
+      },
+    })
+
+    return {
+      clientSecret: paymentIntent.client_secret!,
+      paymentIntentId: paymentIntent.id,
+    }
+  }
+
+  // Confirm payment intent and create subscription
+  async confirmPaymentIntent(paymentIntentId: string): Promise<void> {
+    const paymentIntent =
+      await this.stripe.paymentIntents.retrieve(paymentIntentId)
+
+    if (paymentIntent.status === 'succeeded') {
+      const { planId, userId, companyId, transactionId } =
+        paymentIntent.metadata
+
+      // Create subscription
+      const plan = await this.prisma.plan.findUnique({
+        where: { id: planId },
+      })
+
+      if (!plan) {
+        throw new Error('Plan not found')
+      }
+
+      // Create subscription in database
+      const subscription = await this.prisma.companySubscription.create({
+        data: {
+          companyId,
+          planId,
+          startDate: new Date(),
+          endDate: this.calculateEndDate(),
+          isExpired: false,
+          status: 'ACTIVE',
+        },
+      })
+
+      // Update transaction status
+      await this.prisma.transaction.update({
+        where: { id: transactionId },
+        data: { status: 'SUCCEEDED' },
+      })
+
+      // Update company subscription
+      await this.prisma.company.update({
+        where: { id: companyId },
+        data: {
+          currentSubscriptionId: subscription.id,
+          isBlocked: false,
+        },
+      })
+
+      console.log(
+        `Payment confirmed for company ${companyId}, subscription created`,
+      )
+    } else {
+      throw new Error(`Payment failed: ${paymentIntent.status}`)
+    }
   }
 
   // Helper method to construct success or cancel URLs for checkout sessions

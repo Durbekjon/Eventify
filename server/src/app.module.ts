@@ -19,6 +19,7 @@ import { SelectModule } from './modules/select/select.module'
 import { OptionModule } from './modules/option/option.module'
 import { LogModule } from './modules/log/log.module'
 import { PaymentModule } from './modules/payment/payment.module'
+import { SubscriptionModule } from './modules/subscription/subscription.module'
 import { ChatModule } from './modules/chat/chat.module'
 import { FileModule } from './modules/file/file.module'
 
@@ -58,6 +59,7 @@ import { FileModule } from './modules/file/file.module'
     // Static assets serving removed
 
     PaymentModule,
+    SubscriptionModule,
 
     ChatModule,
 

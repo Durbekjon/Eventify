@@ -77,7 +77,15 @@ export class PlanRepository {
   }
 
   async deletePlan(id: string) {
-    await this.stripe.deleteProduct(id) // Deletes the Stripe product and prices
-    return this.prisma.plan.delete({ where: { id } }) // Deletes the plan from the database
+    try {
+      // Try to delete from Stripe first (this won't throw errors now)
+      await this.stripe.deleteProduct(id)
+    } catch (error) {
+      // Log the error but continue with database deletion
+      console.error(`Error deleting Stripe product for plan ${id}:`, error.message)
+    }
+    
+    // Always delete from database, regardless of Stripe deletion result
+    return this.prisma.plan.delete({ where: { id } })
   }
 }
