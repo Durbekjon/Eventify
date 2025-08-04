@@ -9,11 +9,10 @@ import { CompanyRepository } from './company.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { IUser } from '@/modules/user/dto/IUser'
 import { RoleService } from '@role/role.service'
-import { Company, Prisma, RoleTypes } from '@prisma/client'
+import { Company, MemberTypes, Prisma, RoleTypes } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UpdateCompanyDto } from './dto/update-company.dto'
 import { LogRepository } from '@log/log.repository'
-import { CreateLogDto } from '@log/dto/create-log.dto'
 import { LOG_MESSAGES } from '@consts/log.messages'
 import { UserService } from '@user/user.service'
 import { RoleDto } from '@role/dto/role.dto'
@@ -27,6 +26,7 @@ export class CompanyService {
     private readonly log: LogRepository,
     private readonly user: UserService,
   ) {}
+
   async create(body: CreateCompanyDto, user: IUser) {
     const company = await this.prisma.company.create({
       data: { name: body.name, author: { connect: { id: user.id } } },
@@ -40,11 +40,121 @@ export class CompanyService {
     }
 
     await this.role.createRole(roleOptions)
-    
+
     await this.createLog(user.id, company.id, LOG_MESSAGES.CREATED_COMPANY)
     return {
       status: 'OK',
       result: company.id,
+    }
+  }
+
+  /**
+   * Get company usage statistics and limits
+   * @param user - Current user
+   * @returns Usage statistics with percentages
+   */
+  async getUsage(user: IUser) {
+    const role = await this.validateUserRole(user)
+    const company = await this.getOne(role.companyId, user)
+
+    const { plan, usageStats } = await this.getCompanyUsageData(company.id)
+
+    return {
+      plan,
+      ...usageStats,
+      usageInPercent: this.calculateUsagePercentages(usageStats, plan),
+    }
+  }
+
+  /**
+   * Get company usage data with optimized parallel queries
+   * @param companyId - Company ID
+   * @returns Plan and usage statistics
+   */
+  private async getCompanyUsageData(companyId: string) {
+    const [lastSubscription, usageStats] = await Promise.all([
+      this.getLastSubscription(companyId),
+      this.getUsageStatistics(companyId),
+    ])
+
+    if (!lastSubscription) {
+      throw new BadRequestException('No active subscription found')
+    }
+
+    const plan = await this.prisma.plan.findUnique({
+      where: { id: lastSubscription.planId },
+    })
+
+    if (!plan) {
+      throw new BadRequestException('Plan not found')
+    }
+
+    return { plan, usageStats }
+  }
+
+  /**
+   * Get the last active subscription for a company
+   * @param companyId - Company ID
+   * @returns Last subscription or null
+   */
+  private async getLastSubscription(companyId: string) {
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      include: {
+        subscriptions: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+    })
+
+    return company?.subscriptions[0] || null
+  }
+
+  /**
+   * Get usage statistics with optimized parallel queries
+   * @param companyId - Company ID
+   * @returns Usage statistics object
+   */
+  private async getUsageStatistics(companyId: string) {
+    const [workspaces, sheets, members, viewers, tasks] = await Promise.all([
+      this.prisma.workspace.count({ where: { companyId } }),
+      this.prisma.sheet.count({ where: { companyId } }),
+      this.prisma.member.count({
+        where: { companyId, type: MemberTypes.MEMBER },
+      }),
+      this.prisma.member.count({
+        where: { companyId, type: MemberTypes.VIEWER },
+      }),
+      this.prisma.task.count({
+        where: { sheet: { companyId } },
+      }),
+    ])
+
+    return {
+      workspaces,
+      sheets,
+      members,
+      viewers,
+      tasks,
+    }
+  }
+
+  /**
+   * Calculate usage percentages for all metrics
+   * @param usageStats - Current usage statistics
+   * @param plan - Plan with limits
+   * @returns Usage percentages object
+   */
+  private calculateUsagePercentages(usageStats: any, plan: any) {
+    const calculatePercentage = (current: number, max: number) =>
+      Math.round((current / max) * 100)
+
+    return {
+      workspace: calculatePercentage(usageStats.workspaces, plan.maxWorkspaces),
+      sheet: calculatePercentage(usageStats.sheets, plan.maxSheets),
+      member: calculatePercentage(usageStats.members, plan.maxMembers),
+      viewer: calculatePercentage(usageStats.viewers, plan.maxViewers),
     }
   }
 

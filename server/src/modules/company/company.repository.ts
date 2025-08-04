@@ -8,7 +8,7 @@ export class CompanyRepository {
   findById(id: string) {
     return this.prisma.company.findUnique({
       where: { id },
-      include: { roles: true, members: true },
+      include: { roles: true, members: true, subscriptions: true },
     })
   }
 }

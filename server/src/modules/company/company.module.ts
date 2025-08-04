@@ -8,6 +8,9 @@ import { NotificationService } from '@notification/notification.service'
 import { NotificationRepository } from '@notification/notification.repository'
 import { LogRepository } from '@log/log.repository'
 import { UserModule } from '../user/user.module'
+import { PlanService } from '@plan/plan.service'
+import { PlanRepository } from '@plan/plan.repository'
+import { StripeService } from '@stripe/stripe.service'
 
 @Module({
   imports: [UserModule],
@@ -20,6 +23,9 @@ import { UserModule } from '../user/user.module'
     NotificationService,
     NotificationRepository,
     LogRepository,
+    PlanService,
+    PlanRepository,
+    StripeService
   ],
 })
 export class CompanyModule {}
