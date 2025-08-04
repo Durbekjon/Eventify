@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '@core/prisma/prisma.service'
-import { Column, Prisma } from '@prisma/client'
+import { Column, Prisma, Member } from '@prisma/client';
 import { CreateColumnDto } from './dto/create-column.dto'
 import { UpdateColumnDto } from './dto/update-column.dto'
 
@@ -70,6 +70,13 @@ export class ColumnRepository {
 
   async deleteColumn(id: string): Promise<Column> {
     return this.prisma.column.delete({ where: { id } })
+  }
+
+  async getSheetById(sheetId: string, companyId: string): Promise<boolean> {
+    const sheet = await this.prisma.sheet.findUnique({
+      where: { id: sheetId, companyId },
+    })
+    return !!sheet
   }
 
   getColumnsBySheetId(sheetId: string): Promise<Column[]> {

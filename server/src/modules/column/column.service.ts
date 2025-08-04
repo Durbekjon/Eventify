@@ -24,7 +24,11 @@ export class ColumnService {
 
   async createColumn(body: CreateColumnDto, user: IUser) {
     const { role } = await this.validateUser(user)
-    await this.validateUserRole(role.type, true)
+
+    await Promise.all([
+      this.validateUserRole(role.type, true),
+      this.isSheetExists(body.sheetId, role.companyId),
+    ])
 
     const fieldsToCheck = fieldMapping[body.type.toLowerCase()]
     if (!fieldsToCheck || fieldsToCheck.length === 0)
@@ -40,7 +44,6 @@ export class ColumnService {
   async updateColumn(user: IUser, columnId: string, body: UpdateColumnDto) {
     const { role } = await this.validateUser(user)
     await this.validateUserRole(role.type, true)
-
     const column = await this.findById(columnId, role.companyId)
     return await this.repository.updateColumn(column.id, body)
   }
@@ -94,5 +97,16 @@ export class ColumnService {
   }
   private async validateUserRole(userRole: RoleTypes, access: boolean) {
     if (userRole === RoleTypes.AUTHOR || !access) return
+  }
+
+  private async isSheetExists(
+    sheetId: string,
+    companyId: string,
+  ): Promise<boolean> {
+    const sheet = await this.repository.getSheetById(sheetId, companyId)
+    if (!sheet) {
+      throw new NotFoundException(HTTP_MESSAGES.SHEET.NOT_FOUND)
+    }
+    return true
   }
 }
