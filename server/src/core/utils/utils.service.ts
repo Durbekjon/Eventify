@@ -5,6 +5,17 @@ import { OTP_VALID_DURATION_MINUTES } from '@consts/token'
 
 @Injectable()
 export class UtilsService {
+  generateRandomPassword(length = 10): string {
+    const characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?'
+    let result = ''
+    const charactersLength = characters.length
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength))
+    }
+    return result
+  }
+
   generateBcrypt = async (password: string) => {
     return bcrypt.hash(password, PASSWORD_SALT)
   }

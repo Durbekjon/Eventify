@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { MemberPermissions, MemberTypes, ViewType } from '@prisma/client'
 import {
   IsArray,
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -34,8 +35,16 @@ export class CreateMemberDto {
 
   @ApiProperty({ description: 'User UUID' })
   @IsUUID()
-  @IsNotEmpty()
-  userId: string
+  @IsOptional()
+  userId?: string
+
+  @ApiProperty({
+    description: 'Email of the member',
+    example: 'saydaliyevdurbek0512@gmail.com',
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string
 
   @ApiProperty({
     description: 'Access to workspaces',

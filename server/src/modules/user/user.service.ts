@@ -21,6 +21,10 @@ export class UserService {
     private readonly utils: UtilsService,
   ) {}
 
+  async createUser(email: string, password: string): Promise<IUser> {
+    const hashPassword = await this.utils.generateBcrypt(password)
+    return this.repository.createUser(email, hashPassword)
+  }
   getUser(id: string) {
     return this.repository.getUser(id)
   }

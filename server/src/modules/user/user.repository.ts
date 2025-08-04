@@ -34,6 +34,18 @@ export class UserRepository {
     })
   }
 
+  async createUser(email: string, password: string): Promise<IUser> {
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        password,
+      },
+      include: userInclude,
+    })
+    delete user.password
+    return user
+  }
+
   async getUserInfo(iUser: IUser) {
     const user = await this.prisma.user.findUnique({
       where: { id: iUser.id },

@@ -17,11 +17,15 @@ import { MemberService } from '@member/member.service'
 import { MemberRepository } from '@member/member.repository'
 import { NotificationService } from '@notification/notification.service'
 import { NotificationRepository } from '@notification/notification.repository'
+import { UtilsModule } from '@core/utils/utils.module'
+import { EmailModule } from '@core/email/email.module'
 
 @Module({
   imports: [
     forwardRef(() => LogModule), // Import LogModule to ensure LogRepository is available
     UserModule,
+    UtilsModule,
+    EmailModule,
   ],
   controllers: [ColumnController],
   providers: [
