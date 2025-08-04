@@ -9,9 +9,11 @@ import { NotificationRepository } from '@notification/notification.repository'
 import { UserRepository } from '@user/user.repository'
 import { RoleService } from '@role/role.service'
 import { LogRepository } from '@log/log.repository'
+import { UtilsModule } from '@core/utils/utils.module'
+import { EmailModule } from '@core/email/email.module'
 
 @Module({
-  imports: [UserModule],
+  imports: [UserModule, UtilsModule, EmailModule],
   controllers: [MemberController],
   providers: [
     MemberService,

@@ -5,4 +5,5 @@ export const fieldMapping: Record<string, string[]> = {
   select: ['select1', 'select2', 'select3', 'select4', 'select5'],
   date: ['date1', 'date2', 'date3', 'date4', 'date5'],
   link: ['link'],
+  member: ['member']
 }

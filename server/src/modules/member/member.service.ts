@@ -8,6 +8,7 @@ import { MemberRepository } from './member.repository'
 import { NotificationService } from '@notification/notification.service'
 import { CreateNotificationDto } from '@notification/dto/create-notification.dto'
 import {
+  Member,
   MemberStatus,
   NotificationFrom,
   NotificationType,
@@ -25,6 +26,8 @@ import { MemberDto } from './dto/member.dto'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { LogRepository } from '@log/log.repository'
 import { RoleDto } from '@role/dto/role.dto'
+import { UtilsService } from '@core/utils/utils.service'
+import { EmailService } from '@core/email/email.service'
 
 @Injectable()
 export class MemberService {
@@ -34,33 +37,119 @@ export class MemberService {
     private readonly user: UserService,
     private readonly role: RoleService,
     private readonly log: LogRepository,
+    private readonly utils: UtilsService,
+    private readonly email: EmailService,
   ) {}
 
   async createMember(dto: CreateMemberDto, user: IUser) {
     const selectedRole = await this.validateUserRole(user)
 
-    const member = await this.repository.createMember(
+    const { member, newUserPassword } = await this.createMemberWithUser(
       dto,
-      selectedRole.companyId,
+      selectedRole,
     )
 
-
-    const notificationData: CreateNotificationDto = {
-      text: APP_MESSAGES.INVITATION_TEXT,
-      type: NotificationType.INVITATION,
-      from: NotificationFrom.COMPANY,
-      userId: dto.userId,
-      member: member.id,
-      companyId: selectedRole.companyId,
-    }
-
-    await this.notification.createNotification(notificationData)
+    await this.createInvitationNotification(member, selectedRole.companyId)
+    await this.sendInvitationEmail(dto, selectedRole, newUserPassword)
     await this.createLog(user.id, selectedRole.companyId, '')
-    
+
     return {
       status: 'OK',
       result: member,
     }
+  }
+
+  /**
+   * Creates a member and associated user if needed
+   * @param dto - Member creation data
+   * @param selectedRole - User's selected role with company info
+   * @returns Object containing created member and optional new user password
+   */
+  private async createMemberWithUser(
+    dto: CreateMemberDto,
+    selectedRole: RoleDto,
+  ): Promise<{ member: Member; newUserPassword?: string }> {
+    if (dto.userId) {
+      return this.createMemberForExistingUser(dto, selectedRole.companyId)
+    } else {
+      return this.createMemberForNewUser(dto, selectedRole.companyId)
+    }
+  }
+
+  /**
+   * Creates a member for an existing user
+   * @param dto - Member creation data with userId
+   * @param companyId - Company ID
+   * @returns Created member
+   */
+  private async createMemberForExistingUser(
+    dto: CreateMemberDto,
+    companyId: string,
+  ): Promise<{ member: Member; newUserPassword?: string }> {
+    const member = await this.repository.createMember(dto, companyId)
+    return { member }
+  }
+
+  /**
+   * Creates a new user and member
+   * @param dto - Member creation data with email
+   * @param companyId - Company ID
+   * @returns Created member and generated password
+   */
+  private async createMemberForNewUser(
+    dto: CreateMemberDto,
+    companyId: string,
+  ): Promise<{ member: Member; newUserPassword: string }> {
+    const newUserPassword = this.utils.generateRandomPassword()
+    const newUser = await this.user.createUser(dto.email!, newUserPassword)
+
+    const memberData = { ...dto, userId: newUser.id }
+    const member = await this.repository.createMember(memberData, companyId)
+
+    return { member, newUserPassword }
+  }
+
+  /**
+   * Creates an invitation notification for the member
+   * @param member - Created member
+   * @param companyId - Company ID
+   */
+  private async createInvitationNotification(
+    member: Member,
+    companyId: string,
+  ): Promise<void> {
+    const notificationData: CreateNotificationDto = {
+      text: APP_MESSAGES.INVITATION_TEXT,
+      type: NotificationType.INVITATION,
+      from: NotificationFrom.COMPANY,
+      userId: member.userId,
+      member: member.id,
+      companyId,
+    }
+
+    await this.notification.createNotification(notificationData)
+  }
+
+  /**
+   * Sends appropriate invitation email based on whether user is new or existing
+   * @param dto - Original member creation data
+   * @param selectedRole - User's selected role with company info
+   * @param newUserPassword - Optional password for new users
+   */
+  private async sendInvitationEmail(
+    dto: CreateMemberDto,
+    selectedRole: RoleDto,
+    newUserPassword?: string,
+  ): Promise<void> {
+    const emailMessage = dto.userId
+      ? this.email.sendInviteCompany(dto.email!, selectedRole.company.name)
+      : this.email.sendInviteToNewUser(
+          dto.email!,
+          newUserPassword!,
+          selectedRole.company.name,
+        )
+
+    await emailMessage
   }
 
   async getMembers(user: IUser) {

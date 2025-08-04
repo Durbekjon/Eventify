@@ -15,9 +15,11 @@ import { MemberRepository } from '@member/member.repository'
 import { NotificationService } from '@notification/notification.service'
 import { NotificationRepository } from '@notification/notification.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
+import { UtilsModule } from '@core/utils/utils.module'
+import { EmailService } from '@core/email/email.service'
 
 @Module({
-  imports: [UserModule],
+  imports: [UserModule, UtilsModule],
   controllers: [TaskController],
   providers: [
     TaskService,
@@ -34,6 +36,7 @@ import { PrismaService } from '@core/prisma/prisma.service'
     NotificationService,
     NotificationRepository,
     PrismaService,
+    EmailService,
   ],
 })
 export class TaskModule {}
