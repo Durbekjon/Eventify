@@ -9,9 +9,14 @@ import { RoleService } from '@role/role.service'
 import { WorkspaceModule } from '@workspace/workspace.module' // Import WorkspaceModule
 import { LogRepository } from '@log/log.repository'
 import { ColumnRepository } from '@column/column.repository'
+import { SubscriptionValidationModule } from '@core/subscription_validation/subscription_validation.module'
 
 @Module({
-  imports: [UserModule, forwardRef(() => WorkspaceModule)], // Import WorkspaceModule with forwardRef
+  imports: [
+    UserModule,
+    SubscriptionValidationModule,
+    forwardRef(() => WorkspaceModule),
+  ], // Import WorkspaceModule with forwardRef
   controllers: [SheetController],
   providers: [
     SheetService,

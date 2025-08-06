@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment System Testing</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 40px;
+      }
+
+      .section {
+        margin-bottom: 40px;
+        padding: 30px;
+        border: 2px solid #f0f0f0;
+        border-radius: 15px;
+        background: #fafafa;
+      }
+
+      .section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+      }
+
+      .card-element {
+        padding: 12px 15px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        background: white;
+        margin-bottom: 20px;
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .result.success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+
+      .result.error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+
+      .result.info {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        color: #0c5460;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status.success {
+        background: #28a745;
+        color: white;
+      }
+
+      .status.error {
+        background: #dc3545;
+        color: white;
+      }
+
+      .status.pending {
+        background: #ffc107;
+        color: #212529;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .content {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+      }
+
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>💰 Payment System Testing</h1>
+        <p>Test the complete payment flow with Stripe integration</p>
+      </div>
+
+      <div class="content">
+        <!-- Configuration Section -->
+        <div class="section">
+          <h2>⚙️ Configuration</h2>
+          <div class="grid">
+            <div class="form-group">
+              <label for="apiUrl">API Base URL:</label>
+              <input
+                type="text"
+                id="apiUrl"
+                value="http://localhost:4000/api/v1"
+                placeholder="API Base URL"
+              />
+            </div>
+            <div class="form-group">
+              <label for="jwtToken">JWT Token:</label>
+              <input
+                type="text"
+                id="jwtToken"
+                placeholder="Enter your JWT token"
+                style="font-family: monospace"
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="stripeKey">Stripe Publishable Key:</label>
+            <input
+              type="text"
+              id="stripeKey"
+              placeholder="pk_test_..."
+              style="font-family: monospace"
+            />
+          </div>
+          <button class="btn" onclick="testConnection()">
+            🔗 Test Connection
+          </button>
+          <div id="connectionResult" class="result hidden"></div>
+        </div>
+
+        <!-- Step 1: Create Payment Intent -->
+        <div class="section">
+          <h2>📝 Step 1: Create Payment Intent</h2>
+          <div class="grid">
+            <div class="form-group">
+              <label for="planId">Plan ID:</label>
+              <input
+                type="text"
+                id="planId"
+                placeholder="550e8400-e29b-41d4-a716-446655440000"
+              />
+            </div>
+            <div class="form-group">
+              <label for="planName">Plan Name (for display):</label>
+              <input
+                type="text"
+                id="planName"
+                placeholder="Premium Plan"
+                value="Premium Plan"
+              />
+            </div>
+          </div>
+          <button class="btn" onclick="createPaymentIntent()" id="createBtn">
+            <span class="loading hidden" id="createLoading"></span>
+            🚀 Create Payment Intent
+          </button>
+          <div id="createResult" class="result hidden"></div>
+        </div>
+
+        <!-- Step 2: Process Payment -->
+        <div class="section" id="paymentSection" style="display: none">
+          <h2>💳 Step 2: Process Payment</h2>
+          <div class="form-group">
+            <label>Card Information:</label>
+            <div class="card-element" id="card-element">
+              <!-- Stripe Elements will be inserted here -->
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="testCard">Test Card Number:</label>
+            <select id="testCard" onchange="updateCardInfo()">
+              <option value="4242424242424242">
+                Visa (Success) - 4242424242424242
+              </option>
+              <option value="4000000000000002">
+                Visa (Declined) - 4000000000000002
+              </option>
+              <option value="4000000000009995">
+                Visa (Insufficient Funds) - 4000000000009995
+              </option>
+              <option value="4000000000000069">
+                Visa (Expired Card) - 4000000000000069
+              </option>
+              <option value="5555555555554444">
+                Mastercard (Success) - 5555555555554444
+              </option>
+              <option value="378282246310005">
+                American Express (Success) - 378282246310005
+              </option>
+            </select>
+          </div>
+          <div class="grid">
+            <div class="form-group">
+              <label for="expiryDate">Expiry Date:</label>
+              <input
+                type="text"
+                id="expiryDate"
+                placeholder="MM/YY"
+                value="12/25"
+              />
+            </div>
+            <div class="form-group">
+              <label for="cvc">CVC:</label>
+              <input type="text" id="cvc" placeholder="123" value="123" />
+            </div>
+          </div>
+          <button
+            class="btn btn-success"
+            onclick="processPayment()"
+            id="processBtn"
+          >
+            <span class="loading hidden" id="processLoading"></span>
+            💳 Process Payment
+          </button>
+          <div id="processResult" class="result hidden"></div>
+        </div>
+
+        <!-- Step 3: Confirm Payment -->
+        <div class="section" id="confirmSection" style="display: none">
+          <h2>✅ Step 3: Confirm Payment Intent</h2>
+          <div class="form-group">
+            <label for="paymentIntentId">Payment Intent ID:</label>
+            <input
+              type="text"
+              id="paymentIntentId"
+              readonly
+              style="background: #f8f9fa"
+            />
+          </div>
+          <button
+            class="btn btn-success"
+            onclick="confirmPayment()"
+            id="confirmBtn"
+          >
+            <span class="loading hidden" id="confirmLoading"></span>
+            ✅ Confirm Payment Intent
+          </button>
+          <div id="confirmResult" class="result hidden"></div>
+        </div>
+
+        <!-- Test Cards Reference -->
+        <div class="section">
+          <h2>🧪 Test Cards Reference</h2>
+          <div class="grid">
+            <div>
+              <h3>✅ Successful Payments</h3>
+              <ul>
+                <li><strong>Visa:</strong> 4242424242424242</li>
+                <li><strong>Mastercard:</strong> 5555555555554444</li>
+                <li><strong>American Express:</strong> 378282246310005</li>
+              </ul>
+            </div>
+            <div>
+              <h3>❌ Failed Payments</h3>
+              <ul>
+                <li><strong>Declined:</strong> 4000000000000002</li>
+                <li><strong>Insufficient Funds:</strong> 4000000000009995</li>
+                <li><strong>Expired Card:</strong> 4000000000000069</li>
+                <li><strong>Incorrect CVC:</strong> 4000000000000127</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Testing -->
+        <div class="section">
+          <h2>🐛 Error Testing</h2>
+          <div class="grid">
+            <div>
+              <h3>Invalid Inputs</h3>
+              <button class="btn btn-danger" onclick="testInvalidPlanId()">
+                Test Invalid Plan ID
+              </button>
+              <button
+                class="btn btn-danger"
+                onclick="testInvalidPaymentIntent()"
+              >
+                Test Invalid Payment Intent
+              </button>
+              <button class="btn btn-danger" onclick="testUnauthorized()">
+                Test Unauthorized
+              </button>
+            </div>
+            <div>
+              <h3>API Health</h3>
+              <button class="btn btn-secondary" onclick="testHealth()">
+                Test Health Check
+              </button>
+              <button class="btn btn-secondary" onclick="testMetrics()">
+                Test Metrics
+              </button>
+              <button class="btn btn-secondary" onclick="testStatus()">
+                Test Status
+              </button>
+            </div>
+          </div>
+          <div id="errorResult" class="result hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let stripe
+      let elements
+      let card
+      let currentPaymentIntent = null
+
+      // Initialize Stripe
+      function initializeStripe() {
+        const stripeKey = document.getElementById('stripeKey').value
+        if (stripeKey) {
+          stripe = Stripe(stripeKey)
+          console.log('Stripe initialized with key:', stripeKey)
+        }
+      }
+
+      // Update card information based on test card selection
+      function updateCardInfo() {
+        const testCard = document.getElementById('testCard').value
+        const expiryDate = document.getElementById('expiryDate')
+        const cvc = document.getElementById('cvc')
+
+        // Set default values based on card type
+        if (testCard.includes('3782')) {
+          // American Express
+          expiryDate.value = '12/25'
+          cvc.value = '1234'
+        } else {
+          // Visa/Mastercard
+          expiryDate.value = '12/25'
+          cvc.value = '123'
+        }
+      }
+
+      // Test API connection
+      async function testConnection() {
+        const apiUrl = document.getElementById('apiUrl').value
+        const jwtToken = document.getElementById('jwtToken').value
+
+        if (!apiUrl || !jwtToken) {
+          showResult(
+            'connectionResult',
+            'Please provide API URL and JWT token',
+            'error',
+          )
+          return
+        }
+
+        try {
+          const response = await fetch(`${apiUrl}/payment/health`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+              'Content-Type': 'application/json',
+            },
+          })
+
+          const result = await response.json()
+
+          if (response.ok) {
+            showResult(
+              'connectionResult',
+              `✅ Connection successful!\n\nHealth Status: ${JSON.stringify(result, null, 2)}`,
+              'success',
+            )
+          } else {
+            showResult(
+              'connectionResult',
+              `❌ Connection failed: ${JSON.stringify(result, null, 2)}`,
+              'error',
+            )
+          }
+        } catch (error) {
+          showResult(
+            'connectionResult',
+            `❌ Connection error: ${error.message}`,
+            'error',
+          )
+        }
+      }
+
+      // Create payment intent
+      async function createPaymentIntent() {
+        const apiUrl = document.getElementById('apiUrl').value
+        const jwtToken = document.getElementById('jwtToken').value
+        const planId = document.getElementById('planId').value
+
+        if (!apiUrl || !jwtToken || !planId) {
+          showResult(
+            'createResult',
+            'Please provide API URL, JWT token, and Plan ID',
+            'error',
+          )
+          return
+        }
+
+        setLoading('createBtn', 'createLoading', true)
+
+        try {
+          const response = await fetch(`${apiUrl}/payment/inline`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ planId }),
+          })
+
+          const result = await response.json()
+
+          if (response.ok) {
+            currentPaymentIntent = result
+            document.getElementById('paymentIntentId').value =
+              result.paymentIntentId
+            document.getElementById('paymentSection').style.display = 'block'
+            document.getElementById('confirmSection').style.display = 'block'
+
+            // Initialize Stripe Elements
+            initializeStripe()
+            if (stripe) {
+              elements = stripe.elements()
+              card = elements.create('card', {
+                style: {
+                  base: {
+                    fontSize: '16px',
+                    color: '#424770',
+                    '::placeholder': {
+                      color: '#aab7c4',
+                    },
+                  },
+                },
+              })
+              card.mount('#card-element')
+            }
+
+            showResult(
+              'createResult',
+              `✅ Payment intent created successfully!\n\n${JSON.stringify(result, null, 2)}`,
+              'success',
+            )
+          } else {
+            showResult(
+              'createResult',
+              `❌ Failed to create payment intent:\n\n${JSON.stringify(result, null, 2)}`,
+              'error',
+            )
+          }
+        } catch (error) {
+          showResult(
+            'createResult',
+            `❌ Error creating payment intent: ${error.message}`,
+            'error',
+          )
+        } finally {
+          setLoading('createBtn', 'createLoading', false)
+        }
+      }
+
+      // Process payment with Stripe
+      async function processPayment() {
+        if (!stripe || !currentPaymentIntent) {
+          showResult(
+            'processResult',
+            'Please create a payment intent first',
+            'error',
+          )
+          return
+        }
+
+        setLoading('processBtn', 'processLoading', true)
+
+        try {
+          const { error, paymentIntent } = await stripe.confirmCardPayment(
+            currentPaymentIntent.clientSecret,
+            {
+              payment_method: {
+                card: card,
+                billing_details: {
+                  name: 'Test Customer',
+                },
+              },
+            },
+          )
+
+          if (error) {
+            showResult(
+              'processResult',
+              `❌ Payment failed:\n\n${JSON.stringify(error, null, 2)}`,
+              'error',
+            )
+          } else if (paymentIntent.status === 'succeeded') {
+            showResult(
+              'processResult',
+              `✅ Payment processed successfully!\n\nStatus: ${paymentIntent.status}\nPayment Intent ID: ${paymentIntent.id}\n\n${JSON.stringify(paymentIntent, null, 2)}`,
+              'success',
+            )
+          } else {
+            showResult(
+              'processResult',
+              `⚠️ Payment status: ${paymentIntent.status}\n\n${JSON.stringify(paymentIntent, null, 2)}`,
+              'info',
+            )
+          }
+        } catch (error) {
+          showResult(
+            'processResult',
+            `❌ Error processing payment: ${error.message}`,
+            'error',
+          )
+        } finally {
+          setLoading('processBtn', 'processLoading', false)
+        }
+      }
+
+      // Confirm payment intent
+      async function confirmPayment() {
+        const apiUrl = document.getElementById('apiUrl').value
+        const jwtToken = document.getElementById('jwtToken').value
+        const paymentIntentId = document.getElementById('paymentIntentId').value
+
+        if (!apiUrl || !jwtToken || !paymentIntentId) {
+          showResult(
+            'confirmResult',
+            'Please provide API URL, JWT token, and Payment Intent ID',
+            'error',
+          )
+          return
+        }
+
+        setLoading('confirmBtn', 'confirmLoading', true)
+
+        try {
+          const response = await fetch(`${apiUrl}/payment/inline/confirm`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ paymentIntentId }),
+          })
+
+          const result = await response.json()
+
+          if (response.ok) {
+            showResult(
+              'confirmResult',
+              `✅ Payment confirmed successfully!\n\n${JSON.stringify(result, null, 2)}`,
+              'success',
+            )
+          } else {
+            showResult(
+              'confirmResult',
+              `❌ Failed to confirm payment:\n\n${JSON.stringify(result, null, 2)}`,
+              'error',
+            )
+          }
+        } catch (error) {
+          showResult(
+            'confirmResult',
+            `❌ Error confirming payment: ${error.message}`,
+            'error',
+          )
+        } finally {
+          setLoading('confirmBtn', 'confirmLoading', false)
+        }
+      }
+
+      // Error testing functions
+      async function testInvalidPlanId() {
+        await testError(
+          'payment/inline',
+          { planId: 'invalid-uuid' },
+          'Test Invalid Plan ID',
+        )
+      }
+
+      async function testInvalidPaymentIntent() {
+        await testError(
+          'payment/inline/confirm',
+          { paymentIntentId: 'invalid-pi-id' },
+          'Test Invalid Payment Intent',
+        )
+      }
+
+      async function testUnauthorized() {
+        const apiUrl = document.getElementById('apiUrl').value
+
+        try {
+          const response = await fetch(`${apiUrl}/payment/inline`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              planId: '550e8400-e29b-41d4-a716-446655440000',
+            }),
+          })
+
+          const result = await response.json()
+          showResult(
+            'errorResult',
+            `🔒 Unauthorized Test Result:\n\n${JSON.stringify(result, null, 2)}`,
+            'error',
+          )
+        } catch (error) {
+          showResult(
+            'errorResult',
+            `❌ Error testing unauthorized: ${error.message}`,
+            'error',
+          )
+        }
+      }
+
+      async function testHealth() {
+        await testGet('payment/health', 'Health Check')
+      }
+
+      async function testMetrics() {
+        await testGet('payment/metrics', 'Metrics')
+      }
+
+      async function testStatus() {
+        await testGet('payment/status', 'Status')
+      }
+
+      // Helper functions
+      async function testError(endpoint, body, testName) {
+        const apiUrl = document.getElementById('apiUrl').value
+        const jwtToken = document.getElementById('jwtToken').value
+
+        try {
+          const response = await fetch(`${apiUrl}/${endpoint}`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          })
+
+          const result = await response.json()
+          showResult(
+            'errorResult',
+            `${testName} Result (${response.status}):\n\n${JSON.stringify(result, null, 2)}`,
+            response.ok ? 'success' : 'error',
+          )
+        } catch (error) {
+          showResult(
+            'errorResult',
+            `❌ Error in ${testName}: ${error.message}`,
+            'error',
+          )
+        }
+      }
+
+      async function testGet(endpoint, testName) {
+        const apiUrl = document.getElementById('apiUrl').value
+        const jwtToken = document.getElementById('jwtToken').value
+
+        try {
+          const response = await fetch(`${apiUrl}/${endpoint}`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+              'Content-Type': 'application/json',
+            },
+          })
+
+          const result = await response.json()
+          showResult(
+            'errorResult',
+            `${testName} Result:\n\n${JSON.stringify(result, null, 2)}`,
+            response.ok ? 'success' : 'error',
+          )
+        } catch (error) {
+          showResult(
+            'errorResult',
+            `❌ Error in ${testName}: ${error.message}`,
+            'error',
+          )
+        }
+      }
+
+      function showResult(elementId, message, type) {
+        const element = document.getElementById(elementId)
+        element.textContent = message
+        element.className = `result ${type}`
+        element.classList.remove('hidden')
+      }
+
+      function setLoading(buttonId, loadingId, isLoading) {
+        const button = document.getElementById(buttonId)
+        const loading = document.getElementById(loadingId)
+
+        if (isLoading) {
+          button.disabled = true
+          loading.classList.remove('hidden')
+        } else {
+          button.disabled = false
+          loading.classList.add('hidden')
+        }
+      }
+
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', function () {
+        updateCardInfo()
+
+        // Auto-fill with common test values
+        if (!document.getElementById('jwtToken').value) {
+          document.getElementById('jwtToken').value =
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NmY5NzM5LTkxZmEtNDA4Yi1iNjBjLTBiODU1ZDcwYWVlZCIsImVtYWlsIjoic2F5ZGFsaXlldmR1cmJlazA1MTJAZ21haWwuY29tIiwiaWF0IjoxNzU0NDY0NzU5LCJleHAiOjE3NTQ1NTExNTl9.A4lyftsvRlUdqiwBQR_khi6-e82GbPe3bhSqWOrN7Ig'
+        }
+
+        if (!document.getElementById('stripeKey').value) {
+          document.getElementById('stripeKey').value =
+            'pk_test_51OqF2d2eZvKYlo2C1gF12345'
+        }
+      })
+    </script>
+  </body>
+</html>

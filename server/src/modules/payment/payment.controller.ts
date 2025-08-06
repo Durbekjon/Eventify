@@ -23,6 +23,14 @@ import { PaymentService } from './payment.service'
 import { PaymentHealthService } from './payment-health.service'
 import { IUser } from '@user/dto/IUser'
 import { CreatePaymentDto } from './dto/create-payment.dto'
+import {
+  ConfirmPaymentIntentDto,
+  ConfirmPaymentIntentResponseDto,
+} from './dto/confirm-payment.dto'
+import {
+  PaymentErrorResponseDto,
+  PaymentValidationErrorDto,
+} from './dto/payment-error.dto'
 import { User } from '@decorators/user.decorator'
 import { Request, Response } from 'express'
 
@@ -30,15 +38,6 @@ import { Request, Response } from 'express'
 export class InlinePaymentIntentResponseDto {
   clientSecret: string
   paymentIntentId: string
-}
-
-export class ConfirmPaymentIntentDto {
-  paymentIntentId: string
-}
-
-export class ConfirmPaymentIntentResponseDto {
-  status: string
-  message: string
 }
 
 export class PaymentHealthResponseDto {
@@ -61,13 +60,18 @@ export class PaymentController {
   @ApiOperation({
     summary: 'Create Inline Payment Intent',
     description:
-      'Creates a payment intent for inline/embedded payment form. Use this for embedded Stripe Elements instead of redirect-based checkout. This endpoint creates a payment intent that can be used with Stripe Elements to process payments directly in your frontend.',
+      'Creates a payment intent for inline/embedded payment form. Use this for embedded Stripe Elements instead of redirect-based checkout. This endpoint creates a payment intent that can be used with Stripe Elements to process payments directly in your frontend. The user must have AUTHOR role in the company.',
     tags: ['Payment'],
   })
   @ApiBody({
     type: CreatePaymentDto,
     description:
-      'Payment intent creation parameters - plan and company information',
+      'Payment intent creation parameters - plan ID for the subscription to purchase',
+    schema: {
+      example: {
+        planId: '550e8400-e29b-41d4-a716-446655440000',
+      },
+    },
   })
   @ApiResponse({
     status: 201,
@@ -75,8 +79,8 @@ export class PaymentController {
     type: InlinePaymentIntentResponseDto,
     schema: {
       example: {
-        clientSecret: 'pi_1234567890_secret_abcdefghijklmnop',
-        paymentIntentId: 'pi_1234567890',
+        clientSecret: 'pi_3OqF2d2eZvKYlo2C1gF12345_secret_abcdefghijklmnop',
+        paymentIntentId: 'pi_3OqF2d2eZvKYlo2C1gF12345',
       },
     },
   })
@@ -84,18 +88,90 @@ export class PaymentController {
     status: 400,
     description:
       'Bad request - invalid plan ID, active subscription exists, or insufficient permissions',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Active subscription already exists',
+        error: 'ACTIVE_SUBSCRIPTION_EXISTS',
+        retryable: false,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized - invalid or missing authentication token',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Unauthorized',
+        error: 'UNAUTHORIZED',
+        retryable: false,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - user is not an AUTHOR role in the company',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 403,
+        message: 'Forbidden - insufficient permissions',
+        error: 'INSUFFICIENT_PERMISSIONS',
+        retryable: false,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found - plan does not exist',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Plan not found',
+        error: 'PLAN_NOT_FOUND',
+        retryable: false,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Validation error - invalid plan ID format',
+    type: PaymentValidationErrorDto,
+    schema: {
+      example: {
+        statusCode: 422,
+        message: 'Validation failed',
+        errors: [
+          {
+            field: 'planId',
+            message: 'planId must be a UUID',
+            value: 'invalid_plan_id',
+          },
+        ],
+      },
+    },
   })
   @ApiResponse({
     status: 500,
     description: 'Internal server error - Stripe API error or database error',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 500,
+        message: 'Payment processing failed',
+        error: 'PAYMENT_PROCESSING_FAILED',
+        retryable: true,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
   })
   createInlinePayment(@User() user: IUser, @Body() body: CreatePaymentDto) {
     return this.service.createInlinePayment(user, body)
@@ -107,15 +183,16 @@ export class PaymentController {
   @ApiOperation({
     summary: 'Confirm Inline Payment Intent',
     description:
-      'Confirms a payment intent after successful payment processing. This creates the subscription and activates the plan. Call this endpoint after the frontend has successfully processed the payment with Stripe Elements.',
+      'Confirms a payment intent after successful payment processing. This creates the subscription and activates the plan. Call this endpoint after the frontend has successfully processed the payment with Stripe Elements. The payment intent must be in "succeeded" status for confirmation to be successful.',
     tags: ['Payment'],
   })
   @ApiBody({
     type: ConfirmPaymentIntentDto,
-    description: 'Payment intent confirmation request',
+    description:
+      'Payment intent confirmation request with Stripe payment intent ID',
     schema: {
       example: {
-        paymentIntentId: 'pi_1234567890',
+        paymentIntentId: 'pi_3OqF2d2eZvKYlo2C1gF12345',
       },
     },
   })
@@ -128,25 +205,90 @@ export class PaymentController {
       example: {
         status: 'SUCCESS',
         message: 'Payment confirmed successfully',
+        details: {
+          subscriptionId: 'sub_1234567890',
+          transactionId: 'txn_1234567890',
+          amount: 2900,
+          currency: 'usd',
+        },
       },
     },
   })
   @ApiResponse({
     status: 400,
     description:
-      'Bad request - payment intent not found, already confirmed, or payment failed',
+      'Bad request - payment intent not found, already confirmed, payment failed, or invalid payment intent ID format',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Payment intent not found',
+        error: 'PAYMENT_INTENT_NOT_FOUND',
+        retryable: false,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized - invalid or missing authentication token',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Unauthorized',
+        error: 'UNAUTHORIZED',
+        retryable: false,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
-    description: 'Not found - payment intent does not exist',
+    description: 'Not found - payment intent does not exist in Stripe',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Payment intent not found',
+        error: 'PAYMENT_INTENT_NOT_FOUND',
+        retryable: false,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Validation error - invalid payment intent ID format',
+    type: PaymentValidationErrorDto,
+    schema: {
+      example: {
+        statusCode: 422,
+        message: 'Validation failed',
+        errors: [
+          {
+            field: 'paymentIntentId',
+            message:
+              'Payment intent ID must be a valid Stripe payment intent ID starting with "pi_"',
+            value: 'invalid_id',
+          },
+        ],
+      },
+    },
   })
   @ApiResponse({
     status: 500,
     description: 'Internal server error - Stripe API error or database error',
+    type: PaymentErrorResponseDto,
+    schema: {
+      example: {
+        statusCode: 500,
+        message: 'Payment processing failed',
+        error: 'PAYMENT_PROCESSING_FAILED',
+        retryable: true,
+        timestamp: '2025-07-30T21:00:00.000Z',
+      },
+    },
   })
   confirmInlinePayment(@Body() body: ConfirmPaymentIntentDto) {
     return this.service.confirmInlinePayment(body.paymentIntentId)
@@ -280,5 +422,38 @@ export class PaymentController {
   })
   async getStatus(): Promise<any> {
     return this.healthService.getPaymentSystemStatus()
+  }
+
+  @Get('test-page')
+  @ApiOperation({
+    summary: 'Payment Testing Page',
+    description: 'Redirects to the payment testing HTML page',
+    tags: ['Payment Test'],
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment testing page information',
+    schema: {
+      example: {
+        message: 'Payment testing page is available',
+        url: 'http://localhost:4000/payment-test.html',
+        description: 'Comprehensive payment system testing interface',
+      },
+    },
+  })
+  getTestPage() {
+    return {
+      message: 'Payment testing page is available',
+      url: 'http://localhost:4000/payment-test.html',
+      description:
+        'Comprehensive payment system testing interface with Stripe integration',
+      features: [
+        'Create payment intents',
+        'Process payments with Stripe Elements',
+        'Confirm payment intents',
+        'Test error scenarios',
+        'API health checks',
+      ],
+    }
   }
 }

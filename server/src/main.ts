@@ -22,6 +22,19 @@ async function bootstrap() {
     prefix: '/public/uploads/',
   })
 
+  // Serve static files from public directory with better configuration
+  app.useStaticAssets(join(__dirname, '..', '..', 'public'), {
+    prefix: '/',
+    setHeaders: (res, path) => {
+      // Set proper MIME types for HTML files
+      if (path.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
+      }
+      // Set cache headers for static assets
+      res.setHeader('Cache-Control', 'public, max-age=3600')
+    },
+  })
+
   app.setGlobalPrefix('api')
 
   const config = new DocumentBuilder()
@@ -36,5 +49,10 @@ async function bootstrap() {
   }
 
   await app.listen(4000)
+
+  console.log('🚀 Server running on http://localhost:4000')
+  console.log('💰 Payment Testing: http://localhost:4000/payment-test.html')
+  console.log('📚 API Documentation: http://localhost:4000/public/docs')
+  console.log('🏥 Health Check: http://localhost:4000/api/v1/payment/health')
 }
 bootstrap()

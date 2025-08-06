@@ -37,13 +37,18 @@ export class PaymentService {
       const plan = await this.validatePlan(body.planId)
 
       // 3. Check for existing active subscription
-      const existingSubscription = await this.getActiveSubscription(role.companyId)
+      const existingSubscription = await this.getActiveSubscription(
+        role.companyId,
+      )
       if (existingSubscription) {
         throw PaymentError.activeSubscriptionExists()
       }
 
       // 4. Create or get Stripe customer
-      const customer = await this.getOrCreateCustomer(validatedUser, role.companyId)
+      const customer = await this.getOrCreateCustomer(
+        validatedUser,
+        role.companyId,
+      )
 
       // 5. Create payment intent
       return await this.stripeService.createPaymentIntent(
@@ -64,14 +69,21 @@ export class PaymentService {
   /**
    * Confirms a payment intent and creates the subscription
    * @param paymentIntentId - The Stripe payment intent ID
-   * @returns Confirmation status
+   * @returns Confirmation status with subscription details
    */
   async confirmInlinePayment(paymentIntentId: string) {
     try {
-      await this.stripeService.confirmPaymentIntent(paymentIntentId)
+      const result =
+        await this.stripeService.confirmPaymentIntent(paymentIntentId)
       return {
         status: 'SUCCESS',
         message: 'Payment confirmed successfully',
+        details: {
+          subscriptionId: result.subscriptionId,
+          transactionId: result.transactionId,
+          amount: result.amount,
+          currency: result.currency,
+        },
       }
     } catch (error) {
       console.error('Error confirming payment intent:', error.message)

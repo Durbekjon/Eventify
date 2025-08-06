@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Static File Test</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 20px;
+      }
+      
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        text-align: center;
+        max-width: 600px;
+        width: 90%;
+      }
+      
+      h1 {
+        color: #333;
+        margin-bottom: 20px;
+      }
+      
+      .status {
+        background: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 20px;
+      }
+      
+      .links {
+        display: grid;
+        gap: 15px;
+        margin-top: 30px;
+      }
+      
+      .link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+        display: block;
+      }
+      
+      .link:hover {
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="status">✅ Static Files Working</div>
+      <h1>Static File Test</h1>
+      <p>This page confirms that static file serving is working correctly.</p>
+      
+      <div class="links">
+        <a href="/payment-test.html" class="link">💰 Payment Testing Page</a>
+        <a href="/index.html" class="link">🏠 Main Index Page</a>
+        <a href="/api/v1/payment/health" class="link">🏥 API Health Check</a>
+      </div>
+      
+      <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: left;">
+        <h3>Available Endpoints:</h3>
+        <ul>
+          <li><strong>Payment Testing:</strong> <code>/payment-test.html</code></li>
+          <li><strong>Main Page:</strong> <code>/index.html</code></li>
+          <li><strong>API Health:</strong> <code>/api/v1/payment/health</code></li>
+          <li><strong>API Docs:</strong> <code>/public/docs</code></li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html> 

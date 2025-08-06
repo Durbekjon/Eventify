@@ -7,6 +7,7 @@ export class PaymentError extends Error {
   ) {
     super(message)
     this.name = 'PaymentError'
+    this.stack = ''
   }
 
   // Payment method errors

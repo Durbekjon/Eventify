@@ -4,6 +4,7 @@ import { STRIPE } from '@consts/stripe'
 import { Plan } from '@prisma/client'
 import { randomUUID } from 'crypto'
 import { PrismaService } from '@core/prisma/prisma.service'
+import { PaymentError } from '@/modules/payment/payment.error'
 
 @Injectable()
 export class StripeService {
@@ -417,7 +418,12 @@ export class StripeService {
   }
 
   // Confirm payment intent and create subscription
-  async confirmPaymentIntent(paymentIntentId: string): Promise<void> {
+  async confirmPaymentIntent(paymentIntentId: string): Promise<{
+    subscriptionId: string
+    transactionId: string
+    amount: number
+    currency: string
+  }> {
     const paymentIntent =
       await this.stripe.paymentIntents.retrieve(paymentIntentId)
 
@@ -464,8 +470,20 @@ export class StripeService {
       console.log(
         `Payment confirmed for company ${companyId}, subscription created`,
       )
+
+      return {
+        subscriptionId: subscription.id,
+        transactionId,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+      }
     } else {
-      throw new Error(`Payment failed: ${paymentIntent.status}`)
+      throw new PaymentError(
+        `Payment failed: ${paymentIntent.status}`,
+        'PAYMENT_FAILED',
+        false,
+        400,
+      )
     }
   }
 

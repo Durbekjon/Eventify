@@ -18,9 +18,10 @@ import { PrismaService } from '@core/prisma/prisma.service'
 import { UtilsModule } from '@core/utils/utils.module'
 import { EmailService } from '@core/email/email.service'
 import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
+import { SubscriptionValidationModule } from '@core/subscription_validation/subscription_validation.module'
 
 @Module({
-  imports: [UserModule, UtilsModule],
+  imports: [UserModule, UtilsModule, SubscriptionValidationModule],
   controllers: [TaskController],
   providers: [
     TaskService,
