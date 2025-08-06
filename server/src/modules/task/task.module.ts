@@ -17,6 +17,7 @@ import { NotificationRepository } from '@notification/notification.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { UtilsModule } from '@core/utils/utils.module'
 import { EmailService } from '@core/email/email.service'
+import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
 
 @Module({
   imports: [UserModule, UtilsModule],
@@ -37,6 +38,7 @@ import { EmailService } from '@core/email/email.service'
     NotificationRepository,
     PrismaService,
     EmailService,
+    SubscriptionValidationService, // Assuming this service is used in TaskModule
   ],
 })
 export class TaskModule {}

@@ -1,16 +1,15 @@
-import { PrismaService } from '@core/prisma/prisma.service'
 import { CreateTaskDto } from './dto/create-task.dto'
 import { Prisma, Task } from '@prisma/client'
-import { UpdateTaskDto } from './dto/update-task.dto'
 import { Injectable } from '@nestjs/common'
 import { TaskReorderDto } from './dto/reorder-tasks.dto'
 import { TaskQueryDto } from './dto/query.task.dto'
 import { MoveTaskDto } from './dto/move-task.dto'
 import { IPagination } from '@core/types/pagination'
+import { PrismaService } from '@core/prisma/prisma.service'
 import { TaskWithRelations } from './types/task.types'
 
 @Injectable()
-class TaskRepository {
+export class TaskRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findOne(id: string): Promise<TaskWithRelations | null> {
@@ -20,12 +19,174 @@ class TaskRepository {
     })
   }
 
+  // Helper method to validate search filters
+  private validateSearchFilters(search: any[]): {
+    isValid: boolean
+    errors: string[]
+  } {
+    const errors: string[] = []
+    const validFields = [
+      'name',
+      'status',
+      'priority',
+      'link',
+      'price',
+      'paid',
+      'text1',
+      'text2',
+      'text3',
+      'text4',
+      'text5',
+      'number1',
+      'number2',
+      'number3',
+      'number4',
+      'number5',
+      'checkbox1',
+      'checkbox2',
+      'checkbox3',
+      'checkbox4',
+      'checkbox5',
+      'select1',
+      'select2',
+      'select3',
+      'select4',
+      'select5',
+      'date1',
+      'date2',
+      'date3',
+      'date4',
+      'date5',
+      'link1',
+      'link2',
+      'link3',
+      'link4',
+      'link5',
+    ]
+
+    if (!Array.isArray(search)) {
+      errors.push('Search must be an array')
+      return { isValid: false, errors }
+    }
+
+    for (const filter of search) {
+      if (!filter || typeof filter !== 'object') {
+        errors.push('Each search filter must be an object')
+        continue
+      }
+
+      const { key, value } = filter
+
+      if (!key || typeof key !== 'string') {
+        errors.push('Search filter key must be a non-empty string')
+        continue
+      }
+
+      if (!validFields.includes(key)) {
+        errors.push(
+          `Invalid search field: ${key}. Valid fields are: ${validFields.join(', ')}`,
+        )
+        continue
+      }
+
+      if (value === undefined || value === null || value === '') {
+        errors.push(`Search filter value for ${key} cannot be empty`)
+        continue
+      }
+    }
+
+    return { isValid: errors.length === 0, errors }
+  }
+
+  // Simplified method to build search conditions with smart type detection
+  private buildSearchCondition(key: string, value: string): any {
+    // Define field types
+    const stringFields = [
+      'name',
+      'status',
+      'priority',
+      'link',
+      'text1',
+      'text2',
+      'text3',
+      'text4',
+      'text5',
+      'select1',
+      'select2',
+      'select3',
+      'select4',
+      'select5',
+      'link1',
+      'link2',
+      'link3',
+      'link4',
+      'link5',
+    ]
+
+    const numberFields = [
+      'price',
+      'number1',
+      'number2',
+      'number3',
+      'number4',
+      'number5',
+    ]
+    const booleanFields = [
+      'paid',
+      'checkbox1',
+      'checkbox2',
+      'checkbox3',
+      'checkbox4',
+      'checkbox5',
+    ]
+    const dateFields = ['date1', 'date2', 'date3', 'date4', 'date5']
+
+    // Smart type detection and condition building
+    if (stringFields.includes(key)) {
+      return {
+        contains: value,
+        mode: 'insensitive' as const,
+      }
+    }
+
+    if (numberFields.includes(key)) {
+      const numValue = Number(value)
+      if (isNaN(numValue)) {
+        throw new Error(`Invalid number value for field ${key}: ${value}`)
+      }
+      return numValue
+    }
+
+    if (booleanFields.includes(key)) {
+      const boolValue =
+        value === 'true' ||
+        value === '1' ||
+        (typeof value === 'boolean' && value) ||
+        (typeof value === 'number' && value === 1)
+      return Boolean(boolValue)
+    }
+
+    if (dateFields.includes(key)) {
+      const dateValue = new Date(value)
+      if (isNaN(dateValue.getTime())) {
+        throw new Error(`Invalid date value for field ${key}: ${value}`)
+      }
+      return dateValue
+    }
+
+    // Default to string search
+    return {
+      contains: value,
+      mode: 'insensitive' as const,
+    }
+  }
+
   async getTasksBySheet(
     options: { sheetId: string; memberId: string | null },
     reqQuery: TaskQueryDto,
   ): Promise<{ tasks: Task[]; pagination: IPagination }> {
     const { sheetId, memberId } = options
-    const { page = 1, limit = 12, search = [], order } = reqQuery
+    const { page = 1, limit = 12, search, order } = reqQuery
 
     const parsedPage = Number(page)
     const parsedLimit = Number(limit)
@@ -40,23 +201,34 @@ class TaskRepository {
       }),
     }
 
-    // ✅ Add dynamic filters based on `search` array
-    if (Array.isArray(search) && search.length > 0) {
+    // ✅ Apply simplified search filters
+    if (search && search.length) {
+      // Validate search filters first
+      const validation = this.validateSearchFilters(search)
+      if (!validation.isValid) {
+        throw new Error(
+          `Invalid search filters: ${validation.errors.join(', ')}`,
+        )
+      }
+
+      // Build search conditions for each filter
+      const searchConditions: Prisma.TaskWhereInput[] = []
+
       for (const filter of search) {
         const { key, value } = filter
 
-        if (key && value) {
-          // Optionally sanitize or validate key/value
-
-          // Note: Adjust logic depending on field types
-          whereConditions = {
-            ...whereConditions,
-            [key]: {
-              contains: value,
-              mode: 'insensitive', // For case-insensitive match
-            },
-          }
+        try {
+          const condition = this.buildSearchCondition(key, value)
+          searchConditions.push({ [key]: condition })
+        } catch (error) {
+          throw new Error(`Invalid search filter: ${error.message}`)
         }
+      }
+
+      // Combine base conditions with search conditions using AND logic
+      whereConditions = {
+        ...whereConditions,
+        AND: searchConditions,
       }
     }
 
@@ -224,5 +396,3 @@ class TaskRepository {
     return date ? new Date(date).toISOString() : undefined
   }
 }
-
-export { TaskRepository }

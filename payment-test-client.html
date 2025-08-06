@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventify Payment Test Client</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background: white;
+            border-left: 4px solid #667eea;
+        }
+
+        .result.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .result.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .result pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .card-element {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .card-element.StripeElement--focus {
+            border-color: #667eea;
+        }
+
+        .card-element.StripeElement--invalid {
+            border-color: #dc3545;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-healthy {
+            background: #28a745;
+        }
+
+        .status-unhealthy {
+            background: #dc3545;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Eventify Payment Test Client</h1>
+            <p>Comprehensive testing interface for payment system endpoints</p>
+        </div>
+
+        <div class="content">
+            <!-- Configuration Section -->
+            <div class="section">
+                <h2>⚙️ Configuration</h2>
+                <div class="form-group">
+                    <label for="baseUrl">API Base URL:</label>
+                    <input type="text" id="baseUrl" value="http://localhost:3000/api/v1" placeholder="Enter your API base URL">
+                </div>
+                <div class="form-group">
+                    <label for="authToken">Authentication Token:</label>
+                    <input type="text" id="authToken" placeholder="Enter your JWT token">
+                </div>
+                <button class="btn" onclick="testConnection()">Test Connection</button>
+                <div id="connectionResult" class="result hidden"></div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('payment')">💳 Payment Testing</div>
+                <div class="tab" onclick="showTab('health')">🏥 Health Checks</div>
+                <div class="tab" onclick="showTab('metrics')">📊 Metrics</div>
+            </div>
+
+            <!-- Payment Testing Tab -->
+            <div id="payment-tab" class="tab-content active">
+                <div class="section">
+                    <h2>💳 Payment Testing</h2>
+                    
+                    <div class="form-group">
+                        <label for="planId">Select Plan:</label>
+                        <select id="planId">
+                            <option value="">Loading plans...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cardElement">Card Details:</label>
+                        <div id="cardElement" class="card-element"></div>
+                    </div>
+
+                    <button class="btn" onclick="createPaymentIntent()">Create Payment Intent</button>
+                    <button class="btn btn-success" onclick="confirmPayment()" id="confirmBtn" disabled>Confirm Payment</button>
+                    
+                    <div id="paymentResult" class="result hidden"></div>
+                </div>
+            </div>
+
+            <!-- Health Checks Tab -->
+            <div id="health-tab" class="tab-content">
+                <div class="section">
+                    <h2>🏥 System Health</h2>
+                    <button class="btn" onclick="checkHealth()">Check Health</button>
+                    <button class="btn btn-secondary" onclick="getStatus()">Get Status</button>
+                    
+                    <div id="healthResult" class="result hidden"></div>
+                </div>
+            </div>
+
+            <!-- Metrics Tab -->
+            <div id="metrics-tab" class="tab-content">
+                <div class="section">
+                    <h2>📊 System Metrics</h2>
+                    <button class="btn" onclick="getMetrics()">Get Metrics</button>
+                    
+                    <div id="metricsResult" class="result hidden"></div>
+                    <div id="metricsGrid" class="grid hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let stripe;
+        let cardElement;
+        let currentPaymentIntent = null;
+        let plans = [];
+
+        // Initialize Stripe
+        function initializeStripe() {
+            // Note: You'll need to replace with your actual Stripe publishable key
+            stripe = Stripe('pk_test_51Q1Q38CNk2DfIGoIzTj4YnJhQWRk1UnlyOJBpFJQFn9R1Inl4YI3z3lqU6LiADg6q8mIHgDR18QVlbEIrdlLlk6200F6fLd9Zs');
+            
+            const elements = stripe.elements();
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                    invalid: {
+                        color: '#9e2146',
+                    },
+                },
+            });
+            
+            cardElement.mount('#cardElement');
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // API helper functions
+        async function makeRequest(endpoint, options = {}) {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const token = document.getElementById('authToken').value;
+            
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            
+            const response = await fetch(`${baseUrl}${endpoint}`, {
+                ...defaultOptions,
+                ...options
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return data;
+        }
+
+        // Test connection
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="loading"></div>Testing connection...';
+            resultDiv.classList.remove('hidden');
+            
+            try {
+                await makeRequest('/payment/health');
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = '✅ Connection successful! API is responding.';
+                
+                // Load plans after successful connection
+                await loadPlans();
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Connection failed: ${error.message}`;
+            }
+        }
+
+        // Load available plans
+        async function loadPlans() {
+            try {
+                const plansData = await makeRequest('/plan');
+                plans = plansData;
+                
+                const planSelect = document.getElementById('planId');
+                planSelect.innerHTML = '<option value="">Select a plan...</option>';
+                
+                plans.forEach(plan => {
+                    const option = document.createElement('option');
+                    option.value = plan.id;
+                    option.textContent = `${plan.name} - $${plan.price/100}/month`;
+                    planSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load plans:', error);
+            }
+        }
+
+        // Create payment intent
+        async function createPaymentIntent() {
+            const planId = document.getElementById('planId').value;
+            if (!planId) {
+                alert('Please select a plan first.');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('paymentResult');
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="loading"></div>Creating payment intent...';
+            resultDiv.classList.remove('hidden');
+            
+            try {
+                const response = await makeRequest('/payment/inline', {
+                    method: 'POST',
+                    body: JSON.stringify({ planId })
+                });
+                
+                currentPaymentIntent = response;
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h4>✅ Payment Intent Created Successfully!</h4>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+                
+                document.getElementById('confirmBtn').disabled = false;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Failed to create payment intent: ${error.message}`;
+            }
+        }
+
+        // Confirm payment
+        async function confirmPayment() {
+            if (!currentPaymentIntent) {
+                alert('Please create a payment intent first.');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('paymentResult');
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="loading"></div>Confirming payment...';
+            
+            try {
+                // First, confirm with Stripe
+                const { error } = await stripe.confirmCardPayment(currentPaymentIntent.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: 'Test User',
+                        },
+                    }
+                });
+                
+                if (error) {
+                    throw new Error(error.message);
+                }
+                
+                // Then confirm with our API
+                const response = await makeRequest('/payment/inline/confirm', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        paymentIntentId: currentPaymentIntent.paymentIntentId 
+                    })
+                });
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h4>✅ Payment Confirmed Successfully!</h4>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+                
+                document.getElementById('confirmBtn').disabled = true;
+                currentPaymentIntent = null;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Payment confirmation failed: ${error.message}`;
+            }
+        }
+
+        // Check health
+        async function checkHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="loading"></div>Checking system health...';
+            resultDiv.classList.remove('hidden');
+            
+            try {
+                const response = await makeRequest('/payment/health');
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h4>🏥 System Health Status</h4>
+                    <div style="margin: 10px 0;">
+                        <span class="status-indicator ${response.status === 'healthy' ? 'status-healthy' : 'status-unhealthy'}"></span>
+                        Overall Status: <strong>${response.status}</strong>
+                    </div>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Health check failed: ${error.message}`;
+            }
+        }
+
+        // Get status
+        async function getStatus() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="loading"></div>Getting system status...';
+            resultDiv.classList.remove('hidden');
+            
+            try {
+                const response = await makeRequest('/payment/status');
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h4>📊 System Status</h4>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Status check failed: ${error.message}`;
+            }
+        }
+
+        // Get metrics
+        async function getMetrics() {
+            const resultDiv = document.getElementById('metricsResult');
+            const metricsGrid = document.getElementById('metricsGrid');
+            
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="loading"></div>Getting system metrics...';
+            resultDiv.classList.remove('hidden');
+            metricsGrid.classList.add('hidden');
+            
+            try {
+                const response = await makeRequest('/payment/metrics');
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <h4>📊 System Metrics</h4>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+                
+                // Display metrics in a grid
+                displayMetricsGrid(response);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Metrics retrieval failed: ${error.message}`;
+            }
+        }
+
+        // Display metrics in a grid
+        function displayMetricsGrid(metrics) {
+            const metricsGrid = document.getElementById('metricsGrid');
+            metricsGrid.innerHTML = '';
+            
+            const metricItems = [
+                { key: 'totalTransactions', label: 'Total Transactions', format: 'number' },
+                { key: 'successfulTransactions', label: 'Successful Transactions', format: 'number' },
+                { key: 'failedTransactions', label: 'Failed Transactions', format: 'number' },
+                { key: 'totalRevenue', label: 'Total Revenue', format: 'currency' },
+                { key: 'averageTransactionValue', label: 'Avg Transaction Value', format: 'currency' },
+                { key: 'monthlyRecurringRevenue', label: 'Monthly Recurring Revenue', format: 'currency' },
+                { key: 'activeSubscriptions', label: 'Active Subscriptions', format: 'number' },
+                { key: 'systemUptime', label: 'System Uptime', format: 'percentage' }
+            ];
+            
+            metricItems.forEach(item => {
+                if (metrics[item.key] !== undefined) {
+                    const card = document.createElement('div');
+                    card.className = 'metric-card';
+                    
+                    let value = metrics[item.key];
+                    switch (item.format) {
+                        case 'currency':
+                            value = `$${(value / 100).toFixed(2)}`;
+                            break;
+                        case 'percentage':
+                            value = `${value}%`;
+                            break;
+                        case 'number':
+                        default:
+                            value = value.toLocaleString();
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="metric-value">${value}</div>
+                        <div class="metric-label">${item.label}</div>
+                    `;
+                    
+                    metricsGrid.appendChild(card);
+                }
+            });
+            
+            metricsGrid.classList.remove('hidden');
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStripe();
+            
+            // Set default values
+            document.getElementById('baseUrl').value = 'http://localhost:3000/api/v1';
+            
+            // Add event listeners
+            document.getElementById('baseUrl').addEventListener('change', testConnection);
+            document.getElementById('authToken').addEventListener('change', testConnection);
+        });
+    </script>
+</body>
+</html> 

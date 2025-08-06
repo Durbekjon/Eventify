@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventify Payment Test Client - Fixed</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background: white;
+            border-left: 4px solid #667eea;
+        }
+
+        .result.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .result.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .result.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+
+        .result pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .card-element {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .card-element.StripeElement--focus {
+            border-color: #667eea;
+        }
+
+        .card-element.StripeElement--invalid {
+            border-color: #dc3545;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stripe-config {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stripe-config h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .test-cards {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .test-cards h3 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+
+        .test-cards ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .test-cards li {
+            margin-bottom: 5px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Eventify Payment Test Client</h1>
+            <p>Fixed version with proper Stripe configuration</p>
+        </div>
+
+        <div class="content">
+            <!-- Configuration Section -->
+            <div class="section">
+                <h2>⚙️ Configuration</h2>
+                
+                <div class="stripe-config">
+                    <h3>🔑 Stripe Configuration</h3>
+                    <p><strong>Important:</strong> You need to replace the Stripe publishable key with your actual key.</p>
+                    <p>Current key: <code id="currentStripeKey">pk_test_your_publishable_key_here</code></p>
+                    <p>To fix: Replace the key in the JavaScript code (line ~400) with your actual Stripe publishable key.</p>
+                </div>
+
+                <div class="test-cards">
+                    <h3>🧪 Test Card Numbers</h3>
+                    <ul>
+                        <li><strong>Success:</strong> 4242 4242 4242 4242</li>
+                        <li><strong>Decline:</strong> 4000 0000 0000 0002</li>
+                        <li><strong>Requires Auth:</strong> 4000 0025 0000 3155</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label for="baseUrl">API Base URL:</label>
+                    <input type="text" id="baseUrl" value="http://localhost:3000/api/v1" placeholder="Enter your API base URL">
+                </div>
+                <div class="form-group">
+                    <label for="authToken">Authentication Token:</label>
+                    <input type="text" id="authToken" placeholder="Enter your JWT token">
+                </div>
+                <div class="form-group">
+                    <label for="stripeKey">Stripe Publishable Key:</label>
+                    <input type="text" id="stripeKey" placeholder="Enter your Stripe publishable key" value="pk_test_your_publishable_key_here">
+                </div>
+                <button class="btn" onclick="testConnection()">Test Connection</button>
+                <button class="btn btn-warning" onclick="updateStripeKey()">Update Stripe Key</button>
+                <div id="connectionResult" class="result hidden"></div>
+            </div>
+
+            <!-- Payment Testing Section -->
+            <div class="section">
+                <h2>💳 Payment Testing</h2>
+                
+                <div class="form-group">
+                    <label for="planId">Select Plan:</label>
+                    <select id="planId">
+                        <option value="">Loading plans...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cardElement">Card Details:</label>
+                    <div id="cardElement" class="card-element"></div>
+                </div>
+
+                <button class="btn" onclick="createPaymentIntent()">Create Payment Intent</button>
+                <button class="btn btn-success" onclick="confirmPayment()" id="confirmBtn" disabled>Confirm Payment</button>
+                <button class="btn btn-warning" onclick="confirmPaymentServerOnly()" id="serverConfirmBtn" disabled>Confirm Server Only</button>
+                
+                <div id="paymentResult" class="result hidden"></div>
+            </div>
+
+            <!-- Health Checks Section -->
+            <div class="section">
+                <h2>🏥 Health Checks</h2>
+                <button class="btn" onclick="checkHealth()">Check Health</button>
+                <button class="btn" onclick="getStatus()">Get Status</button>
+                <button class="btn" onclick="getMetrics()">Get Metrics</button>
+                
+                <div id="healthResult" class="result hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let stripe;
+        let cardElement;
+        let currentPaymentIntent = null;
+        let plans = [];
+
+        // Initialize Stripe with dynamic key
+        function initializeStripe() {
+            const stripeKey = document.getElementById('stripeKey').value;
+            if (stripeKey && stripeKey !== 'pk_test_your_publishable_key_here') {
+                try {
+                    stripe = Stripe(stripeKey);
+                    
+                    const elements = stripe.elements();
+                    cardElement = elements.create('card', {
+                        style: {
+                            base: {
+                                fontSize: '16px',
+                                color: '#424770',
+                                '::placeholder': {
+                                    color: '#aab7c4',
+                                },
+                            },
+                            invalid: {
+                                color: '#9e2146',
+                            },
+                        },
+                    });
+                    
+                    cardElement.mount('#cardElement');
+                    console.log('Stripe initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize Stripe:', error);
+                    showResult('connectionResult', 'error', `Failed to initialize Stripe: ${error.message}`);
+                }
+            } else {
+                console.warn('Please set a valid Stripe publishable key');
+            }
+        }
+
+        // Update Stripe key
+        function updateStripeKey() {
+            const newKey = document.getElementById('stripeKey').value;
+            if (newKey && newKey !== 'pk_test_your_publishable_key_here') {
+                document.getElementById('currentStripeKey').textContent = newKey;
+                initializeStripe();
+                showResult('connectionResult', 'success', 'Stripe key updated successfully!');
+            } else {
+                showResult('connectionResult', 'error', 'Please enter a valid Stripe publishable key');
+            }
+        }
+
+        // API helper functions
+        async function makeRequest(endpoint, options = {}) {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const token = document.getElementById('authToken').value;
+            
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            
+            const response = await fetch(`${baseUrl}${endpoint}`, {
+                ...defaultOptions,
+                ...options
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return data;
+        }
+
+        // Show result helper
+        function showResult(elementId, type, message, data = null) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.className = `result ${type}`;
+            
+            if (data) {
+                resultDiv.innerHTML = `
+                    <h4>${message}</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } else {
+                resultDiv.innerHTML = message;
+            }
+            resultDiv.classList.remove('hidden');
+        }
+
+        // Test connection
+        async function testConnection() {
+            showResult('connectionResult', '', '<div class="loading"></div>Testing connection...');
+            
+            try {
+                await makeRequest('/payment/health');
+                showResult('connectionResult', 'success', '✅ Connection successful! API is responding.');
+                await loadPlans();
+            } catch (error) {
+                showResult('connectionResult', 'error', `❌ Connection failed: ${error.message}`);
+            }
+        }
+
+        // Load available plans
+        async function loadPlans() {
+            try {
+                const plansData = await makeRequest('/plan');
+                plans = plansData;
+                
+                const planSelect = document.getElementById('planId');
+                planSelect.innerHTML = '<option value="">Select a plan...</option>';
+                
+                plans.forEach(plan => {
+                    const option = document.createElement('option');
+                    option.value = plan.id;
+                    option.textContent = `${plan.name} - $${plan.price/100}/month`;
+                    planSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load plans:', error);
+            }
+        }
+
+        // Create payment intent
+        async function createPaymentIntent() {
+            const planId = document.getElementById('planId').value;
+            if (!planId) {
+                alert('Please select a plan first.');
+                return;
+            }
+            
+            showResult('paymentResult', '', '<div class="loading"></div>Creating payment intent...');
+            
+            try {
+                const response = await makeRequest('/payment/inline', {
+                    method: 'POST',
+                    body: JSON.stringify({ planId })
+                });
+                
+                currentPaymentIntent = response;
+                
+                showResult('paymentResult', 'success', '✅ Payment Intent Created Successfully!', response);
+                
+                document.getElementById('confirmBtn').disabled = false;
+                document.getElementById('serverConfirmBtn').disabled = false;
+            } catch (error) {
+                showResult('paymentResult', 'error', `❌ Failed to create payment intent: ${error.message}`);
+            }
+        }
+
+        // Confirm payment with Stripe Elements
+        async function confirmPayment() {
+            if (!currentPaymentIntent) {
+                alert('Please create a payment intent first.');
+                return;
+            }
+            
+            if (!stripe) {
+                showResult('paymentResult', 'error', '❌ Stripe not initialized. Please set a valid Stripe key.');
+                return;
+            }
+            
+            showResult('paymentResult', '', '<div class="loading"></div>Confirming payment with Stripe...');
+            
+            try {
+                // First, confirm with Stripe
+                const { error } = await stripe.confirmCardPayment(currentPaymentIntent.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: 'Test User',
+                        },
+                    }
+                });
+                
+                if (error) {
+                    throw new Error(error.message);
+                }
+                
+                // Then confirm with our API
+                const response = await makeRequest('/payment/inline/confirm', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        paymentIntentId: currentPaymentIntent.paymentIntentId 
+                    })
+                });
+                
+                showResult('paymentResult', 'success', '✅ Payment Confirmed Successfully!', response);
+                
+                document.getElementById('confirmBtn').disabled = true;
+                document.getElementById('serverConfirmBtn').disabled = true;
+                currentPaymentIntent = null;
+            } catch (error) {
+                showResult('paymentResult', 'error', `❌ Payment confirmation failed: ${error.message}`);
+            }
+        }
+
+        // Confirm payment server-only (bypasses Stripe client-side confirmation)
+        async function confirmPaymentServerOnly() {
+            if (!currentPaymentIntent) {
+                alert('Please create a payment intent first.');
+                return;
+            }
+            
+            showResult('paymentResult', '', '<div class="loading"></div>Confirming payment server-side...');
+            
+            try {
+                // Skip Stripe client-side confirmation and go directly to server
+                const response = await makeRequest('/payment/inline/confirm', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        paymentIntentId: currentPaymentIntent.paymentIntentId 
+                    })
+                });
+                
+                showResult('paymentResult', 'success', '✅ Payment Confirmed Server-Side!', response);
+                
+                document.getElementById('confirmBtn').disabled = true;
+                document.getElementById('serverConfirmBtn').disabled = true;
+                currentPaymentIntent = null;
+            } catch (error) {
+                showResult('paymentResult', 'error', `❌ Server-side payment confirmation failed: ${error.message}`);
+            }
+        }
+
+        // Check health
+        async function checkHealth() {
+            showResult('healthResult', '', '<div class="loading"></div>Checking system health...');
+            
+            try {
+                const response = await makeRequest('/payment/health');
+                showResult('healthResult', 'success', '🏥 System Health Status', response);
+            } catch (error) {
+                showResult('healthResult', 'error', `❌ Health check failed: ${error.message}`);
+            }
+        }
+
+        // Get status
+        async function getStatus() {
+            showResult('healthResult', '', '<div class="loading"></div>Getting system status...');
+            
+            try {
+                const response = await makeRequest('/payment/status');
+                showResult('healthResult', 'success', '📊 System Status', response);
+            } catch (error) {
+                showResult('healthResult', 'error', `❌ Status check failed: ${error.message}`);
+            }
+        }
+
+        // Get metrics
+        async function getMetrics() {
+            showResult('healthResult', '', '<div class="loading"></div>Getting system metrics...');
+            
+            try {
+                const response = await makeRequest('/payment/metrics');
+                showResult('healthResult', 'success', '📊 System Metrics', response);
+            } catch (error) {
+                showResult('healthResult', 'error', `❌ Metrics retrieval failed: ${error.message}`);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default values
+            document.getElementById('baseUrl').value = 'http://localhost:3000/api/v1';
+            
+            // Add event listeners
+            document.getElementById('baseUrl').addEventListener('change', testConnection);
+            document.getElementById('authToken').addEventListener('change', testConnection);
+            document.getElementById('stripeKey').addEventListener('change', updateStripeKey);
+        });
+    </script>
+</body>
+</html> 

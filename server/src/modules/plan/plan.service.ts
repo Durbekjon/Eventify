@@ -12,8 +12,15 @@ export class PlanService {
     return this.repository.createPlan(body)
   }
 
-  getPlans() {
-    return this.repository.getPlans()
+  async getPlans() {
+    const plans = await this.repository.getPlans()
+    const plansWithPrice = plans.map((plan) => {
+      return {
+        ...plan,
+        price: plan.price * 100,
+      }
+    })
+    return plansWithPrice
   }
 
   getPlan(id: string) {
@@ -24,7 +31,7 @@ export class PlanService {
     const plan = await this.getById(id)
     return this.repository.updatePlan(plan.id, body)
   }
-
+  
   async deleletePlan(id: string) {
     const plan = await this.getById(id)
     return this.repository.deletePlan(plan.id)

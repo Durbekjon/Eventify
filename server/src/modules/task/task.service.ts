@@ -49,7 +49,7 @@ export class TaskService {
   // TASK CREATION
   async createTask(body: CreateTaskDto, user: IUser): Promise<Task> {
     const role = await this.validateUserAccess(user, MemberPermissions.CREATE)
-    if(role.type === RoleTypes.MEMBER) {
+    if (role.type === RoleTypes.MEMBER) {
       body.members = [role.access.id]
     }
     if (body.members?.length > 0) {
@@ -71,12 +71,17 @@ export class TaskService {
   }
 
   // TASK UPDATING
-  async updateTask(id: string, body: UpdateTaskDto, user: IUser): Promise<Task> {
+  async updateTask(
+    id: string,
+    body: UpdateTaskDto,
+    user: IUser,
+  ): Promise<Task> {
     const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
     const task = await this.findById(id, role.companyId)
 
     const updateData: Prisma.TaskUpdateInput = {}
-    const changes: Array<{ updatedKey: string; oldValue: any; newValue: any }> = []
+    const changes: Array<{ updatedKey: string; oldValue: any; newValue: any }> =
+      []
 
     // Process regular fields
     for (const field of fieldsToCheck) {
@@ -101,7 +106,7 @@ export class TaskService {
       if (body.members.length > 0) {
         await this.validateBodyMembers(body)
         updateData.members = {
-          set: body.members.map(id => ({ id })),
+          set: body.members.map((id) => ({ id })),
         }
       } else {
         updateData.members = { set: [] }
@@ -110,8 +115,8 @@ export class TaskService {
       // Update chat members as well
       updateData.chat = {
         update: {
-          members: updateData.members
-        }
+          members: updateData.members,
+        },
       }
     }
 
@@ -204,7 +209,10 @@ export class TaskService {
     return selectedRole
   }
 
-  private async findById(id: string, companyId: string): Promise<TaskWithRelations> {
+  private async findById(
+    id: string,
+    companyId: string,
+  ): Promise<TaskWithRelations> {
     const task = await this.repository.findById(id)
     if (!task || task.companyId !== companyId) {
       throw new BadRequestException(HTTP_MESSAGES.TASK.NOT_FOUND)
@@ -213,7 +221,10 @@ export class TaskService {
   }
 
   private getMemberIdForTaskRetrieval(role: RoleDto): string | null {
-    return role.type !== RoleTypes.AUTHOR && !role.access.permissions.includes(MemberPermissions.ALL) ? role.access.id : null
+    return role.type !== RoleTypes.AUTHOR &&
+      !role.access.permissions.includes(MemberPermissions.ALL)
+      ? role.access.id
+      : null
   }
 
   private async validateBodyMembers(body: CreateTaskDto | UpdateTaskDto) {

@@ -25,6 +25,7 @@ import { SheetService } from '@sheet/sheet.service'
 import { WorkspaceReorderDto } from './dto/reorder-workspaces.dto'
 import { RoleDto } from '@role/dto/role.dto'
 import { LogRepository } from '@log/log.repository'
+import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
 @Injectable()
 export class WorkspaceService {
   constructor(
@@ -32,12 +33,15 @@ export class WorkspaceService {
     private readonly user: UserService,
     private readonly role: RoleService,
     @Inject(forwardRef(() => SheetService))
-    private readonly sheet: SheetService,
     private readonly log: LogRepository,
+    private readonly subscriptionValidationService: SubscriptionValidationService,
   ) {}
 
   async createWorkspace(body: CreateWorkspaceDto, iUser: IUser) {
     const { user, role } = await this.validateUserRole(iUser)
+    await this.subscriptionValidationService.validateSubscriptionToWorkspace(
+      role.companyId,
+    )
     const workspace: Workspace = await this.repository.createWorkspace(
       body,
       role.companyId,
@@ -56,7 +60,6 @@ export class WorkspaceService {
     iUser: IUser,
   ) {
     const { user, role } = await this.validateUserRole(iUser)
-
     await this.validateWorkspaceOwnership(workspaceId, role.companyId)
 
     // Fix: Use logical OR (||) for fallback
@@ -126,7 +129,7 @@ export class WorkspaceService {
     companyId: string,
     message: string,
     workspaceId?: string | null,
-  ): Promise<Log> {
+  ) {
     const data: Prisma.LogCreateInput = {
       user: { connect: { id: userId } },
       company: { connect: { id: companyId } },
@@ -134,7 +137,7 @@ export class WorkspaceService {
       ...(workspaceId ? { workspace: { connect: { id: workspaceId } } } : {}), // Conditionally connect workspace if provided
     }
 
-    return this.log.create(data)
+    // return this.log.create(data)
   }
 
   private async getOwnMemberWorkspaces(memberId: string) {

@@ -30,8 +30,8 @@ export class CreatePlanDto {
   @IsNumber()
   @IsNotEmpty()
   maxViewers: number
-  @ApiProperty({ description: 'Maximum requests count' })
+  @ApiProperty({ description: 'Maximum tasks count' })
   @IsNumber()
   @IsNotEmpty()
-  maxRequests: number
+  maxTasks: number
 }

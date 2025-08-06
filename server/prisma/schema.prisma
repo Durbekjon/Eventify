@@ -200,8 +200,8 @@ model Plan {
   maxSheets            Int                   @map("max_sheets")
   maxMembers           Int                   @map("max_members")
   maxViewers           Int                   @map("max_viewers")
+  maxTasks             Int                   @map("max_tasks") 
   order                Int                   @default(autoincrement())
-  maxRequests          Int                   @map("max_requests")
   stripePriceId        String?               @map("stripe_price_id")
   companies            Company[]
   companySubscriptions CompanySubscription[]
