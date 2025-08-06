@@ -31,7 +31,7 @@ export class PlanService {
     const plan = await this.getById(id)
     return this.repository.updatePlan(plan.id, body)
   }
-
+  
   async deleletePlan(id: string) {
     const plan = await this.getById(id)
     return this.repository.deletePlan(plan.id)

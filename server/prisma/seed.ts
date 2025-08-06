@@ -80,6 +80,7 @@ async function createStripeProducts() {
     name: 'Free',
     stripeProductId: freeProduct.id,
     stripePriceId: freePrice.id,
+    maxTasks: 30,
   })
 
   // Pro Plan Product
@@ -99,6 +100,7 @@ async function createStripeProducts() {
     name: 'Pro',
     stripeProductId: proProduct.id,
     stripePriceId: proPrice.id,
+    maxTasks: 100,
   })
 
   // Business Plan Product
@@ -118,6 +120,7 @@ async function createStripeProducts() {
     name: 'Business',
     stripeProductId: businessProduct.id,
     stripePriceId: businessPrice.id,
+    maxTasks: 1000,
   })
 
   // Enterprise Plan Product
@@ -137,6 +140,7 @@ async function createStripeProducts() {
     name: 'Enterprise',
     stripeProductId: enterpriseProduct.id,
     stripePriceId: enterprisePrice.id,
+    maxTasks: 10000,
   })
 
   return products
@@ -155,7 +159,7 @@ async function createPlans(products: any[]) {
       maxSheets: 3,
       maxMembers: 2,
       maxViewers: 2,
-      maxRequests: 100,
+      maxTasks: 30,
       stripePriceId: products[0].stripePriceId,
     },
   })
@@ -171,7 +175,7 @@ async function createPlans(products: any[]) {
       maxSheets: 20,
       maxMembers: 10,
       maxViewers: 10,
-      maxRequests: 1000,
+      maxTasks: 100,
       stripePriceId: products[1].stripePriceId,
     },
   })
@@ -187,7 +191,7 @@ async function createPlans(products: any[]) {
       maxSheets: 100,
       maxMembers: 50,
       maxViewers: 50,
-      maxRequests: 10000,
+      maxTasks: 1000,
       stripePriceId: products[2].stripePriceId,
     },
   })
@@ -203,7 +207,7 @@ async function createPlans(products: any[]) {
       maxSheets: -1, // Unlimited
       maxMembers: -1, // Unlimited
       maxViewers: -1, // Unlimited
-      maxRequests: -1, // Unlimited
+      maxTasks: -1, // Unlimited
       stripePriceId: products[3].stripePriceId,
     },
   })

@@ -16,7 +16,7 @@ export class PlanRepository {
     const plan = await this.prisma.plan.create({
       data: {
         ...body,
-        maxRequests: body.maxRequests, // Default value
+        maxTasks: body.maxTasks ?? 0,
       },
     })
 

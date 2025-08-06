@@ -8,12 +8,15 @@ import { UserRepository } from '@user/user.repository'
 import { RoleService } from '@role/role.service'
 import { SheetModule } from '@sheet/sheet.module' // Import SheetModule with forwardRef
 import { LogModule } from '@log/log.module' // Import LogModule to provide LogRepository
+import { SubscriptionValidationModule } from '@core/subscription_validation/subscription_validation.module'
+import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
 
 @Module({
   imports: [
     forwardRef(() => SheetModule), // Handle potential circular dependency
     LogModule, // Import LogModule to make LogRepository available
     UserModule,
+    SubscriptionValidationModule,
   ],
   controllers: [WorkspaceController],
   providers: [
@@ -21,6 +24,7 @@ import { LogModule } from '@log/log.module' // Import LogModule to provide LogRe
     WorkspaceRepository,
     PrismaService,
     RoleService,
+    SubscriptionValidationService,
   ],
   exports: [WorkspaceService], // Export WorkspaceService for use in other modules
 })

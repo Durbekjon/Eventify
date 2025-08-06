@@ -36,7 +36,11 @@ export class TaskController {
   constructor(private readonly service: TaskService) {}
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get tasks by sheet id' })
+  @ApiOperation({ summary: 'Get tasks by sheet id with search' })
+  @ApiResponse({
+    description: 'Returns tasks with pagination and search capabilities',
+    type: () => TaskResponseDto,
+  })
   getTasksBySheet(
     @User() user: IUser,
     @Param('id') id: string,

@@ -30,6 +30,10 @@ export class UpdatePlanDto {
   @IsNotEmpty()
   @IsNotEmpty()
   maxViewers: number
+  @ApiProperty({ description: 'Maximum tasks count' })
+  @IsNotEmpty()
+  @IsNotEmpty()
+  maxTasks: number
   @ApiProperty({ description: 'Optional Plan order' })
   @IsOptional()
   order: number
