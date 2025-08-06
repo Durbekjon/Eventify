@@ -10,6 +10,12 @@ export class SheetRepository {
     private readonly prisma: PrismaService,
     private readonly columnRepository: ColumnRepository,
   ) {}
+
+  getSheetsCountByCompany(companyId: string): Promise<number> {
+    return this.prisma.sheet.count({
+      where: { companyId },
+    })
+  }
   async createSheet(body: CreateSheetDto, companyId: string) {
     const { name, workspaceId, columns } = body
 

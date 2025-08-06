@@ -17,6 +17,7 @@ import { RoleDto } from '@role/dto/role.dto'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
 import { SheetReorderDto } from './dto/reorder-sheets.dto'
 import { LogRepository } from '@log/log.repository'
+import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
 
 @Injectable()
 export class SheetService {
@@ -27,17 +28,25 @@ export class SheetService {
     private readonly log: LogRepository,
     @Inject(forwardRef(() => WorkspaceService))
     private readonly workspace: WorkspaceService,
+    private readonly validateSubscriptionValidationService: SubscriptionValidationService,
   ) {}
 
   async createSheet(iUser: IUser, body: CreateSheetDto) {
     const { user, role } = await this.validateUserRole(iUser)
-    console.log(role)
-    await this.isWorkspaceBelongToCompany(body.workspaceId, role.company.id)
-
+    await Promise.all([
+      this.isWorkspaceBelongToCompany(body.workspaceId, role.company.id),
+      this.validateSubscriptionValidationService.validateSubscriptionToSheet(
+        role.company.id,
+      ),
+    ])
     const logMessage = `created new sheet ${body.name}`
-    await this.createLog(user.id, role.companyId, null, logMessage)
 
-    return this.repository.createSheet(body, role.companyId)
+    const [sheet, _] = await Promise.all([
+      this.repository.createSheet(body, role.company.id),
+      this.createLog(user.id, role.company.id, null, logMessage),
+    ])
+
+    return sheet
   }
 
   async getSheetsByWorkspace(workspaceId: string, user: IUser) {
@@ -77,10 +86,12 @@ export class SheetService {
     if (body.sheetIds.length === 0 || body.sheetIds === null)
       throw new BadRequestException(HTTP_MESSAGES.SHEET.INVALID_IDS)
 
-    await this.repository.reorder(body)
-
     const logMessage = `reordered sheets`
-    await this.createLog(user.id, role.companyId, null, logMessage)
+
+    await Promise.all([
+      this.repository.reorder(body),
+      this.createLog(user.id, role.companyId, null, logMessage),
+    ])
 
     return {
       status: 'OK',
@@ -94,9 +105,11 @@ export class SheetService {
     const sheet = await this.isExistSheetInCompany(sheetId, role.companyId)
 
     const logMessage = `deleted sheet ${sheet.name}`
-    await this.createLog(user.id, role.companyId, null, logMessage)
 
-    await this.repository.deleteSheet(sheetId)
+    await Promise.all([
+      this.createLog(user.id, role.companyId, sheetId, logMessage),
+      this.repository.deleteSheet(sheetId),
+    ])
 
     return {
       status: 'OK',

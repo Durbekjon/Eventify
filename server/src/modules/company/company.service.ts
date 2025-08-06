@@ -155,6 +155,7 @@ export class CompanyService {
       sheet: calculatePercentage(usageStats.sheets, plan.maxSheets),
       member: calculatePercentage(usageStats.members, plan.maxMembers),
       viewer: calculatePercentage(usageStats.viewers, plan.maxViewers),
+      task: calculatePercentage(usageStats.tasks, plan.maxTasks),
     }
   }
 

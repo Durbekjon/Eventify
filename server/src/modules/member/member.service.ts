@@ -10,6 +10,7 @@ import { CreateNotificationDto } from '@notification/dto/create-notification.dto
 import {
   Member,
   MemberStatus,
+  MemberTypes,
   NotificationFrom,
   NotificationType,
   Prisma,
@@ -28,6 +29,7 @@ import { LogRepository } from '@log/log.repository'
 import { RoleDto } from '@role/dto/role.dto'
 import { UtilsService } from '@core/utils/utils.service'
 import { EmailService } from '@core/email/email.service'
+import { SubscriptionValidationService } from '../../core/subscription_validation/subscription_validation.service'
 
 @Injectable()
 export class MemberService {
@@ -39,6 +41,7 @@ export class MemberService {
     private readonly log: LogRepository,
     private readonly utils: UtilsService,
     private readonly email: EmailService,
+    private readonly subscriptionValidationService: SubscriptionValidationService,
   ) {}
 
   async createMember(dto: CreateMemberDto, user: IUser) {
@@ -48,10 +51,22 @@ export class MemberService {
       dto,
       selectedRole,
     )
+    switch (dto.type) {
+      case MemberTypes.MEMBER:
+        await this.subscriptionValidationService.validateSubscriptionToMember(
+          selectedRole.companyId,
+        )
+      case MemberTypes.VIEWER:
+        await this.subscriptionValidationService.validateSubscriptionToViewer(
+          selectedRole.companyId,
+        )
+    }
 
-    await this.createInvitationNotification(member, selectedRole.companyId)
-    await this.sendInvitationEmail(dto, selectedRole, newUserPassword)
-    await this.createLog(user.id, selectedRole.companyId, '')
+    await Promise.all([
+      this.createInvitationNotification(member, selectedRole.companyId),
+      this.sendInvitationEmail(dto, selectedRole, newUserPassword),
+      this.createLog(user.id, selectedRole.companyId, ''),
+    ])
 
     return {
       status: 'OK',

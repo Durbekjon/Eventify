@@ -27,6 +27,7 @@ import { fieldsToCheck } from './dto/task.fields'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { MemberService } from '@member/member.service'
 import { TaskWithRelations } from './types/task.types'
+import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
 
 @Injectable()
 export class TaskService {
@@ -37,6 +38,7 @@ export class TaskService {
     private readonly sheet: SheetService,
     private readonly prisma: PrismaService,
     private readonly member: MemberService,
+    private readonly subscriptionValidationService: SubscriptionValidationService,
   ) {}
 
   // TASK RETRIEVAL
@@ -55,6 +57,10 @@ export class TaskService {
     if (body.members?.length > 0) {
       await this.validateBodyMembers(body)
     }
+
+    await this.subscriptionValidationService.validateSubscriptionToTask(
+      role.companyId,
+    )
 
     const task = await this.repository.createTask(body, role.companyId)
 
