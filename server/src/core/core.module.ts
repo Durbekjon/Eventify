@@ -9,5 +9,6 @@ import { SubscriptionValidationModule } from './subscription_validation/subscrip
 
 @Module({
   imports: [PrismaModule, UtilsModule, EmailModule, StripeModule, CompanySubscriptionModule, FileStorageModule, SubscriptionValidationModule],
+  exports: [PrismaModule, UtilsModule, EmailModule, StripeModule, CompanySubscriptionModule, FileStorageModule, SubscriptionValidationModule],
 })
 export class CoreModule {}
