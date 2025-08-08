@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '@core/prisma/prisma.service'
-import { Column, Prisma, Member } from '@prisma/client';
+import { Column, Prisma, Member } from '@prisma/client'
 import { CreateColumnDto } from './dto/create-column.dto'
 import { UpdateColumnDto } from './dto/update-column.dto'
 
@@ -22,9 +22,13 @@ export class ColumnRepository {
               show: column.show,
               type: column.type,
               selected: column.selected?.trim() ?? null,
-              selects: column.selects?.length
-                ? { connect: column.selects.map((id) => ({ id })) }
-                : undefined,
+              selects: {
+                create:
+                  column.selects?.map((select) => ({
+                    title: select.title,
+                    color: select.color,
+                  })) || [],
+              },
             },
           }),
         ),
@@ -38,16 +42,20 @@ export class ColumnRepository {
   async createColumn(body: CreateColumnDto, key: string, companyId: string) {
     return this.prisma.column.create({
       data: {
-        sheet: { connect: { id: body.sheetId } },
-        company: { connect: { id: companyId } },
         name: body.name,
-        key,
         show: body.show,
         type: body.type,
+        key,
         selected: body.selected?.trim() ?? null,
-        selects: body.selects?.length
-          ? { connect: body.selects.map((id) => ({ id })) }
-          : undefined,
+        sheet: { connect: { id: body.sheetId } },
+        company: { connect: { id: companyId } },
+        selects: {
+          create:
+            body.selects?.map((select) => ({
+              title: select.title,
+              color: select.color,
+            })) || [],
+        },
       },
     })
   }
