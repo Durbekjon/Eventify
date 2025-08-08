@@ -10,7 +10,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { ColumnType } from '@prisma/client'
 
-class Option {
+export class Option {
   @ApiProperty({ description: 'Option name', example: 'High Priority' })
   @IsString()
   name: string
@@ -20,7 +20,7 @@ class Option {
   color: string
 }
 
-class SelectCreateInput {
+export class SelectCreateInput {
   @ApiProperty({
     description: 'Title of the select input',
     example: 'Priority',

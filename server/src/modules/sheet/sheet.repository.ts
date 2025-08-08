@@ -4,6 +4,7 @@ import { CreateSheetDto } from './dto/create-sheet.dto'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
 import { SheetReorderDto } from './dto/reorder-sheets.dto'
 import { ColumnRepository } from '@column/column.repository'
+import { fieldsToCheck } from '@task/dto/task.fields'
 @Injectable()
 export class SheetRepository {
   constructor(
@@ -26,6 +27,9 @@ export class SheetRepository {
         workspace: { connect: { id: workspaceId } },
         company: { connect: { id: companyId } },
       },
+      include: {
+        columns: { include: { selects: { include: { options: true } } } },
+      },
     })
 
     if (columns && columns.length > 0) {
@@ -39,12 +43,12 @@ export class SheetRepository {
       ])
 
       // Step 2: Prepare the columns with unique keys if necessary
-      const updatedColumns = columns.map((column) => ({
+      const updatedColumns = columns.map((column, i) => ({
         ...column,
         sheetId: sheet.id,
         key: defaultColumnKeys.has(column.name)
-          ? column.name
-          : column.key || column.name,
+          ? column.key.toLowerCase()
+          : column.type.toLocaleLowerCase() + (i + 1).toString(),
       }))
 
       // Step 3: Create each column and handle `selects` if present

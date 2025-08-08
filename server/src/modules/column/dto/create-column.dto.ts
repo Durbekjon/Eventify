@@ -1,8 +1,22 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { ColumnType } from '@prisma/client'
+import { SelectCreateInput } from '@sheet/dto/create-sheet.dto'
+import { Type } from 'class-transformer'
+
 
 export class CreateColumnDto {
+  @ApiProperty({
+      description: 'Selects related to the column',
+      type: [SelectCreateInput],
+    })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => SelectCreateInput)
+  selects?: SelectCreateInput[]
+
+  
   @ApiPropertyOptional({
     description: 'The name of the column',
   })
@@ -27,13 +41,6 @@ export class CreateColumnDto {
   @ApiProperty({ description: 'The sheet associated with the column' })
   @IsNotEmpty()
   sheetId: string
-
-  @ApiPropertyOptional({
-    description: 'The selects for the column',
-    type: [String],
-  })
-  @IsOptional()
-  selects?: string[]
 
   @ApiPropertyOptional({
     description: 'The selected select for the column',
