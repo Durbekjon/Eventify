@@ -4,7 +4,6 @@ import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 import { ReshreshTokenDto } from './dto/refresh.dto'
 import {
-  ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,

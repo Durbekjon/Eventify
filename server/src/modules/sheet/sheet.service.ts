@@ -104,12 +104,11 @@ export class SheetService {
 
     const sheet = await this.isExistSheetInCompany(sheetId, role.companyId)
 
-    const logMessage = `deleted sheet ${sheet.name}`
-
-    await Promise.all([
-      this.createLog(user.id, role.companyId, sheetId, logMessage),
-      this.repository.deleteSheet(sheetId),
-    ])
+    // const logMessage = `deleted sheet ${sheet.name}`
+    // await Promise.all([
+    //   this.createLog(user.id, role.companyId, sheetId, logMessage),
+    //   this.repository.deleteSheet(sheetId),
+    // ])
 
     return {
       status: 'OK',
@@ -127,7 +126,8 @@ export class SheetService {
 
   private async isExistSheetInCompany(sheetId: string, companyId: string) {
     const sheet = await this.repository.findById(sheetId)
-
+    console.log('isExistSheetInCompany', { sheetId, companyId })
+    console.log({ sheet, companyId })
     if (!sheet || sheet.companyId !== companyId)
       throw new NotFoundException(HTTP_MESSAGES.SHEET.NOT_FOUND)
 
