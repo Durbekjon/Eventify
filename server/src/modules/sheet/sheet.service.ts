@@ -17,7 +17,7 @@ import { RoleDto } from '@role/dto/role.dto'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
 import { SheetReorderDto } from './dto/reorder-sheets.dto'
 import { LogRepository } from '@log/log.repository'
-import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
+import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 
 @Injectable()
 export class SheetService {
@@ -41,7 +41,7 @@ export class SheetService {
     ])
     const logMessage = `created new sheet ${body.name}`
 
-    const [sheet, _] = await Promise.all([
+    const [sheet] = await Promise.all([
       this.repository.createSheet(body, role.company.id),
       this.createLog(user.id, role.company.id, null, logMessage),
     ])
@@ -104,11 +104,11 @@ export class SheetService {
 
     const sheet = await this.isExistSheetInCompany(sheetId, role.companyId)
 
-    // const logMessage = `deleted sheet ${sheet.name}`
-    // await Promise.all([
-    //   this.createLog(user.id, role.companyId, sheetId, logMessage),
-    //   this.repository.deleteSheet(sheetId),
-    // ])
+    const logMessage = `deleted sheet ${sheet.name}`
+    await Promise.all([
+      this.createLog(user.id, role.companyId, sheetId, logMessage),
+      this.repository.deleteSheet(sheetId),
+    ])
 
     return {
       status: 'OK',

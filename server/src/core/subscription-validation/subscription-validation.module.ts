@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { SubscriptionValidationService } from './subscription_validation.service'
+import { SubscriptionValidationService } from './subscription-validation.service'
 import { PrismaService } from '@core/prisma/prisma.service'
 
 @Module({

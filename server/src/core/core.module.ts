@@ -5,9 +5,17 @@ import { EmailModule } from './email/email.module'
 import { StripeModule } from './stripe/stripe.module'
 import { CompanySubscriptionModule } from './company_subscription/company_subscription.module'
 import { FileStorageModule } from './file-storage/file-storage.module'
-import { SubscriptionValidationModule } from './subscription_validation/subscription_validation.module';
+import { SubscriptionValidationModule } from './subscription-validation/subscription-validation.module'
 
 @Module({
-  imports: [PrismaModule, UtilsModule, EmailModule, StripeModule, CompanySubscriptionModule, FileStorageModule, SubscriptionValidationModule],
+  imports: [
+    PrismaModule,
+    UtilsModule,
+    EmailModule,
+    StripeModule,
+    CompanySubscriptionModule,
+    FileStorageModule,
+    SubscriptionValidationModule,
+  ],
 })
 export class CoreModule {}

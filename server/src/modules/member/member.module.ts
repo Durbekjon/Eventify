@@ -11,7 +11,7 @@ import { RoleService } from '@role/role.service'
 import { LogRepository } from '@log/log.repository'
 import { UtilsModule } from '@core/utils/utils.module'
 import { EmailModule } from '@core/email/email.module'
-import { SubscriptionValidationModule } from '@core/subscription_validation/subscription_validation.module'
+import { SubscriptionValidationModule } from '@core/subscription-validation/subscription-validation.module'
 
 @Module({
   imports: [UserModule, UtilsModule, EmailModule, SubscriptionValidationModule],

@@ -17,8 +17,8 @@ import { NotificationRepository } from '@notification/notification.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { UtilsModule } from '@core/utils/utils.module'
 import { EmailService } from '@core/email/email.service'
-import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
-import { SubscriptionValidationModule } from '@core/subscription_validation/subscription_validation.module'
+import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
+import { SubscriptionValidationModule } from '@core/subscription-validation/subscription-validation.module'
 
 @Module({
   imports: [UserModule, UtilsModule, SubscriptionValidationModule],
