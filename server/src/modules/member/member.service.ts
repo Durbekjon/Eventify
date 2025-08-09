@@ -29,7 +29,7 @@ import { LogRepository } from '@log/log.repository'
 import { RoleDto } from '@role/dto/role.dto'
 import { UtilsService } from '@core/utils/utils.service'
 import { EmailService } from '@core/email/email.service'
-import { SubscriptionValidationService } from '../../core/subscription_validation/subscription_validation.service'
+import { SubscriptionValidationService } from '../../core/subscription-validation/subscription-validation.service'
 
 @Injectable()
 export class MemberService {

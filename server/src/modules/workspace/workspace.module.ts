@@ -8,8 +8,8 @@ import { UserRepository } from '@user/user.repository'
 import { RoleService } from '@role/role.service'
 import { SheetModule } from '@sheet/sheet.module' // Import SheetModule with forwardRef
 import { LogModule } from '@log/log.module' // Import LogModule to provide LogRepository
-import { SubscriptionValidationModule } from '@core/subscription_validation/subscription_validation.module'
-import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
+import { SubscriptionValidationModule } from '@core/subscription-validation/subscription-validation.module'
+import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 
 @Module({
   imports: [

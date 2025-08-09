@@ -52,6 +52,9 @@ export class SubscriptionValidationService {
     if (!plan) {
       throw new PaymentError('Plan not found', 'PLAN_NOT_FOUND', false, 404)
     }
+    if (plan.maxWorkspaces === -1) {
+      return 
+    }
 
     if (plan.maxWorkspaces <= workspaces) {
       throw new PaymentError(
@@ -90,6 +93,9 @@ export class SubscriptionValidationService {
     if (!plan) {
       throw new PaymentError('Plan not found', 'PLAN_NOT_FOUND', false, 404)
     }
+    if (plan.maxSheets === -1) {
+      return
+    }
     if (plan.maxSheets <= sheets) {
       throw new PaymentError(
         'Sheet limit reached',
@@ -127,6 +133,9 @@ export class SubscriptionValidationService {
     if (!plan) {
       throw new PaymentError('Plan not found', 'PLAN_NOT_FOUND', false, 404)
     }
+    if (plan.maxMembers === -1) {
+      return
+    }
     if (plan.maxMembers <= members) {
       throw new PaymentError(
         'Member limit reached',
@@ -162,6 +171,9 @@ export class SubscriptionValidationService {
     })
     if (!plan) {
       throw new PaymentError('Plan not found', 'PLAN_NOT_FOUND', false, 404)
+    }
+    if (plan.maxViewers === -1) {
+      return
     }
     if (plan.maxViewers <= viewers) {
       throw new PaymentError(
@@ -199,6 +211,9 @@ export class SubscriptionValidationService {
     })
     if (!plan) {
       throw new PaymentError('Plan not found', 'PLAN_NOT_FOUND', false, 404)
+    }
+    if (plan.maxTasks === -1) {
+      return
     }
     if (plan.maxTasks <= tasks) {
       throw new PaymentError('Task limit reached', 'TASK_LIMIT_REACHED', false, 403)

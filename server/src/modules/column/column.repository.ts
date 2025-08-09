@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '@core/prisma/prisma.service'
-import { Column, Prisma, Member } from '@prisma/client'
+import { Column, Prisma } from '@prisma/client'
 import { CreateColumnDto } from './dto/create-column.dto'
 import { UpdateColumnDto } from './dto/update-column.dto'
 
@@ -40,7 +40,7 @@ export class ColumnRepository {
   }
 
   async createColumn(body: CreateColumnDto, key: string, companyId: string) {
-    return this.prisma.column.create({
+    const column = await this.prisma.column.create({
       data: {
         name: body.name,
         show: body.show,
@@ -49,15 +49,29 @@ export class ColumnRepository {
         selected: body.selected?.trim() ?? null,
         sheet: { connect: { id: body.sheetId } },
         company: { connect: { id: companyId } },
-        selects: {
-          create:
-            body.selects?.map((select) => ({
-              title: select.title,
-              color: select.color,
-            })) || [],
-        },
       },
     })
+    await Promise.all(
+      body.selects.map((select) => {
+        this.prisma.select.create({
+          data: {
+            title: select.title,
+            color: select.color,
+            column: { connect: { id: column.id } },
+            company: { connect: { id: companyId } },
+            options: {
+              create:
+                select.options.map((option) => ({
+                  name: option.name,
+                  color: option.color,
+                })) || [],
+            },
+          },
+        })
+      }),
+    )
+
+    return this.findById(column.id)
   }
 
   async updateColumn(columnId: string, body: UpdateColumnDto): Promise<Column> {
@@ -73,6 +87,9 @@ export class ColumnRepository {
   async findById(columnId: string): Promise<Column | null> {
     return this.prisma.column.findUnique({
       where: { id: columnId },
+      include: {
+        selects: { include: { options: true } },
+      },
     })
   }
 

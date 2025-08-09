@@ -27,7 +27,7 @@ import { fieldsToCheck } from './dto/task.fields'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { MemberService } from '@member/member.service'
 import { TaskWithRelations } from './types/task.types'
-import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
+import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 
 @Injectable()
 export class TaskService {

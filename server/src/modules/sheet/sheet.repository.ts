@@ -4,7 +4,6 @@ import { CreateSheetDto } from './dto/create-sheet.dto'
 import { UpdateSheetDto } from './dto/update-sheet.dto'
 import { SheetReorderDto } from './dto/reorder-sheets.dto'
 import { ColumnRepository } from '@column/column.repository'
-import { fieldsToCheck } from '@task/dto/task.fields'
 @Injectable()
 export class SheetRepository {
   constructor(
@@ -46,7 +45,7 @@ export class SheetRepository {
       const updatedColumns = columns.map((column, i) => ({
         ...column,
         sheetId: sheet.id,
-        key: defaultColumnKeys.has(column.name)
+        key: defaultColumnKeys.has(column.key)
           ? column.key.toLowerCase()
           : column.type.toLocaleLowerCase() + (i + 1).toString(),
       }))
