@@ -9,7 +9,7 @@ import { RoleService } from '@role/role.service'
 import { WorkspaceModule } from '@workspace/workspace.module' // Import WorkspaceModule
 import { LogRepository } from '@log/log.repository'
 import { ColumnRepository } from '@column/column.repository'
-import { SubscriptionValidationModule } from '@core/subscription_validation/subscription_validation.module'
+import { SubscriptionValidationModule } from '@core/subscription-validation/subscription-validation.module'
 
 @Module({
   imports: [

@@ -19,7 +19,7 @@ import { NotificationService } from '@notification/notification.service'
 import { NotificationRepository } from '@notification/notification.repository'
 import { UtilsModule } from '@core/utils/utils.module'
 import { EmailModule } from '@core/email/email.module'
-import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
+import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 
 @Module({
   imports: [

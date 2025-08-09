@@ -25,7 +25,7 @@ import { SheetService } from '@sheet/sheet.service'
 import { WorkspaceReorderDto } from './dto/reorder-workspaces.dto'
 import { RoleDto } from '@role/dto/role.dto'
 import { LogRepository } from '@log/log.repository'
-import { SubscriptionValidationService } from '@core/subscription_validation/subscription_validation.service'
+import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 @Injectable()
 export class WorkspaceService {
   constructor(
