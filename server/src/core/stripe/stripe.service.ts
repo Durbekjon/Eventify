@@ -194,6 +194,63 @@ export class StripeService {
     }
   }
 
+  // Creates a "free plan" invoice without Stripe payment
+  async createFreePlanInvoice(
+    plan: Plan,
+    userId: string,
+    companyId: string,
+  ): Promise<{
+    subscriptionId: string
+    transactionId: string
+    amount: number
+    currency: string
+  }> {
+    const transactionUuid = randomUUID()
+
+    // Create transaction in DB with SUCCEEDED immediately
+    await this.prisma.transaction.create({
+      data: {
+        id: transactionUuid,
+        userId,
+        companyId,
+        planId: plan.id,
+        amount: 0,
+        currency: 'usd',
+        status: 'SUCCEEDED',
+      },
+    })
+
+    // Create subscription in DB
+    const subscription = await this.prisma.companySubscription.create({
+      data: {
+        companyId,
+        planId: plan.id,
+        startDate: new Date(),
+        endDate: this.calculateEndDate(),
+        isExpired: false,
+        status: 'ACTIVE',
+      },
+    })
+
+    // Update company to unblock and set current subscription
+    await this.prisma.company.update({
+      where: { id: companyId },
+      data: {
+        currentSubscriptionId: subscription.id,
+        isBlocked: false,
+      },
+    })
+
+    console.log(`Free plan activated for company ${companyId}`)
+
+    return {
+      subscriptionId: subscription.id,
+      transactionId: transactionUuid,
+      amount: 0,
+      currency: 'usd',
+    }
+  }
+
   private async handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session,
   ): Promise<void> {
@@ -225,7 +282,7 @@ export class StripeService {
           where: { id: companyId },
           data: {
             isBlocked: false,
-            planId,
+            plan: { connect: { id: planId } },
             currentSubscriptionId: subscription.id,
           },
         })
@@ -379,9 +436,12 @@ export class StripeService {
     userId: string,
     companyId: string,
     customerId: string,
-  ): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  ) {
     const transactionUuid = randomUUID()
-
+    // If plan is free, bypass Stripe and create invoice directly
+    if (plan.price === 0) {
+      return this.createFreePlanInvoice(plan, userId, companyId)
+    }
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount: plan.price * 100, // Convert to cents
       currency: 'usd',
