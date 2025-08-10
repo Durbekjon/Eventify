@@ -30,6 +30,7 @@ import { RoleDto } from '@role/dto/role.dto'
 import { UtilsService } from '@core/utils/utils.service'
 import { EmailService } from '@core/email/email.service'
 import { SubscriptionValidationService } from '../../core/subscription-validation/subscription-validation.service'
+import { FilterDto } from './dto/filter.dto'
 
 @Injectable()
 export class MemberService {
@@ -167,11 +168,12 @@ export class MemberService {
     await emailMessage
   }
 
-  async getMembers(user: IUser) {
+  async getMembers(user: IUser, filter: FilterDto) {
     const selectedRole = await this.validateUserRole(user)
 
     return this.repository.getActiveMembersInReverseOrder(
       selectedRole.companyId,
+      filter
     )
   }
 

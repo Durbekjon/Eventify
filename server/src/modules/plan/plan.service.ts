@@ -3,35 +3,33 @@ import { PlanRepository } from './plan.repository'
 import { CreatePlanDto } from './dto/create-plan.dto'
 import { HTTP_MESSAGES } from '@/consts/http-messages'
 import { UpdatePlanDto } from './dto/update-plan.dto'
+import { Plan } from '@prisma/client'
 
 @Injectable()
 export class PlanService {
   constructor(private readonly repository: PlanRepository) {}
 
-  createPlan(body: CreatePlanDto) {
-    return this.repository.createPlan(body)
+  async createPlan(body: CreatePlanDto) {
+    const plan = await this.repository.createPlan(body)
+    return this.validatePlans([plan])[0]
   }
 
   async getPlans() {
     const plans = await this.repository.getPlans()
-    const plansWithPrice = plans.map((plan) => {
-      return {
-        ...plan,
-        price: plan.price * 100,
-      }
-    })
-    return plansWithPrice
+    return this.validatePlans(plans)
   }
 
-  getPlan(id: string) {
-    return this.getById(id)
+  async getPlan(id: string) {
+    const plan = await this.getById(id)
+    return this.validatePlans([plan])[0]
   }
 
   async updatePlan(id: string, body: UpdatePlanDto) {
     const plan = await this.getById(id)
-    return this.repository.updatePlan(plan.id, body)
+    const updatedPlan = await this.repository.updatePlan(plan.id, body)
+    return this.validatePlans([updatedPlan])[0]
   }
-  
+
   async deleletePlan(id: string) {
     const plan = await this.getById(id)
     return this.repository.deletePlan(plan.id)
@@ -43,5 +41,21 @@ export class PlanService {
     if (!plan) throw new NotFoundException(HTTP_MESSAGES.PLAN.NOT_FOUND)
 
     return plan
+  }
+
+  private async validatePlans(plans: Plan[]) {
+    const updateUnlimitedPlans: Plan[] = plans.map((plan: Plan) => {
+      return {
+        maxWorkspaces:
+          plan.maxWorkspaces === -1 ? 'unlimited' : plan.maxWorkspaces,
+        maxMembers: plan.maxMembers === -1 ? 'unlimited' : plan.maxMembers,
+        maxSheets: plan.maxSheets === -1 ? 'unlimited' : plan.maxSheets,
+        maxTasks: plan.maxTasks === -1 ? 'unlimited' : plan.maxTasks,
+        maxViewers: plan.maxViewers === -1 ? 'unlimited' : plan.maxViewers,
+        ...plan,
+      }
+    })
+
+    return updateUnlimitedPlans
   }
 }
