@@ -41,7 +41,8 @@ export class PlanRepository {
       where: { id },
       data: {
         ...body,
-        order: body.order ?? null, // Handle the case where order might not be provided
+        price: body.price ? body.price * 100 : plan.price, // Use existing price if not provided
+        order: body.order ?? plan.order, // Handle the case where order might not be provided
       },
     })
 
@@ -82,9 +83,12 @@ export class PlanRepository {
       await this.stripe.deleteProduct(id)
     } catch (error) {
       // Log the error but continue with database deletion
-      console.error(`Error deleting Stripe product for plan ${id}:`, error.message)
+      console.error(
+        `Error deleting Stripe product for plan ${id}:`,
+        error.message,
+      )
     }
-    
+
     // Always delete from database, regardless of Stripe deletion result
     return this.prisma.plan.delete({ where: { id } })
   }

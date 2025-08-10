@@ -51,25 +51,27 @@ export class ColumnRepository {
         company: { connect: { id: companyId } },
       },
     })
-    await Promise.all(
-      body.selects.map((select) => {
-        this.prisma.select.create({
-          data: {
-            title: select.title,
-            color: select.color,
-            column: { connect: { id: column.id } },
-            company: { connect: { id: companyId } },
-            options: {
-              create:
-                select.options.map((option) => ({
-                  name: option.name,
-                  color: option.color,
-                })) || [],
+    if (body.selects && body.selects.length > 0) {
+      await Promise.all(
+        body.selects.map((select) => {
+          this.prisma.select.create({
+            data: {
+              title: select.title,
+              color: select.color,
+              column: { connect: { id: column.id } },
+              company: { connect: { id: companyId } },
+              options: {
+                create:
+                  select.options.map((option) => ({
+                    name: option.name,
+                    color: option.color,
+                  })) || [],
+              },
             },
-          },
-        })
-      }),
-    )
+          })
+        }),
+      )
+    }
 
     return this.findById(column.id)
   }

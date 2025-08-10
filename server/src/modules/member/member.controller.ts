@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { MemberService } from './member.service'
@@ -16,6 +17,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { StatusUpdateDto } from './dto/status-update.dto'
 import { UpdateMemberDto } from './dto/update-member.dto'
+import { FilterDto } from './dto/filter.dto'
 
 @ApiBearerAuth()
 @ApiTags('Member')
@@ -26,8 +28,8 @@ export class MemberController {
 
   @Get()
   @ApiOperation({ summary: 'Get members' })
-  getUser(@User() user: IUser) {
-    return this.service.getMembers(user)
+  getUser(@User() user: IUser, @Query() filter: FilterDto) {
+    return this.service.getMembers(user, filter)
   }
 
   @Get(':id')

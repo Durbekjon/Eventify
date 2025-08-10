@@ -4,6 +4,7 @@ import { CreateMemberDto } from './dto/create-member.dto'
 import { StatusUpdateDto } from './dto/status-update.dto'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { Prisma } from '@prisma/client'
+import { FilterDto } from './dto/filter.dto'
 
 @Injectable()
 export class MemberRepository {
@@ -37,10 +38,17 @@ export class MemberRepository {
     }
   }
 
-  getActiveMembersInReverseOrder(companyId: string) {
-    // status: { not: 'NEW' }
+  getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
+    const { type, status, view } = filter
+    const where: Prisma.MemberWhereInput = {
+      companyId,
+    }
+    if (type) where.type = type
+    if (status) where.status = status
+    if (view) where.view = view
+
     return this.prisma.member.findMany({
-      where: { companyId, status: { not: 'CANCELLED' } },
+      where,
       orderBy: { id: 'desc' },
       include: {
         user: {
