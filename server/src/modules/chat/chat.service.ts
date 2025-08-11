@@ -54,7 +54,18 @@ export class ChatService {
     return this.prisma.message.findMany({
       where: { chatId },
       orderBy: { createdAt: 'asc' },
-      include: { user: true },
+      include: {
+        user: {
+          include: {
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
 
