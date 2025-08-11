@@ -238,6 +238,7 @@ export class StripeService {
       data: {
         currentSubscriptionId: subscription.id,
         isBlocked: false,
+        plan: { connect: { id: plan.id } },
       },
     })
 

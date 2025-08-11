@@ -44,18 +44,16 @@ export class PlanService {
   }
 
   private async validatePlans(plans: Plan[]) {
-    const updateUnlimitedPlans: Plan[] = plans.map((plan: Plan) => {
+    return plans.map((plan: Plan) => {
       return {
+        ...plan, // avval plan qiymatlari
         maxWorkspaces:
-          plan.maxWorkspaces === -1 ? 'unlimited' : plan.maxWorkspaces,
-        maxMembers: plan.maxMembers === -1 ? 'unlimited' : plan.maxMembers,
-        maxSheets: plan.maxSheets === -1 ? 'unlimited' : plan.maxSheets,
-        maxTasks: plan.maxTasks === -1 ? 'unlimited' : plan.maxTasks,
-        maxViewers: plan.maxViewers === -1 ? 'unlimited' : plan.maxViewers,
-        ...plan,
+          plan.maxWorkspaces < 0 ? 'unlimited' : plan.maxWorkspaces,
+        maxMembers: plan.maxMembers < 0 ? 'unlimited' : plan.maxMembers,
+        maxSheets: plan.maxSheets < 0 ? 'unlimited' : plan.maxSheets,
+        maxTasks: plan.maxTasks < 0 ? 'unlimited' : plan.maxTasks,
+        maxViewers: plan.maxViewers < 0 ? 'unlimited' : plan.maxViewers,
       }
     })
-
-    return updateUnlimitedPlans
   }
 }
