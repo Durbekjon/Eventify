@@ -481,7 +481,7 @@ enum ColumnType {
   TEXT
   NUMBER
   LINK
-  MEMBER
+  MEMBERS
   DATE
   DUEDATE
   FILE
