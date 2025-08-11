@@ -39,7 +39,7 @@
       token = document.getElementById('token').value;
       chatId = document.getElementById('chatId').value;
 
-      socket = io('http://localhost:4001/chat', {
+      socket = io('http://localhost:4000/chat', {
         query: { token, chatId },
         transports: ['websocket']
       });
