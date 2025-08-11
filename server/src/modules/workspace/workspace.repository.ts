@@ -70,7 +70,16 @@ export class WorkspaceRepository {
     })
   }
 
-  getOwnMemberWorkspaces(memberId: string) {
+  async getOwnMemberWorkspaces(memberId: string) {
+    const member = await this.prisma.member.findUnique({
+      where: { id: memberId },
+    })
+    if (!member) {
+      throw new Error('Member not found')
+    }
+    if (member.status !== 'ACTIVE') {
+      return []
+    }
     return this.prisma.workspace.findMany({
       where: { members: { some: { id: memberId } } },
       include: { sheets: true },

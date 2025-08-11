@@ -4,6 +4,6 @@ export const SOCKET_OPTIONS = {
   MESSAGE: 'message',
   ONLINE_USERS_IN_CHAT: 'onlineUsersInChat',
   MESSAGES_IN_CHAT: 'messagesInChat',
-  ERROR: 'CLIENT ERROR',
+  ERROR: 'error',
   CHAT_MESSAGE: 'chatMessage',
 }
