@@ -66,6 +66,25 @@ export class CompanyService {
     }
   }
 
+  async getCurrentPlan(user: IUser) {
+    const role = await this.validateUserRole(user)
+    const company = await this.getOne(role.companyId, user)
+    const lastSubscription = await this.getLastSubscription(company.id)
+    if (!lastSubscription) {
+      throw new BadRequestException('No active subscription found')
+    }
+    if (lastSubscription.isExpired) {
+      throw new BadRequestException('Your subscription is expired')
+    }
+    const plan = await this.prisma.plan.findUnique({
+      where: { id: lastSubscription.planId },
+    })
+    if (!plan) {
+      throw new BadRequestException('Plan not found')
+    }
+    return plan
+  }
+
   /**
    * Get company usage data with optimized parallel queries
    * @param companyId - Company ID

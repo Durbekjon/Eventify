@@ -35,6 +35,11 @@ export class CompanyController {
   getCompanyUsage(@User() user: IUser) {
     return this.service.getUsage(user)
   }
+  @Get('current-plan')
+  @ApiOperation({ summary: 'Get current plan' })
+  getCurrentPlan(@User() user: IUser) {
+    return this.service.getCurrentPlan(user)
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get company' })
