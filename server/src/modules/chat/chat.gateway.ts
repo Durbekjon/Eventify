@@ -135,14 +135,15 @@ export class ChatGateway implements OnGatewayConnection<Socket> {
     }
   }
 
-  private addUserToChat({ chatId, user }: OnlineUser): void {
+  private async addUserToChat({ chatId, user }: OnlineUser): Promise<void> {
     const isUserAlreadyOnline = this.onlineUsers.some(
       (onlineUser) =>
         onlineUser.user.id === user.id && onlineUser.chatId === chatId,
     )
 
     if (!isUserAlreadyOnline) {
-      this.onlineUsers.push({ chatId, user })
+      let detailedUser = await this.chatService.getUserData(user.id)
+      this.onlineUsers.push({ chatId, user: detailedUser })
     }
   }
 
