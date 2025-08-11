@@ -10,7 +10,7 @@ export class PaymentRepository {
    * @param id - Plan ID
    * @returns Plan or null if not found
    */
-  getPlan(id: string) {
+  async getPlan(id: string) {
     return this.prisma.plan.findUnique({ where: { id } })
   }
 }

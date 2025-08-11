@@ -40,15 +40,23 @@ export class SheetRepository {
         'price',
         'paid',
       ])
+     let numberOfDefaultColumns = 0
 
-      // Step 2: Prepare the columns with unique keys if necessary
-      const updatedColumns = columns.map((column, i) => ({
-        ...column,
-        sheetId: sheet.id,
-        key: defaultColumnKeys.has(column.key)
-          ? column.key.toLowerCase()
-          : column.type.toLocaleLowerCase() + (i + 1).toString(),
-      }))
+     const updatedColumns = columns.map((column, i) => {
+       const isDefault = defaultColumnKeys.has(column.name.toLowerCase())
+       if (isDefault) numberOfDefaultColumns++
+
+       const columnKey = isDefault
+         ? column.name.toLowerCase()
+         : `${column.type.toLowerCase()}${i}`
+
+       return {
+         ...column,
+         sheetId: sheet.id,
+         key: columnKey,
+       }
+     })
+
 
       // Step 3: Create each column and handle `selects` if present
       for (const column of updatedColumns) {
@@ -143,8 +151,8 @@ export class SheetRepository {
     )
   }
 
-  deleteSheet(id: string) {
-    return this.prisma.sheet.delete({ where: { id } })
+  async deleteSheet(id: string) {
+     return this.prisma.sheet.delete({ where: { id } })
   }
 
   async deleteMultipleSheetsByWorkspace(workspaceId: string) {
