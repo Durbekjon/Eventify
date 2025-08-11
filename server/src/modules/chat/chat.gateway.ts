@@ -17,7 +17,7 @@ interface OnlineUser {
 }
 
 @Injectable()
-@WebSocketGateway(4002, {
+@WebSocketGateway({
   namespace: 'chat',
   cors: {
     origin: '*',
