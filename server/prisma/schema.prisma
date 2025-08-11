@@ -317,10 +317,10 @@ model Log {
   sheetId     String?    @map("sheet_id")
   taskId      String?    @map("task_id")
   company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  sheet       Sheet?     @relation(fields: [sheetId], references: [id])
-  task        Task?      @relation(fields: [taskId], references: [id])
-  user        User?      @relation(fields: [userId], references: [id])
-  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  sheet       Sheet?     @relation(fields: [sheetId], references: [id], onDelete: SetNull)
+  task        Task?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 
   @@map("logs")
 }

@@ -53,8 +53,8 @@ export class ColumnRepository {
     })
     if (body.selects && body.selects.length > 0) {
       await Promise.all(
-        body.selects.map((select) => {
-          this.prisma.select.create({
+        body.selects.map(async (select) => {
+         return this.prisma.select.create({
             data: {
               title: select.title,
               color: select.color,
@@ -68,6 +68,9 @@ export class ColumnRepository {
                   })) || [],
               },
             },
+            include: {
+              options: true
+            }
           })
         }),
       )

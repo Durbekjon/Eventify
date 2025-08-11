@@ -310,7 +310,11 @@ export class StripeService {
 
         await this.prisma.company.update({
           where: { id: subscription.companyId },
-          data: { isBlocked: false },
+          data: {
+            isBlocked: false,
+            plan: { connect: { id: subscription.planId } },
+            currentSubscriptionId: subscription.id,
+          },
         })
       }
     }
@@ -327,7 +331,7 @@ export class StripeService {
       if (subscription) {
         await this.prisma.company.update({
           where: { id: subscription.companyId },
-          data: { isBlocked: true },
+          data: { isBlocked: true, plan: { disconnect: true }, currentSubscriptionId: null   },
         })
       }
     }
@@ -343,7 +347,7 @@ export class StripeService {
     if (dbSubscription) {
       await this.prisma.company.update({
         where: { id: dbSubscription.companyId },
-        data: { isBlocked: true, currentSubscriptionId: null },
+        data: { isBlocked: true, currentSubscriptionId: null, plan: { disconnect: true } },
       })
     }
   }
@@ -525,6 +529,7 @@ export class StripeService {
         data: {
           currentSubscriptionId: subscription.id,
           isBlocked: false,
+          plan: { connect: { id: plan.id } }, // Connect the plan to the company
         },
       })
 

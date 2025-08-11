@@ -6,7 +6,6 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  // OnModuleInit,
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { AuthRepository } from './auth.repository'
@@ -23,7 +22,6 @@ import {
 } from './dto/registration.dto'
 
 @Injectable()
-//  implements OnModuleInit
 export class AuthService {
   constructor(
     private readonly utils: UtilsService,
@@ -32,15 +30,6 @@ export class AuthService {
     private readonly repository: AuthRepository,
     private readonly emailService: EmailService,
   ) {}
-
-  // async onModuleInit() {
-  //   const response = await this.login({
-  //     email: process.env.ADMIN_EMAIL,
-  //     password: process.env.ADMIN_PASSWORD,
-  //   })
-
-  //   console.log(response.token)
-  // }
 
   async login(body: LoginDto) {
     body.email = body.email.toLowerCase()
@@ -152,7 +141,6 @@ export class AuthService {
           id: body.token,
         },
       })
-      console.log(verificationCode)
       if (!verificationCode) throw new Error('Incorrect OTP')
 
       if (this.utils.isOtpExpired(verificationCode.createdAt)) {
