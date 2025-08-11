@@ -201,34 +201,13 @@ export class TaskRepository {
       }),
     }
 
-    // ✅ Apply simplified search filters
-    if (search && search.length) {
-      // Validate search filters first
-      const validation = this.validateSearchFilters(search)
-      if (!validation.isValid) {
-        throw new Error(
-          `Invalid search filters: ${validation.errors.join(', ')}`,
-        )
-      }
-
-      // Build search conditions for each filter
-      const searchConditions: Prisma.TaskWhereInput[] = []
-
-      for (const filter of search) {
-        const { key, value } = filter
-
-        try {
-          const condition = this.buildSearchCondition(key, value)
-          searchConditions.push({ [key]: condition })
-        } catch (error) {
-          throw new Error(`Invalid search filter: ${error.message}`)
-        }
-      }
-
-      // Combine base conditions with search conditions using AND logic
+    if (search) {
       whereConditions = {
         ...whereConditions,
-        AND: searchConditions,
+        name: {
+          contains: search,
+          mode: 'insensitive',
+        },
       }
     }
 
@@ -236,7 +215,23 @@ export class TaskRepository {
       const [tasks, count] = await Promise.all([
         this.prisma.task.findMany({
           where: whereConditions,
-          include: { members: true, chat: true },
+          include: {
+            members: {
+              include: {
+                user: {
+                  include: {
+                    avatar: {
+                      select: {
+                        id: true,
+                        path: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            chat: true,
+          },
           skip: (parsedPage - 1) * parsedLimit,
           take: parsedLimit,
           orderBy: { createdAt: order },
