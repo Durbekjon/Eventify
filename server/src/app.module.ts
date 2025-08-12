@@ -22,6 +22,7 @@ import { PaymentModule } from './modules/payment/payment.module'
 import { SubscriptionModule } from './modules/subscription/subscription.module'
 import { ChatModule } from './modules/chat/chat.module'
 import { FileModule } from './modules/file/file.module'
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -64,6 +65,8 @@ import { FileModule } from './modules/file/file.module'
     ChatModule,
 
     FileModule,
+
+    AdminModule,
   ],
 })
 export class AppModule {}

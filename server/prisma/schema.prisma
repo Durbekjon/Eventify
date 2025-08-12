@@ -21,6 +21,7 @@ model User {
   updatedAt     DateTime       @updatedAt @map("updated_at")
   avatar        File?          @relation("user_avatars", fields: [avatarId], references: [id])
   avatarId      String?        @map("avatar_id")
+  status        UserStatus     @default(ACTIVE)
   companies     Company[]
   logs          Log[]
   members       Member[]
@@ -307,7 +308,7 @@ model Task {
 model Log {
   id          String     @id @default(uuid())
   message     String
-  companyId   String     @map("company_id")
+  companyId   String?     @map("company_id")
   userId      String?    @map("user_id")
   createdAt   DateTime   @default(now())
   newValue    String?    @map("new_value")
@@ -316,7 +317,7 @@ model Log {
   workspaceId String?    @map("workspace_id")
   sheetId     String?    @map("sheet_id")
   taskId      String?    @map("task_id")
-  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company     Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   sheet       Sheet?     @relation(fields: [sheetId], references: [id], onDelete: SetNull)
   task        Task?      @relation(fields: [taskId], references: [id], onDelete: SetNull)
   user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -481,7 +482,7 @@ enum ColumnType {
   TEXT
   NUMBER
   LINK
-  MEMBER
+  MEMBERS
   DATE
   DUEDATE
   FILE
@@ -493,4 +494,9 @@ enum TransactionStatus {
   SUCCEEDED
   FAILED
   CANCELED
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
 }

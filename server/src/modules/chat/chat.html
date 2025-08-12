@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WebSocket Chat Test</title>
+</head>
+<body>
+  <h2>Chat Test</h2>
+
+  <div>
+    <label>Token: <input id="token" type="text" value="YOUR_TOKEN_HERE"></label><br/>
+    <label>Chat ID: <input id="chatId" type="text" value="YOUR_CHAT_ID_HERE"></label><br/>
+    <button onclick="connectSocket()">Connect</button>
+  </div>
+
+  <hr/>
+
+  <div id="status">Status: Disconnected</div>
+
+  <div>
+    <input id="messageInput" type="text" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <h3>Messages</h3>
+  <div id="messages"></div>
+
+  <h3>Online Users</h3>
+  <div id="onlineUsers"></div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    let socket;
+    let token;
+    let chatId;
+
+    function connectSocket() {
+      token = document.getElementById('token').value;
+      chatId = document.getElementById('chatId').value;
+
+      socket = io('http://localhost:4000/chat', {
+        query: { token, chatId },
+        transports: ['websocket']
+      });
+
+      socket.on('connect', () => {
+        document.getElementById('status').innerText = 'Status: Connected';
+        console.log('Connected');
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('status').innerText = 'Status: Disconnected';
+        console.log('Disconnected');
+      });
+
+      socket.on('error', (err) => {
+        console.error('Connection error:', err);
+      });
+
+      // Listen for incoming messages in this chat
+      socket.on('messagesInChat' + chatId, (messages) => {
+        const msgDiv = document.getElementById('messages');
+        msgDiv.innerHTML = '';
+        messages.forEach(m => {
+          const p = document.createElement('p');
+          p.textContent = m.userId + ': ' + m.content;
+          msgDiv.appendChild(p);
+        });
+      });
+
+      // Listen for online users
+      socket.on('onlineUsersInChat' + chatId, (users) => {
+        const onlineDiv = document.getElementById('onlineUsers');
+        onlineDiv.innerHTML = users.map(u => u.user.id).join(', ');
+      });
+
+      // Listen for errors
+      socket.on('ERROR', (message) => {
+        console.error('Error:', message);
+        alert('Error: ' + message);
+      });
+    }
+
+    function sendMessage() {
+      const content = document.getElementById('messageInput').value;
+      if (!content) return;
+      socket.emit('chatMessage', { content });
+      document.getElementById('messageInput').value = '';
+    }
+  </script>
+</body>
+</html>

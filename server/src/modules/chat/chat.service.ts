@@ -50,11 +50,36 @@ export class ChatService {
     return isMemberWithAccess || role.access.view === ViewType.ALL
   }
 
+  async getUserData(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        avatar: {
+          select: {
+            id: true,
+            path: true,
+          },
+        },
+      },
+    })
+  }
+
   async getChatMessages(chatId: string) {
     return this.prisma.message.findMany({
       where: { chatId },
       orderBy: { createdAt: 'asc' },
-      include: { user: true },
+      include: {
+        user: {
+          include: {
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
 
