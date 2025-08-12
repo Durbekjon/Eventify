@@ -18,7 +18,7 @@ export class EmailService {
     return this.transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: 'Eventify',
+      subject: 'Taskme',
       html: `<body><p>Your OTP: <b>${otp}</b></p><p>It expires in ${OTP_VALID_DURATION_MINUTES} minutes.</p></body>`,
     })
   } //
@@ -27,7 +27,7 @@ export class EmailService {
     return this.transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: 'Eventify',
+      subject: 'Taskme',
       html: `<body><p>Your OTP: <b>${otp}</b></p><p>It expires in ${OTP_VALID_DURATION_MINUTES} minutes.</p></body>`,
     })
   }
@@ -36,7 +36,7 @@ export class EmailService {
     return this.transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: 'Eventify',
+      subject: 'Taskme',
       html: `<body><p>You have been invited to ${companyName}. please check it out!</p></body>`,
     })
   }
@@ -49,7 +49,7 @@ export class EmailService {
     return this.transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: 'Eventify',
+      subject: 'Taskme',
       html: `<><p>You have been invited to ${companyName}. please check it out!</p>
         <p>Your Login: <b>${email}</b></p>
         <p>Your password: <b>${password}</b></p>

@@ -39,7 +39,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .addBearerAuth()
-    .setTitle('Eventify API')
+    .setTitle('taskme API')
     .setVersion('1.0')
     .build()
 

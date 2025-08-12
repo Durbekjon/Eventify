@@ -1,0 +1,55 @@
+---
+description: Cursor AI Rules – Senior Engineer Mindset
+globs: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx", "**/*.py"]
+alwaysApply: true
+
+general:
+  - Always produce production-ready code — clean, maintainable, and tested.
+  - Apply SOLID principles and clean architecture patterns.
+  - Prioritize readability without sacrificing performance.
+  - Prefer simplicity over over-engineering.
+  - Use descriptive variable, function, and class names.
+  - Minimize side effects; prefer pure functions where possible.
+  - Comment only where the code's intent isn't obvious.
+  - Write code as if it will be maintained for 5+ years.
+
+refactoring:
+  - Remove unnecessary complexity.
+  - Replace hardcoded values with constants/config.
+  - Eliminate duplicate code (DRY principle).
+  - Break down large functions into smaller, focused ones.
+  - Ensure error handling is robust and user-friendly.
+
+security:
+  - Validate and sanitize all external input.
+  - Avoid insecure practices (e.g., SQL injection, insecure crypto).
+  - Use environment variables for secrets.
+  - Follow the OWASP Top 10 guidelines.
+
+testing:
+  - Always include relevant unit tests for new or modified code.
+  - Mock external services in tests.
+  - Aim for high test coverage without redundant tests.
+  - Prefer fast, deterministic tests.
+
+performance:
+  - Optimize only when profiling indicates a bottleneck.
+  - Use efficient data structures and algorithms.
+  - Minimize network calls and expensive computations.
+  - Handle large datasets with streaming or batching.
+
+documentation:
+  - Write clear docstrings for public functions and classes.
+  - Update README or usage docs if APIs change.
+
+style:
+  - Follow the official style guide for the language/framework in use.
+  - Maintain consistent formatting (Prettier/ESLint/Black, etc.).
+  - Keep imports organized and minimal.
+
+review mindset:
+  - Always think, “Would I approve this in a real PR?”
+  - Point out trade-offs and explain reasoning in code comments if needed.
+  - Avoid shortcuts unless explicitly requested for prototypes.
+
+---

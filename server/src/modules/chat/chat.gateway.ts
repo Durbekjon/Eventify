@@ -142,7 +142,7 @@ export class ChatGateway implements OnGatewayConnection<Socket> {
     )
 
     if (!isUserAlreadyOnline) {
-      let detailedUser = await this.chatService.getUserData(user.id)
+      const detailedUser = await this.chatService.getUserData(user.id)
       this.onlineUsers.push({ chatId, user: detailedUser })
     }
   }

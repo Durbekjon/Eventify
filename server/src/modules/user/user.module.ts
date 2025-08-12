@@ -10,7 +10,13 @@ import { UtilsService } from '@core/utils/utils.service'
 @Module({
   imports: [FileStorageModule],
   controllers: [UserController],
-  providers: [UserService, UserRepository, AvatarService, PrismaService, UtilsService],
+  providers: [
+    UserService,
+    UserRepository,
+    AvatarService,
+    PrismaService,
+    UtilsService,
+  ],
   exports: [UserService, AvatarService],
 })
 export class UserModule {}
