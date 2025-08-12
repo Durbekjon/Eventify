@@ -1,6 +1,6 @@
 # Payment Testing Page
 
-This directory contains a comprehensive HTML/JavaScript payment testing page for the Eventify payment system.
+This directory contains a comprehensive HTML/JavaScript payment testing page for the taskme payment system.
 
 ## Files
 

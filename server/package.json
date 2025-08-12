@@ -1,7 +1,7 @@
 {
-  "name": "eventify-backend",
-  "version": "0.0.1",
-  "description": "",
+  "name": "taskme-backend",
+  "version": "0.1.0",
+  "description": "taskme Backend",
   "author": "Durbek Saydaliyev",
   "private": true,
   "license": "UNLICENSED",

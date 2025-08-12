@@ -23,35 +23,35 @@ async function main() {
 
     // Create plans
     console.log('💳 Creating subscription plans...')
-    const plans = await createPlans(products)
+    await createPlans(products)
 
     // Create admin user and company
     console.log('👤 Creating admin user and company...')
-    const adminData = await createAdminUser()
+    await createAdminUser()
 
     // Create sample companies and users
-    console.log('🏢 Creating sample companies and users...')
-    await createSampleCompanies(adminData.user, plans)
+    // console.log('🏢 Creating sample companies and users...')
+    // await createSampleCompanies(adminData.user, plans)
 
     // Create sample workspaces and sheets
-    console.log('📋 Creating sample workspaces and sheets...')
-    await createSampleWorkspaces()
+    // console.log('📋 Creating sample workspaces and sheets...')
+    // await createSampleWorkspaces()
 
     // Create sample tasks and columns
-    console.log('✅ Creating sample tasks and columns...')
-    await createSampleTasks()
+    // console.log('✅ Creating sample tasks and columns...')
+    // await createSampleTasks()
 
     // Create sample members
-    console.log('👥 Creating sample members...')
-    await createSampleMembers()
+    // console.log('👥 Creating sample members...')
+    // await createSampleMembers()
 
     // Create sample notifications
-    console.log('🔔 Creating sample notifications...')
-    await createSampleNotifications()
+    // console.log('🔔 Creating sample notifications...')
+    // await createSampleNotifications()
 
     // Create sample payment logs
-    console.log('💰 Creating sample payment logs...')
-    await createSamplePaymentLogs()
+    // console.log('💰 Creating sample payment logs...')
+    // await createSamplePaymentLogs()
 
     console.log('✅ Database seeding completed successfully!')
   } catch (error) {
@@ -65,7 +65,7 @@ async function createStripeProducts() {
 
   // Free Plan Product
   const freeProduct = await stripe.products.create({
-    name: 'Eventify Free',
+    name: 'Taskme Free',
     description: 'Free plan for basic task management',
   })
 
@@ -85,7 +85,7 @@ async function createStripeProducts() {
 
   // Pro Plan Product
   const proProduct = await stripe.products.create({
-    name: 'Eventify Pro',
+    name: 'Taskme Pro',
     description: 'Professional plan with advanced features',
   })
 
@@ -105,7 +105,7 @@ async function createStripeProducts() {
 
   // Business Plan Product
   const businessProduct = await stripe.products.create({
-    name: 'Eventify Business',
+    name: 'Taskme Business',
     description: 'Business plan for teams and organizations',
   })
 
@@ -125,7 +125,7 @@ async function createStripeProducts() {
 
   // Enterprise Plan Product
   const enterpriseProduct = await stripe.products.create({
-    name: 'Eventify Enterprise',
+    name: 'Taskme Enterprise',
     description: 'Enterprise plan for large organizations',
   })
 
@@ -224,13 +224,13 @@ async function createAdminUser() {
   if (!existData) {
     const customer = await stripe.customers.create({
       email: ADMIN_EMAIL,
-      name: 'Admin Eventify',
+      name: 'Admin Taskme',
     })
 
     const user = await prisma.user.create({
       data: {
         firstName: 'Admin',
-        lastName: 'Eventify',
+        lastName: 'Taskme',
         email: ADMIN_EMAIL,
         password: await bcrypt.hash(process.env.ADMIN_PASSWORD, PASSWORD_SALT),
         isAdmin: true,
@@ -240,7 +240,7 @@ async function createAdminUser() {
 
     const company = await prisma.company.create({
       data: {
-        name: 'EVENTIFY',
+        name: 'Taskme',
         authorId: user.id,
         stripeCustomerId: customer.id,
       },
@@ -269,6 +269,7 @@ async function createAdminUser() {
   return { user: existData, company: null, role: null }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createSampleCompanies(adminUser: any, plans: any[]) {
   const companies = [
     {
@@ -327,6 +328,7 @@ async function createSampleCompanies(adminUser: any, plans: any[]) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createSampleUsersForCompany(company: any, adminUser: any) {
   const users = [
     {
@@ -387,6 +389,7 @@ async function createSampleUsersForCompany(company: any, adminUser: any) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createSampleWorkspaces() {
   const companies = await prisma.company.findMany()
 
@@ -497,6 +500,7 @@ async function createSampleColumns(sheet: any) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createSampleTasks() {
   const sheets = await prisma.sheet.findMany({
     include: {
@@ -560,6 +564,7 @@ async function createSampleTasks() {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createSampleMembers() {
   const companies = await prisma.company.findMany()
 
@@ -621,6 +626,7 @@ async function createSampleMembers() {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createSampleNotifications() {
   const users = await prisma.user.findMany({
     take: 10, // Limit to first 10 users
@@ -628,7 +634,7 @@ async function createSampleNotifications() {
 
   const notificationTemplates = [
     {
-      text: 'Welcome to Eventify! Thank you for joining our platform. Get started by creating your first workspace.',
+      text: 'Welcome to taskme! Thank you for joining our platform. Get started by creating your first workspace.',
       type: 'NOTIFICATION' as const,
       from: 'APPLICATION_TEAM' as const,
     },
@@ -666,6 +672,7 @@ async function createSampleNotifications() {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createSamplePaymentLogs() {
   const companies = await prisma.company.findMany({
     include: {

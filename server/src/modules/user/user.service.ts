@@ -62,6 +62,7 @@ export class UserService {
   }
 
   async updateUser(body: UpdateUserDto, user: IUser) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...updatedUser } = await this.repository.updateUser(
       user.id,
       body,
