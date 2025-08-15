@@ -15,14 +15,13 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { UpdateCompanyDto } from './dto/update-company.dto'
 import { User } from '@decorators/user.decorator'
 import { IUser } from '@/modules/user/dto/IUser'
-import { PlanService } from '@plan/plan.service'
 
 @ApiBearerAuth()
 @ApiTags('Company')
 @UseGuards(JwtAuthGuard)
 @Controller({ path: 'company', version: '1' })
 export class CompanyController {
-  constructor(private readonly service: CompanyService, private readonly plan: PlanService) {}
+  constructor(private readonly service: CompanyService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create company' })

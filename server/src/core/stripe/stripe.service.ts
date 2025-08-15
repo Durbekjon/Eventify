@@ -57,7 +57,7 @@ export class StripeService {
       } catch (error) {
         // If product doesn't exist in Stripe, just return (already deleted or never existed)
         console.log(
-          `Product ${planId} doesn't exist in Stripe, skipping deletion`,
+          `Product ${planId} doesn't exist in Stripe, skipping deletion.\n${error.message}`,
         )
         return
       }
@@ -255,7 +255,7 @@ export class StripeService {
   private async handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session,
   ): Promise<void> {
-    const { planId, userId, companyId } = session.metadata
+    const { planId, companyId } = session.metadata
 
     if (session.payment_status === 'paid') {
       await this.prisma.$transaction(async (tx) => {
@@ -331,7 +331,11 @@ export class StripeService {
       if (subscription) {
         await this.prisma.company.update({
           where: { id: subscription.companyId },
-          data: { isBlocked: true, plan: { disconnect: true }, currentSubscriptionId: null   },
+          data: {
+            isBlocked: true,
+            plan: { disconnect: true },
+            currentSubscriptionId: null,
+          },
         })
       }
     }
@@ -347,7 +351,11 @@ export class StripeService {
     if (dbSubscription) {
       await this.prisma.company.update({
         where: { id: dbSubscription.companyId },
-        data: { isBlocked: true, currentSubscriptionId: null, plan: { disconnect: true } },
+        data: {
+          isBlocked: true,
+          currentSubscriptionId: null,
+          plan: { disconnect: true },
+        },
       })
     }
   }
@@ -493,8 +501,7 @@ export class StripeService {
       await this.stripe.paymentIntents.retrieve(paymentIntentId)
 
     if (paymentIntent.status === 'succeeded') {
-      const { planId, userId, companyId, transactionId } =
-        paymentIntent.metadata
+      const { planId, companyId, transactionId } = paymentIntent.metadata
 
       // Create subscription
       const plan = await this.prisma.plan.findUnique({

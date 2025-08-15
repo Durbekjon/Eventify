@@ -31,7 +31,8 @@ model User {
   transactions  Transaction[]
   files         File[]         @relation("user_files")
   paymentLogs   PaymentLog[]
-
+  tasks         Task[]
+  customizedForPlan Plan[]             @relation("customized_for_users")
   @@map("users")
 }
 
@@ -204,11 +205,14 @@ model Plan {
   maxTasks             Int                   @map("max_tasks") 
   order                Int                   @default(autoincrement())
   stripePriceId        String?               @map("stripe_price_id")
+  stripeProductId      String?               @map("stripe_product_id")
   companies            Company[]
   companySubscriptions CompanySubscription[]
   transactions         Transaction[]
   paymentLogs          PaymentLog[]
-
+  isCustomized         Boolean               @default(false)
+  customizedForUsers   User[]                @relation("customized_for_users")
+  
   @@map("plans")
 }
 
@@ -292,6 +296,9 @@ model Task {
   sheetId     String    @map("sheet_id")
   companyId   String    @map("company_id")
   createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  lastUpdatedByUserId String?   @map("last_updated_by_user_id")
+  lastUpdatedByUser User?   @relation(fields: [lastUpdatedByUserId], references: [id], onDelete: SetNull)
   order       Int       @default(autoincrement())
   name        String
   chat        Chat?
