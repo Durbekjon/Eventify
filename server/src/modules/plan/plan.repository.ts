@@ -1,5 +1,5 @@
 import { PrismaService } from '@core/prisma/prisma.service'
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { CreatePlanDto } from './dto/create-plan.dto'
 import { UpdatePlanDto } from './dto/update-plan.dto'
 import { StripeService } from '@stripe/stripe.service'
@@ -12,21 +12,56 @@ export class PlanRepository {
   ) {}
 
   async createPlan(body: CreatePlanDto) {
+    const { isCustomized, customizedPlanFor, ...rest } = body
+
+    if (isCustomized) {
+      const users = await this.prisma.user.findMany({
+        where: {
+          id: { in: customizedPlanFor },
+        },
+      })
+
+      if (users.length !== customizedPlanFor.length) {
+        throw new BadRequestException('Some users not found')
+      }
+    }
+
     // Create the plan in the database
     const plan = await this.prisma.plan.create({
       data: {
-        ...body,
-        maxTasks: body.maxTasks ?? 0,
+        ...rest,
+        maxTasks: rest.maxTasks ?? 0,
+        isCustomized,
+        customizedForUsers: {
+          connect: customizedPlanFor.map((id) => ({ id })),
+        },
       },
     })
 
     // Create the corresponding product and price in Stripe
-    await this.stripe.createProduct(plan)
+    await Promise.all([
+      this.stripe.createProduct(plan),
+      this.prisma.plan.update({
+        where: { id: plan.id },
+        data: {
+          stripePriceId: plan.id,
+          stripeProductId: plan.id,
+        },
+      }),
+    ])
     return plan // Return the created plan
   }
 
   async getPlans() {
-    return this.prisma.plan.findMany({ orderBy: { order: 'asc' } })
+    return this.prisma.plan.findMany({
+      where: { isCustomized: false },
+      orderBy: { order: 'asc' },
+    })
+  }
+  async getPlansForAdmin() {
+    return this.prisma.plan.findMany({
+      orderBy: { order: 'asc' },
+    })
   }
 
   async getPlan(id: string) {
@@ -34,62 +69,99 @@ export class PlanRepository {
   }
 
   async updatePlan(id: string, body: UpdatePlanDto) {
-    const plan = await this.getPlan(id) // Fetch the current plan
+    const plan = await this.getPlan(id)
+    const { isCustomized, customizedPlanFor = [], ...rest } = body
 
-    // Update the plan in the database
+    // Prepare customization changes
+    const customizationData = isCustomized
+      ? {
+          isCustomized: true,
+          customizedForUsers: {
+            set: (
+              await this.prisma.user.findMany({
+                where: { id: { in: customizedPlanFor } },
+                select: { id: true },
+              })
+            ).map(({ id }) => ({ id })),
+          },
+        }
+      : {
+          isCustomized: false,
+          customizedForUsers: {
+            disconnect: customizedPlanFor.map((uid) => ({ id: uid })),
+          },
+        }
+
+    // Update plan in DB (single transaction step)
     const updatedPlan = await this.prisma.plan.update({
       where: { id },
       data: {
-        ...body,
-        price: body.price ? body.price * 100 : plan.price, // Use existing price if not provided
-        order: body.order ?? plan.order, // Handle the case where order might not be provided
+        ...rest,
+        ...customizationData,
+        price: body.price ?? plan.price,
+        order: body.order ?? plan.order,
       },
     })
 
-    // Check if the price has changed and update in Stripe
+    // If price has not changed, skip price update
     if (plan.price !== updatedPlan.price) {
-      const prices = await this.stripe.pricesList({ product: id })
-      const currentPrice = prices.data.find((price) => price.active)
+      const prices = await this.stripe.pricesList({
+        product: updatedPlan.stripeProductId,
+      })
+      const currentPrice = prices.data.find((p) => p.active)
 
-      // Deactivate the current price if it exists
       if (currentPrice) {
-        // First, create the new price
         const newPrice = await this.stripe.createPrice({
-          product: id,
+          product: updatedPlan.stripeProductId,
           currency: 'usd',
-          unit_amount: updatedPlan.price * 100, // New price in cents
+          unit_amount: updatedPlan.price * 100,
         })
 
-        // Then, update the product to set the new price as the default
-        await this.stripe.updateProduct(id, { default_price: newPrice.id })
+        await this.stripe.updateProduct(updatedPlan.stripeProductId, {
+          default_price: newPrice.id,
+        })
 
-        // Finally, deactivate the old price
         await this.stripe.pricesUpdate(currentPrice.id, { active: false })
       }
     }
 
-    // Update the product details in Stripe
-    await this.stripe.updateProduct(id, {
+    // Always sync product details in Stripe
+    await this.stripe.updateProduct(updatedPlan.stripeProductId, {
       name: updatedPlan.name,
       description: updatedPlan.description,
     })
 
-    return updatedPlan // Return the updated plan
+    return updatedPlan
   }
 
   async deletePlan(id: string) {
+    const plan = await this.getPlan(id)
     try {
       // Try to delete from Stripe first (this won't throw errors now)
-      await this.stripe.deleteProduct(id)
+      await this.stripe.deleteProduct(plan.stripeProductId)
     } catch (error) {
       // Log the error but continue with database deletion
       console.error(
-        `Error deleting Stripe product for plan ${id}:`,
+        `Error deleting Stripe product for plan ${plan.stripeProductId}:`,
         error.message,
       )
     }
 
     // Always delete from database, regardless of Stripe deletion result
     return this.prisma.plan.delete({ where: { id } })
+  }
+  getUserCustomizedPlans(userId: string) {
+    return this.prisma.plan.findMany({
+      where: {
+        isCustomized: true,
+        customizedForUsers: { some: { id: userId } },
+      },
+    })
+  }
+
+  async isUserAdmin(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } })
+
+    return user.isAdmin
   }
 }

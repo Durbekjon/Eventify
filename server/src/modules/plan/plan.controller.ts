@@ -1,4 +1,3 @@
-import { Admin } from '@/decorators/admin.decorator'
 import { AdminGuard } from '@/guards/admin.guard'
 import {
   Body,
@@ -10,15 +9,13 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common'
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiProperty,
-  ApiTags,
-} from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { PlanService } from './plan.service'
 import { CreatePlanDto } from './dto/create-plan.dto'
 import { UpdatePlanDto } from './dto/update-plan.dto'
+import { User } from '@decorators/user.decorator'
+import { IUser } from '@user/dto/IUser'
+import { JwtAuthGuard } from '@guards/jwt-auth.guard'
 
 @ApiBearerAuth()
 @ApiTags('Plan')
@@ -33,9 +30,10 @@ export class PlanController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get plans' })
-  getPlans() {
-    return this.service.getPlans()
+  getPlans(@User() user: IUser) {
+    return this.service.getPlans(user.id)
   }
 
   @Get(':id')

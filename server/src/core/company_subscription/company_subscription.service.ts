@@ -32,7 +32,11 @@ export class CompanySubscriptionService {
           })
           await this.prisma.company.update({
             where: { id: subscription.companyId },
-            data: { isBlocked: true, currentSubscriptionId: '' },
+            data: {
+              isBlocked: true,
+              currentSubscriptionId: null,
+              plan: { disconnect: true },
+            },
           })
         }),
       )
