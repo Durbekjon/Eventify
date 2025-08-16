@@ -82,6 +82,20 @@ export class FileRepository {
     })
   }
 
+  async getTaskById(taskId: string) {
+    return this.prisma.task.findUnique({
+      where: { id: taskId },
+      select: { companyId: true },
+    })
+  }
+
+  async getSheetById(sheetId: string) {
+    return this.prisma.sheet.findUnique({
+      where: { id: sheetId },
+      select: { companyId: true },
+    })
+  }
+
   async updateFileAvatar(userId: string, fileId: string): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },

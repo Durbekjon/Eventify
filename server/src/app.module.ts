@@ -6,7 +6,6 @@ import { ConfigModule } from '@nestjs/config'
 import { CoreModule } from './core/core.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { UserModule } from './modules/user/user.module'
-import { CompanyModule } from './modules/company/company.module'
 import { WorkspaceModule } from './modules/workspace/workspace.module'
 import { NotificationModule } from './modules/notification/notification.module'
 import { PlanModule } from './modules/plan/plan.module'
@@ -22,7 +21,8 @@ import { PaymentModule } from './modules/payment/payment.module'
 import { SubscriptionModule } from './modules/subscription/subscription.module'
 import { ChatModule } from './modules/chat/chat.module'
 import { FileModule } from './modules/file/file.module'
-import { AdminModule } from './modules/admin/admin.module';
+import { AdminModule } from './modules/admin/admin.module'
+import { CompanyModule } from './modules/company/company.module'
 
 @Module({
   imports: [

@@ -8,7 +8,7 @@ import { StripeService } from '@core/stripe/stripe.service'
 import { IUser } from '@user/dto/IUser'
 import { UserService } from '@user/user.service'
 import { RoleService } from '@role/role.service'
-import { RoleTypes } from '@prisma/client'
+import { MemberTypes, RoleTypes } from '@prisma/client'
 
 @Injectable()
 export class SubscriptionService {
@@ -47,39 +47,24 @@ export class SubscriptionService {
       throw new BadRequestException('Subscription is already on this plan')
     }
 
-    // Calculate proration
-    const prorationAmount = this.calculateProration(
-      currentSubscription,
-      newPlan,
-    )
-
     try {
-      // Update Stripe subscription
-      const updatedSubscription = await this.stripeService.updateSubscription(
-        currentSubscription.stripeSubscriptionId,
-        {
-          items: [
-            {
-              id: currentSubscription.stripeItemId || '',
-              price: newPlan.stripePriceId || '',
-            },
-          ],
-          proration_behavior: 'create_prorations',
-          proration_date: Math.floor(Date.now() / 1000),
-        },
-      )
-
-      // Update database
-      await this.updateSubscription(
+      // Use the payment service for upgrade processing
+      const upgradeResult = await this.processUpgrade(
+        currentUser,
         role.companyId,
-        newPlanId,
-        updatedSubscription,
+        currentSubscription,
+        newPlan,
       )
 
-      return { message: 'Subscription upgraded successfully', prorationAmount }
+      return {
+        message: 'Subscription upgrade initiated successfully',
+        upgradeDetails: upgradeResult,
+      }
     } catch (error) {
       console.error('Subscription upgrade error:', error)
-      throw new BadRequestException('Failed to upgrade subscription')
+      throw new BadRequestException(
+        `Failed to upgrade subscription: ${error.message}`,
+      )
     }
   }
 
@@ -331,12 +316,43 @@ export class SubscriptionService {
   }
 
   private async getCurrentUsage(companyId: string) {
-    // Implement usage tracking logic
+    // Use a single transaction to perform all queries efficiently
+    const [company, counts] = await Promise.all([
+      this.prisma.company.findUnique({
+        where: { id: companyId },
+        select: { id: true }, // Only select what we need
+      }),
+      this.prisma.$transaction([
+        this.prisma.workspace.count({
+          where: { companyId },
+        }),
+        this.prisma.sheet.count({
+          where: { companyId },
+        }),
+        this.prisma.member.count({
+          where: { companyId, type: MemberTypes.MEMBER },
+        }),
+        this.prisma.member.count({
+          where: { companyId, type: MemberTypes.VIEWER },
+        }),
+        this.prisma.task.count({
+          where: { companyId },
+        }),
+      ]),
+    ])
+
+    if (!company) {
+      throw new NotFoundException('Company not found')
+    }
+
+    const [workspaces, sheets, members, viewers, tasks] = counts
+
     return {
-      workspaces: 0,
-      sheets: 0,
-      members: 0,
-      requests: 0,
+      workspaces,
+      sheets,
+      members,
+      viewers,
+      tasks,
     }
   }
 
@@ -355,6 +371,95 @@ export class SubscriptionService {
       sheets: Math.max(0, limits.maxSheets - currentUsage.sheets),
       members: Math.max(0, limits.maxMembers - currentUsage.members),
       requests: Math.max(0, limits.maxRequests - currentUsage.requests),
+    }
+  }
+
+  /**
+   * Processes subscription upgrade using payment service
+   * @param user - Current user
+   * @param companyId - Company ID
+   * @param currentSubscription - Current subscription
+   * @param newPlan - New plan
+   * @returns Upgrade result
+   */
+  private async processUpgrade(
+    user: any,
+    companyId: string,
+    currentSubscription: any,
+    newPlan: any,
+  ) {
+    // Calculate proration
+    const prorationAmount = this.calculateProration(
+      currentSubscription,
+      newPlan,
+    )
+
+    // If downgrading or same price, process immediately
+    if (prorationAmount <= 0) {
+      return await this.processImmediateUpgrade(
+        companyId,
+        currentSubscription,
+        newPlan,
+        prorationAmount,
+      )
+    }
+
+    // If upgrading (higher price), return upgrade information
+    return {
+      type: 'upgrade_required',
+      prorationAmount,
+      currentPlan: currentSubscription.plan,
+      newPlan,
+      message:
+        'Payment required for upgrade. Use payment endpoint to complete upgrade.',
+    }
+  }
+
+  /**
+   * Processes immediate upgrade without additional payment
+   * @param companyId - Company ID
+   * @param currentSubscription - Current subscription
+   * @param newPlan - New plan
+   * @param prorationAmount - Proration amount
+   * @returns Upgrade result
+   */
+  private async processImmediateUpgrade(
+    companyId: string,
+    currentSubscription: any,
+    newPlan: any,
+    prorationAmount: number,
+  ) {
+    try {
+      // Update Stripe subscription immediately
+      if (currentSubscription.stripeSubscriptionId) {
+        await this.stripeService.updateSubscription(
+          currentSubscription.stripeSubscriptionId,
+          {
+            items: [
+              {
+                id: currentSubscription.stripeItemId || '',
+                price: newPlan.stripePriceId || '',
+              },
+            ],
+            proration_behavior: 'none',
+          },
+        )
+      }
+
+      // Update database
+      await this.updateSubscription(companyId, newPlan.id, {
+        id: currentSubscription.stripeSubscriptionId,
+      })
+
+      return {
+        type: 'immediate_upgrade',
+        prorationAmount,
+        message:
+          'Subscription upgraded successfully without additional payment',
+      }
+    } catch (error) {
+      console.error('Immediate upgrade error:', error)
+      throw new Error('Failed to process immediate upgrade')
     }
   }
 }

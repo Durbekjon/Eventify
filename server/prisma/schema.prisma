@@ -292,6 +292,11 @@ model Task {
   link3       String?
   link4       String?
   link5       String?
+  duedate1    DateTime[]
+  duedate2    DateTime[]
+  duedate3    DateTime[]
+  duedate4    DateTime[]
+  duedate5    DateTime[]
   workspaceId String    @map("workspace_id")
   sheetId     String    @map("sheet_id")
   companyId   String    @map("company_id")
@@ -308,6 +313,7 @@ model Task {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   files       File[]
+
 
   @@map("tasks")
 }
@@ -494,6 +500,7 @@ enum ColumnType {
   DUEDATE
   FILE
   CHECK
+  FILES
 }
 
 enum TransactionStatus {

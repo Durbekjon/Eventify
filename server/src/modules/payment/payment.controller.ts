@@ -294,6 +294,73 @@ export class PaymentController {
     return this.service.confirmInlinePayment(body.paymentIntentId)
   }
 
+  @Post('upgrade')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Upgrade Subscription',
+    description:
+      'Upgrades an existing subscription to a new plan. This endpoint handles both immediate upgrades (downgrades or same price) and upgrades requiring additional payment. For upgrades requiring payment, it returns a payment intent that must be confirmed.',
+    tags: ['Payment'],
+  })
+  @ApiBody({
+    description: 'Subscription upgrade request with new plan ID',
+    schema: {
+      example: {
+        planId: '550e8400-e29b-41d4-a716-446655440000',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription upgrade processed successfully',
+    schema: {
+      example: {
+        message: 'Subscription upgrade initiated successfully',
+        upgradeDetails: {
+          type: 'immediate_upgrade',
+          prorationAmount: 0,
+          message: 'Subscription upgraded successfully without additional payment',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Upgrade requires payment - payment intent created',
+    schema: {
+      example: {
+        clientSecret: 'pi_3OqF2d2eZvKYlo2C1gF12345_secret_abcdefghijklmnop',
+        paymentIntentId: 'pi_3OqF2d2eZvKYlo2C1gF12345',
+        isUpgrade: true,
+        prorationAmount: 1500,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - invalid plan ID or upgrade not possible',
+    type: PaymentErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or missing authentication token',
+    type: PaymentErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - user is not an AUTHOR role in the company',
+    type: PaymentErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found - plan does not exist',
+    type: PaymentErrorResponseDto,
+  })
+  async upgradeSubscription(@User() user: IUser, @Body() body: CreatePaymentDto) {
+    return this.service.createInlinePayment(user, body)
+  }
+
   @Post('webhook')
   @UseGuards(WebhookGuard)
   @ApiOperation({
