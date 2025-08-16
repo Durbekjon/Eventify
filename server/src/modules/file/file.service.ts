@@ -9,9 +9,7 @@ import { UserService } from '@user/user.service'
 import { RoleService } from '@role/role.service'
 import { IUser } from '@user/dto/IUser'
 import { FileResponseDto } from './dto/file-response.dto'
-import { DeleteFileDto } from './dto/delete-file.dto'
 import { FILE_ERROR_MESSAGES } from '@consts/file-upload'
-import { HTTP_MESSAGES } from '@consts/http-messages'
 
 @Injectable()
 export class FileService {
@@ -25,11 +23,36 @@ export class FileService {
   async uploadFiles(
     files: Express.Multer.File[],
     user: IUser,
-    context?: { taskId?: string; sheetId?: string; companyId: string },
+    context?: { taskId?: string; sheetId?: string; companyId?: string },
   ): Promise<FileResponseDto[]> {
+    // Get company ID from context or automatically from user's role
+    let companyId = context?.companyId
+
+    if (!companyId) {
+      // Automatically get company ID from user's current role
+      const userData = await this.userService.getUser(user.id)
+      const selectedRole = await this.roleService.getUserSelectedRole({
+        roles: userData.roles,
+        selectedRole: userData.selectedRole,
+      })
+
+      if (!selectedRole) {
+        throw new BadRequestException('User has no active role')
+      }
+
+      companyId = selectedRole.companyId
+    }
+
     // Validate user access
-    if (context?.companyId) {
-      await this.validateUserAccess(user, context.companyId)
+    await this.validateUserAccess(user, companyId)
+
+    // Validate context-specific access
+    if (context?.taskId) {
+      await this.validateTaskAccess(user, context.taskId, companyId)
+    }
+
+    if (context?.sheetId) {
+      await this.validateSheetAccess(user, context.sheetId, companyId)
     }
 
     const uploadedFiles: FileResponseDto[] = []
@@ -47,7 +70,7 @@ export class FileService {
           size: fileInfo.size,
           path: fileInfo.path,
           uploadedBy: user.id,
-          companyId: context?.companyId || '',
+          companyId: companyId,
           taskId: context?.taskId,
           sheetId: context?.sheetId,
         })
@@ -58,7 +81,9 @@ export class FileService {
         for (const uploadedFile of uploadedFiles) {
           await this.fileStorage.deleteFile(uploadedFile.filename)
         }
-        throw error
+        throw new BadRequestException(
+          `Failed to upload file ${file.originalname}: ${error.message}`,
+        )
       }
     }
 
@@ -102,7 +127,7 @@ export class FileService {
     user: IUser,
   ): Promise<FileResponseDto[]> {
     // Get task to validate access
-    const task = await this.repository.getFileById(taskId)
+    const task = await this.repository.getTaskById(taskId)
     if (!task) {
       throw new BadRequestException('Task not found')
     }
@@ -118,7 +143,7 @@ export class FileService {
     user: IUser,
   ): Promise<FileResponseDto[]> {
     // Get sheet to validate access
-    const sheet = await this.repository.getFileById(sheetId)
+    const sheet = await this.repository.getSheetById(sheetId)
     if (!sheet) {
       throw new BadRequestException('Sheet not found')
     }
@@ -167,6 +192,36 @@ export class FileService {
     })
 
     if (!selectedRole || selectedRole.companyId !== companyId) {
+      throw new ForbiddenException(FILE_ERROR_MESSAGES.ACCESS_DENIED)
+    }
+  }
+
+  private async validateTaskAccess(
+    user: IUser,
+    taskId: string,
+    companyId: string,
+  ): Promise<void> {
+    const task = await this.repository.getTaskById(taskId)
+    if (!task) {
+      throw new BadRequestException('Task not found')
+    }
+
+    if (task.companyId !== companyId) {
+      throw new ForbiddenException(FILE_ERROR_MESSAGES.ACCESS_DENIED)
+    }
+  }
+
+  private async validateSheetAccess(
+    user: IUser,
+    sheetId: string,
+    companyId: string,
+  ): Promise<void> {
+    const sheet = await this.repository.getSheetById(sheetId)
+    if (!sheet) {
+      throw new BadRequestException('Sheet not found')
+    }
+
+    if (sheet.companyId !== companyId) {
       throw new ForbiddenException(FILE_ERROR_MESSAGES.ACCESS_DENIED)
     }
   }

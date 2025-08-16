@@ -40,6 +40,7 @@ export class SheetRepository {
         'price',
         'paid',
         'members',
+        'files',
       ])
       const noDefaultColumnKeysMap = new Map()
       // Step 2: Prepare the columns with unique keys if necessary
@@ -47,12 +48,11 @@ export class SheetRepository {
         const columnKey = defaultColumnKeys.has(column.name.toLowerCase())
           ? column.name.toLowerCase()
           : [1, 2, 3, 4, 5].map((n) => {
-              if (!noDefaultColumnKeysMap.has(column.type+ n)) {
+              if (!noDefaultColumnKeysMap.has(column.type + n)) {
                 noDefaultColumnKeysMap.set(column.type + n, column.type + n)
                 return `${column.type.toLocaleLowerCase()}${n}`
               }
             })[0]
-
 
         return {
           ...column,
@@ -100,6 +100,18 @@ export class SheetRepository {
           }
         }
       }
+    } else {
+      // Create default FILE column when no columns are provided
+      await this.prisma.column.create({
+        data: {
+          name: 'Files',
+          key: 'files',
+          show: true,
+          type: 'FILES',
+          company: { connect: { id: companyId } },
+          sheet: { connect: { id: sheet.id } },
+        },
+      })
     }
 
     return this.findById(sheet.id)

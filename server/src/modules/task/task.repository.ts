@@ -230,6 +230,26 @@ export class TaskRepository {
                 },
               },
             },
+            files: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+            lastUpdatedByUser: {
+              select: {
+                id: true,
+                avatar: {
+                  select: {
+                    id: true,
+                    path: true,
+                  },
+                },
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
             chat: true,
           },
           skip: (parsedPage - 1) * parsedLimit,
@@ -257,7 +277,11 @@ export class TaskRepository {
     }
   }
 
-  async createTask(body: CreateTaskDto, companyId: string): Promise<Task> {
+  async createTask(
+    body: CreateTaskDto,
+    companyId: string,
+    userId: string,
+  ): Promise<Task> {
     const { sheetId, name, members, status, priority, link, price, paid } = body
 
     // Find the sheet and retrieve workspaceId, validate existence
@@ -285,6 +309,7 @@ export class TaskRepository {
           permissions: { create: {} },
         },
       },
+      lastUpdatedByUser: { connect: { id: userId } },
       members: members ? { connect: members.map((id) => ({ id })) } : undefined,
       status,
       priority,

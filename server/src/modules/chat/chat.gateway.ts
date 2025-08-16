@@ -13,11 +13,11 @@ import { ChatService } from './chat.service'
 import { SOCKET_OPTIONS } from '@consts/socket-options'
 import { IUser } from '@user/dto/IUser'
 
-interface OnlineUser {
-  chatId: string
-  user: IUser
-  socketId: string
-}
+// interface OnlineUser {
+//   chatId: string
+//   user: IUser
+//   socketId: string
+// }
 
 interface AuthenticatedSocket extends Socket {
   userId?: string
@@ -51,6 +51,8 @@ export class ChatGateway
       token?: string
       chatId?: string
     }
+    console.log('token', token)
+    console.log('chatId', chatId)
 
     if (!token || !chatId) {
       client.emit(SOCKET_OPTIONS.ERROR, HTTP_MESSAGES.AUTH.INVALID_TOKEN)
@@ -69,6 +71,7 @@ export class ChatGateway
         decoded.id,
         chatId,
       )
+      console.log('hasAccess', hasAccess)
       if (!hasAccess) {
         client.emit(SOCKET_OPTIONS.ERROR, HTTP_MESSAGES.GENERAL.ACCESS_DENIED)
         client.disconnect()
@@ -123,7 +126,7 @@ export class ChatGateway
 
     try {
       // Remove user from chat tracking
-      this.removeUserFromChat(chatId, userId, socketId)
+      this.removeUserFromChat(chatId, userId)
 
       // Remove from socket tracking
       this.socketToChatMap.delete(socketId)
@@ -204,7 +207,7 @@ export class ChatGateway
   private removeUserFromChat(
     chatId: string,
     userId: string,
-    socketId: string,
+    // socketId: string,
   ): void {
     const chatUsers = this.onlineUsersByChat.get(chatId)
     if (!chatUsers) return

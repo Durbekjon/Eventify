@@ -130,7 +130,7 @@ export class DashboardService {
     return {
       usersToday,
       companiesToday,
-      revenueToday,
+      revenueToday: revenueToday / 100 || 0,
       errorsToday,
     }
   }

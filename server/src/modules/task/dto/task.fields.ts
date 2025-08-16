@@ -35,4 +35,9 @@ export const fieldsToCheck = [
   'link3',
   'link4',
   'link5',
+  'duedate1',
+  'duedate2',
+  'duedate3',
+  'duedate4',
+  'duedate5',
 ]
