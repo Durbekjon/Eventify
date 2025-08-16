@@ -19,168 +19,6 @@ export class TaskRepository {
     })
   }
 
-  // Helper method to validate search filters
-  private validateSearchFilters(search: any[]): {
-    isValid: boolean
-    errors: string[]
-  } {
-    const errors: string[] = []
-    const validFields = [
-      'name',
-      'status',
-      'priority',
-      'link',
-      'price',
-      'paid',
-      'text1',
-      'text2',
-      'text3',
-      'text4',
-      'text5',
-      'number1',
-      'number2',
-      'number3',
-      'number4',
-      'number5',
-      'checkbox1',
-      'checkbox2',
-      'checkbox3',
-      'checkbox4',
-      'checkbox5',
-      'select1',
-      'select2',
-      'select3',
-      'select4',
-      'select5',
-      'date1',
-      'date2',
-      'date3',
-      'date4',
-      'date5',
-      'link1',
-      'link2',
-      'link3',
-      'link4',
-      'link5',
-    ]
-
-    if (!Array.isArray(search)) {
-      errors.push('Search must be an array')
-      return { isValid: false, errors }
-    }
-
-    for (const filter of search) {
-      if (!filter || typeof filter !== 'object') {
-        errors.push('Each search filter must be an object')
-        continue
-      }
-
-      const { key, value } = filter
-
-      if (!key || typeof key !== 'string') {
-        errors.push('Search filter key must be a non-empty string')
-        continue
-      }
-
-      if (!validFields.includes(key)) {
-        errors.push(
-          `Invalid search field: ${key}. Valid fields are: ${validFields.join(', ')}`,
-        )
-        continue
-      }
-
-      if (value === undefined || value === null || value === '') {
-        errors.push(`Search filter value for ${key} cannot be empty`)
-        continue
-      }
-    }
-
-    return { isValid: errors.length === 0, errors }
-  }
-
-  // Simplified method to build search conditions with smart type detection
-  private buildSearchCondition(key: string, value: string): any {
-    // Define field types
-    const stringFields = [
-      'name',
-      'status',
-      'priority',
-      'link',
-      'text1',
-      'text2',
-      'text3',
-      'text4',
-      'text5',
-      'select1',
-      'select2',
-      'select3',
-      'select4',
-      'select5',
-      'link1',
-      'link2',
-      'link3',
-      'link4',
-      'link5',
-    ]
-
-    const numberFields = [
-      'price',
-      'number1',
-      'number2',
-      'number3',
-      'number4',
-      'number5',
-    ]
-    const booleanFields = [
-      'paid',
-      'checkbox1',
-      'checkbox2',
-      'checkbox3',
-      'checkbox4',
-      'checkbox5',
-    ]
-    const dateFields = ['date1', 'date2', 'date3', 'date4', 'date5']
-
-    // Smart type detection and condition building
-    if (stringFields.includes(key)) {
-      return {
-        contains: value,
-        mode: 'insensitive' as const,
-      }
-    }
-
-    if (numberFields.includes(key)) {
-      const numValue = Number(value)
-      if (isNaN(numValue)) {
-        throw new Error(`Invalid number value for field ${key}: ${value}`)
-      }
-      return numValue
-    }
-
-    if (booleanFields.includes(key)) {
-      const boolValue =
-        value === 'true' ||
-        value === '1' ||
-        (typeof value === 'boolean' && value) ||
-        (typeof value === 'number' && value === 1)
-      return Boolean(boolValue)
-    }
-
-    if (dateFields.includes(key)) {
-      const dateValue = new Date(value)
-      if (isNaN(dateValue.getTime())) {
-        throw new Error(`Invalid date value for field ${key}: ${value}`)
-      }
-      return dateValue
-    }
-
-    // Default to string search
-    return {
-      contains: value,
-      mode: 'insensitive' as const,
-    }
-  }
-
   async getTasksBySheet(
     options: { sheetId: string; memberId: string | null },
     reqQuery: TaskQueryDto,
@@ -344,6 +182,21 @@ export class TaskRepository {
         include: {
           members: true,
           chat: true,
+          lastUpdatedByUser: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          files: {
+            select: {
+              id: true,
+              path: true,
+            },
+          },
         },
       })
     } catch (error) {

@@ -14,6 +14,28 @@ export class LogRepository {
     return this.prisma.log.findMany({
       where: { companyId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
 
@@ -21,6 +43,28 @@ export class LogRepository {
     return this.prisma.log.findMany({
       where: { workspaceId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
 
@@ -28,20 +72,68 @@ export class LogRepository {
     return this.prisma.log.findMany({
       where: { sheetId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
   getByTask(taskId: string) {
     return this.prisma.log.findMany({
       where: { taskId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
 
   getWorkspace(workspaceId: string) {
-    return this.prisma.workspace.findUnique({ where: { id: workspaceId } })
+    return this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+    })
   }
 
   async getSheet(sheetId: string) {
-    return await this.prisma.sheet.findUnique({ where: { id: sheetId } })
+    return await this.prisma.sheet.findUnique({
+      where: { id: sheetId },
+    })
   }
 }
