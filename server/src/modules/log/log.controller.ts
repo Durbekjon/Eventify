@@ -30,12 +30,12 @@ export class LogController {
   @Get('sheet/:sheetId')
   @ApiOperation({ summary: 'Get by sheet id' })
   getBySheet(@User() user: IUser, @Param('sheetId') sheetId: string) {
-    return this.service.getByWorkspace(user, sheetId)
+    return this.service.getBySheet(user, sheetId)
   }
 
   @Get('task/:taksId')
   @ApiOperation({ summary: 'Get by task id' })
   getByTask(@User() user: IUser, @Param('taksId') taksId: string) {
-    return this.service.getByWorkspace(user, taksId)
+    return this.service.getByTask(user, taksId)
   }
 }

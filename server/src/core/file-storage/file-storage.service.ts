@@ -92,9 +92,15 @@ export class FileStorageService {
       throw new BadRequestException(FILE_ERROR_MESSAGES.FILE_TOO_LARGE)
     }
 
-    // Check file type
+    // Check file type - try MIME type first, then fallback to extension
     if (!FILE_UPLOAD_CONFIG.ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException(FILE_ERROR_MESSAGES.INVALID_FILE_TYPE)
+      // Fallback: check if file extension is allowed
+      const ext = path.extname(file.originalname).toLowerCase()
+      const allowedExtensions = this.getAllowedExtensions()
+      
+      if (!allowedExtensions.includes(ext)) {
+        throw new BadRequestException(FILE_ERROR_MESSAGES.INVALID_FILE_TYPE)
+      }
     }
   }
 
@@ -122,6 +128,14 @@ export class FileStorageService {
       '.xlsx':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       '.txt': 'text/plain',
+      '.md': 'text/markdown',
+      '.markdown': 'text/markdown',
+      '.html': 'text/html',
+      '.htm': 'text/html',
+      '.css': 'text/css',
+      '.js': 'text/javascript',
+      '.json': 'application/json',
+      '.xml': 'application/xml',
       '.mp3': 'audio/mpeg',
       '.wav': 'audio/wav',
       '.mp4': 'video/mp4',
@@ -129,5 +143,17 @@ export class FileStorageService {
     }
 
     return mimeTypes[ext.toLowerCase()] || 'application/octet-stream'
+  }
+
+  private getAllowedExtensions(): string[] {
+    return [
+      '.jpg', '.jpeg', '.png', '.gif', '.webp',
+      '.pdf',
+      '.doc', '.docx',
+      '.xls', '.xlsx',
+      '.txt', '.md', '.markdown', '.html', '.htm', '.css', '.js', '.json', '.xml',
+      '.mp3', '.wav',
+      '.mp4', '.webm',
+    ]
   }
 }

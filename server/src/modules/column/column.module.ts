@@ -4,7 +4,6 @@ import { ColumnController } from './column.controller'
 import { ColumnRepository } from './column.repository'
 import { PrismaService } from '@core/prisma/prisma.service'
 import { UserModule } from '../user/user.module'
-import { UserRepository } from '@user/user.repository'
 import { RoleService } from '@role/role.service'
 import { SheetService } from '@sheet/sheet.service'
 import { SheetRepository } from '@sheet/sheet.repository'
@@ -20,6 +19,11 @@ import { NotificationRepository } from '@notification/notification.repository'
 import { UtilsModule } from '@core/utils/utils.module'
 import { EmailModule } from '@core/email/email.module'
 import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
+import { FileService } from '../file/file.service'
+import { FileRepository } from '../file/file.repository'
+import { FileStorageService } from '@core/file-storage/file-storage.service'
+import { TaskAuditService } from '@task/services/task-audit.service'
+import { TaskAuditHelper } from '@task/utils/audit-helper'
 
 @Module({
   imports: [
@@ -45,6 +49,11 @@ import { SubscriptionValidationService } from '@core/subscription-validation/sub
     NotificationService,
     NotificationRepository,
     SubscriptionValidationService,
+    FileService,
+    FileRepository,
+    FileStorageService,
+    TaskAuditService,
+    TaskAuditHelper,
   ],
   exports: [ColumnService], // Export ColumnService if other modules need access
 })

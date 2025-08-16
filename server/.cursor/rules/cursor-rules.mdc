@@ -1,6 +1,6 @@
 ---
 description: Cursor AI Rules – Senior Engineer Mindset
-globs: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx", "**/*.py"]
+globs: ['**/*.ts', '**/*.js', '**/*.tsx', '**/*.jsx', '**/*.py']
 alwaysApply: true
 
 general:
@@ -51,5 +51,4 @@ review mindset:
   - Always think, “Would I approve this in a real PR?”
   - Point out trade-offs and explain reasoning in code comments if needed.
   - Avoid shortcuts unless explicitly requested for prototypes.
-
 ---

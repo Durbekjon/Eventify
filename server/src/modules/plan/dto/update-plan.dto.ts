@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator'
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+} from 'class-validator'
 
 export class UpdatePlanDto {
   @ApiProperty({ description: 'Plan name' })
@@ -37,4 +43,14 @@ export class UpdatePlanDto {
   @ApiProperty({ description: 'Optional Plan order' })
   @IsOptional()
   order: number
+
+  @ApiProperty({ description: 'Is customized plan' })
+  @IsBoolean()
+  @IsNotEmpty()
+  isCustomized: boolean
+
+  @ApiProperty({ description: 'Customized plan for users' })
+  @IsOptional()
+  @IsArray()
+  customizedPlanFor: string[]
 }

@@ -11,12 +11,27 @@ export class PlanService {
 
   async createPlan(body: CreatePlanDto) {
     const plan = await this.repository.createPlan(body)
-    return this.validatePlans([plan])[0]
+    const validatedPlan = await this.validatePlan(plan)
+    return validatedPlan
   }
 
-  async getPlans() {
-    const plans = await this.repository.getPlans()
-    return this.validatePlans(plans)
+  async getPlans(userId: string | null) {
+    if (userId) {
+      const isAdmin = await this.repository.isUserAdmin(userId)
+      if (isAdmin) {
+        const plans = await this.repository.getPlansForAdmin()
+        return this.validatePlans(plans)
+      }
+      const customizedPlans =
+        await this.repository.getUserCustomizedPlans(userId)
+      const validatedCustomizedPlans = await this.validatePlans(customizedPlans)
+      const plans = await this.repository.getPlans()
+      const validatedPlans = await this.validatePlans(plans)
+      return [...validatedCustomizedPlans, ...validatedPlans]
+    } else {
+      const plans = await this.repository.getPlans()
+      return this.validatePlans(plans)
+    }
   }
 
   async getPlan(id: string) {
@@ -27,7 +42,8 @@ export class PlanService {
   async updatePlan(id: string, body: UpdatePlanDto) {
     const plan = await this.getById(id)
     const updatedPlan = await this.repository.updatePlan(plan.id, body)
-    return this.validatePlans([updatedPlan])[0]
+    const validatedPlan = await this.validatePlan(updatedPlan)
+    return validatedPlan
   }
 
   async deleletePlan(id: string) {
@@ -55,5 +71,13 @@ export class PlanService {
         maxViewers: plan.maxViewers < 0 ? 'unlimited' : plan.maxViewers,
       }
     })
+  }
+
+  private async validatePlan(plan: Plan) {
+    return {
+      ...plan,
+      stripePriceId: plan.stripePriceId,
+      stripeProductId: plan.stripeProductId,
+    }
   }
 }

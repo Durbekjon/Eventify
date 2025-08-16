@@ -57,7 +57,7 @@ export class StripeService {
       } catch (error) {
         // If product doesn't exist in Stripe, just return (already deleted or never existed)
         console.log(
-          `Product ${planId} doesn't exist in Stripe, skipping deletion`,
+          `Product ${planId} doesn't exist in Stripe, skipping deletion.\n${error.message}`,
         )
         return
       }
@@ -255,7 +255,7 @@ export class StripeService {
   private async handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session,
   ): Promise<void> {
-    const { planId, userId, companyId } = session.metadata
+    const { planId, companyId } = session.metadata
 
     if (session.payment_status === 'paid') {
       await this.prisma.$transaction(async (tx) => {
@@ -331,7 +331,11 @@ export class StripeService {
       if (subscription) {
         await this.prisma.company.update({
           where: { id: subscription.companyId },
-          data: { isBlocked: true, plan: { disconnect: true }, currentSubscriptionId: null   },
+          data: {
+            isBlocked: true,
+            plan: { disconnect: true },
+            currentSubscriptionId: null,
+          },
         })
       }
     }
@@ -347,7 +351,11 @@ export class StripeService {
     if (dbSubscription) {
       await this.prisma.company.update({
         where: { id: dbSubscription.companyId },
-        data: { isBlocked: true, currentSubscriptionId: null, plan: { disconnect: true } },
+        data: {
+          isBlocked: true,
+          currentSubscriptionId: null,
+          plan: { disconnect: true },
+        },
       })
     }
   }
@@ -456,6 +464,7 @@ export class StripeService {
         userId,
         companyId,
         transactionId: transactionUuid,
+        type: 'new_subscription',
       },
       automatic_payment_methods: {
         enabled: true,
@@ -482,6 +491,261 @@ export class StripeService {
     }
   }
 
+  /**
+   * Creates a payment intent specifically for subscription upgrades
+   * @param plan - New plan to upgrade to
+   * @param userId - User ID
+   * @param companyId - Company ID
+   * @param customerId - Stripe customer ID
+   * @param currentSubscriptionId - Current Stripe subscription ID
+   * @param prorationAmount - Calculated proration amount in cents
+   * @returns Payment intent with client secret for upgrade
+   */
+  async createUpgradePaymentIntent(
+    plan: Plan,
+    userId: string,
+    companyId: string,
+    customerId: string,
+    currentSubscriptionId: string,
+    prorationAmount: number,
+  ) {
+    const transactionUuid = randomUUID()
+
+    // If proration is negative (downgrade), no additional payment needed
+    if (prorationAmount <= 0) {
+      return this.processUpgradeWithoutPayment(
+        plan,
+        userId,
+        companyId,
+        currentSubscriptionId,
+        transactionUuid,
+      )
+    }
+
+    // Create payment intent for the proration amount
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount: prorationAmount,
+      currency: 'usd',
+      customer: customerId,
+      metadata: {
+        planId: plan.id,
+        userId,
+        companyId,
+        transactionId: transactionUuid,
+        type: 'subscription_upgrade',
+        currentSubscriptionId,
+        prorationAmount: prorationAmount.toString(),
+      },
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    })
+
+    // Store upgrade transaction in database
+    await this.prisma.transaction.create({
+      data: {
+        id: transactionUuid,
+        userId,
+        companyId,
+        planId: plan.id,
+        amount: prorationAmount,
+        currency: 'usd',
+        status: 'PENDING',
+        paymentIntentId: paymentIntent.id,
+      },
+    })
+
+    // Create payment log for upgrade tracking
+    await this.prisma.paymentLog.create({
+      data: {
+        event: 'SUBSCRIPTION_UPGRADE_INTENT_CREATED',
+        companyId,
+        userId,
+        transactionId: transactionUuid,
+        planId: plan.id,
+        amount: prorationAmount,
+        currency: 'usd',
+        status: 'PENDING',
+        metadata: JSON.stringify({
+          type: 'subscription_upgrade',
+          currentSubscriptionId,
+          prorationAmount,
+        }),
+      },
+    })
+
+    return {
+      clientSecret: paymentIntent.client_secret!,
+      paymentIntentId: paymentIntent.id,
+      isUpgrade: true,
+      prorationAmount,
+    }
+  }
+
+  /**
+   * Processes upgrade without additional payment (downgrades or same price)
+   * @param plan - New plan
+   * @param userId - User ID
+   * @param companyId - Company ID
+   * @param currentSubscriptionId - Current subscription ID
+   * @param transactionId - Transaction ID
+   * @returns Upgrade result
+   */
+  private async processUpgradeWithoutPayment(
+    plan: Plan,
+    userId: string,
+    companyId: string,
+    currentSubscriptionId: string,
+    transactionId: string,
+  ) {
+    try {
+      // Update Stripe subscription immediately
+      if (currentSubscriptionId) {
+        await this.stripe.subscriptions.update(currentSubscriptionId, {
+          items: [
+            {
+              id: await this.getSubscriptionItemId(currentSubscriptionId),
+              price: plan.stripePriceId || '',
+            },
+          ],
+          proration_behavior: 'none', // No proration for immediate changes
+        })
+      }
+
+      // Create transaction record
+      await this.prisma.transaction.create({
+        data: {
+          id: transactionId,
+          userId,
+          companyId,
+          planId: plan.id,
+          amount: 0,
+          currency: 'usd',
+          status: 'SUCCEEDED',
+        },
+      })
+
+      // Create payment log for upgrade tracking
+      await this.prisma.paymentLog.create({
+        data: {
+          event: 'SUBSCRIPTION_UPGRADED_IMMEDIATE',
+          companyId,
+          userId,
+          transactionId,
+          planId: plan.id,
+          amount: 0,
+          currency: 'usd',
+          status: 'SUCCEEDED',
+          metadata: JSON.stringify({
+            type: 'subscription_upgrade',
+            currentSubscriptionId,
+            prorationAmount: 0,
+          }),
+        },
+      })
+
+      // Update subscription in database
+      await this.updateSubscriptionPlan(
+        companyId,
+        plan.id,
+        currentSubscriptionId,
+      )
+
+      return {
+        clientSecret: null,
+        paymentIntentId: null,
+        isUpgrade: true,
+        prorationAmount: 0,
+        message:
+          'Subscription upgraded successfully without additional payment',
+      }
+    } catch (error) {
+      console.error('Error processing upgrade without payment:', error)
+      throw new Error('Failed to process subscription upgrade')
+    }
+  }
+
+  /**
+   * Gets customer ID from subscription
+   * @param subscriptionId - Stripe subscription ID
+   * @returns Customer ID
+   */
+  private async getCustomerFromSubscription(
+    subscriptionId: string,
+  ): Promise<string> {
+    if (!subscriptionId) {
+      throw new Error('Subscription ID is required to get customer')
+    }
+
+    try {
+      const subscription =
+        await this.stripe.subscriptions.retrieve(subscriptionId)
+      return subscription.customer as string
+    } catch (error) {
+      console.error(`Error retrieving subscription ${subscriptionId}:`, error)
+      throw new Error(`Failed to retrieve subscription: ${error.message}`)
+    }
+  }
+
+  /**
+   * Gets subscription item ID for updating
+   * @param subscriptionId - Stripe subscription ID
+   * @returns Subscription item ID
+   */
+  private async getSubscriptionItemId(subscriptionId: string): Promise<string> {
+    if (!subscriptionId) {
+      throw new Error('Subscription ID is required to get subscription item')
+    }
+
+    try {
+      const subscription =
+        await this.stripe.subscriptions.retrieve(subscriptionId)
+      if (!subscription.items?.data?.length) {
+        throw new Error('No subscription items found')
+      }
+      return subscription.items.data[0].id
+    } catch (error) {
+      console.error(
+        `Error retrieving subscription item for ${subscriptionId}:`,
+        error,
+      )
+      throw new Error(`Failed to retrieve subscription item: ${error.message}`)
+    }
+  }
+
+  /**
+   * Updates subscription plan in database
+   * @param companyId - Company ID
+   * @param newPlanId - New plan ID
+   * @param stripeSubscriptionId - Stripe subscription ID
+   */
+  private async updateSubscriptionPlan(
+    companyId: string,
+    newPlanId: string,
+    stripeSubscriptionId: string,
+  ) {
+    await this.prisma.$transaction(async (tx) => {
+      // Update company subscription
+      await tx.companySubscription.updateMany({
+        where: {
+          companyId,
+          stripeSubscriptionId,
+          isExpired: false,
+        },
+        data: {
+          planId: newPlanId,
+          updatedAt: new Date(),
+        },
+      })
+
+      // Update company plan reference
+      await tx.company.update({
+        where: { id: companyId },
+        data: { planId: newPlanId },
+      })
+    })
+  }
+
   // Confirm payment intent and create subscription
   async confirmPaymentIntent(paymentIntentId: string): Promise<{
     subscriptionId: string
@@ -493,55 +757,13 @@ export class StripeService {
       await this.stripe.paymentIntents.retrieve(paymentIntentId)
 
     if (paymentIntent.status === 'succeeded') {
-      const { planId, userId, companyId, transactionId } =
-        paymentIntent.metadata
+      const { type } = paymentIntent.metadata
 
-      // Create subscription
-      const plan = await this.prisma.plan.findUnique({
-        where: { id: planId },
-      })
-
-      if (!plan) {
-        throw new Error('Plan not found')
-      }
-
-      // Create subscription in database
-      const subscription = await this.prisma.companySubscription.create({
-        data: {
-          companyId,
-          planId,
-          startDate: new Date(),
-          endDate: this.calculateEndDate(),
-          isExpired: false,
-          status: 'ACTIVE',
-        },
-      })
-
-      // Update transaction status
-      await this.prisma.transaction.update({
-        where: { id: transactionId },
-        data: { status: 'SUCCEEDED' },
-      })
-
-      // Update company subscription
-      await this.prisma.company.update({
-        where: { id: companyId },
-        data: {
-          currentSubscriptionId: subscription.id,
-          isBlocked: false,
-          plan: { connect: { id: plan.id } }, // Connect the plan to the company
-        },
-      })
-
-      console.log(
-        `Payment confirmed for company ${companyId}, subscription created`,
-      )
-
-      return {
-        subscriptionId: subscription.id,
-        transactionId,
-        amount: paymentIntent.amount,
-        currency: paymentIntent.currency,
+      // Handle different payment types
+      if (type === 'subscription_upgrade') {
+        return this.handleUpgradePaymentConfirmation(paymentIntent)
+      } else {
+        return this.handleNewSubscriptionPaymentConfirmation(paymentIntent)
       }
     } else {
       throw new PaymentError(
@@ -551,6 +773,138 @@ export class StripeService {
         400,
       )
     }
+  }
+
+  /**
+   * Handles confirmation of upgrade payment intents
+   * @param paymentIntent - Stripe payment intent
+   * @returns Upgrade confirmation result
+   */
+  private async handleUpgradePaymentConfirmation(
+    paymentIntent: Stripe.PaymentIntent,
+  ) {
+    const { planId, companyId, transactionId, currentSubscriptionId } =
+      paymentIntent.metadata
+
+    try {
+      // Update Stripe subscription
+      await this.stripe.subscriptions.update(currentSubscriptionId, {
+        items: [
+          {
+            id: await this.getSubscriptionItemId(currentSubscriptionId),
+            price: await this.getPlanPriceId(planId),
+          },
+        ],
+        proration_behavior: 'create_prorations',
+      })
+
+      // Update transaction status
+      await this.prisma.transaction.update({
+        where: { id: transactionId },
+        data: { status: 'SUCCEEDED' },
+      })
+
+      // Update subscription in database
+      await this.updateSubscriptionPlan(
+        companyId,
+        planId,
+        currentSubscriptionId,
+      )
+
+      console.log(`Upgrade payment confirmed for company ${companyId}`)
+
+      return {
+        subscriptionId: currentSubscriptionId,
+        transactionId,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+      }
+    } catch (error) {
+      console.error('Error confirming upgrade payment:', error)
+      throw new PaymentError(
+        'Failed to confirm upgrade payment',
+        'UPGRADE_CONFIRMATION_FAILED',
+        false,
+        500,
+      )
+    }
+  }
+
+  /**
+   * Handles confirmation of new subscription payment intents
+   * @param paymentIntent - Stripe payment intent
+   * @returns New subscription confirmation result
+   */
+  private async handleNewSubscriptionPaymentConfirmation(
+    paymentIntent: Stripe.PaymentIntent,
+  ) {
+    const { planId, companyId, transactionId } = paymentIntent.metadata
+
+    // Create subscription
+    const plan = await this.prisma.plan.findUnique({
+      where: { id: planId },
+    })
+
+    if (!plan) {
+      throw new Error('Plan not found')
+    }
+
+    // Create subscription in database
+    const subscription = await this.prisma.companySubscription.create({
+      data: {
+        companyId,
+        planId,
+        startDate: new Date(),
+        endDate: this.calculateEndDate(),
+        isExpired: false,
+        status: 'ACTIVE',
+      },
+    })
+
+    // Update transaction status
+    await this.prisma.transaction.update({
+      where: { id: transactionId },
+      data: { status: 'SUCCEEDED' },
+    })
+
+    // Update company subscription
+    await this.prisma.company.update({
+      where: { id: companyId },
+      data: {
+        currentSubscriptionId: subscription.id,
+        isBlocked: false,
+        plan: { connect: { id: plan.id } },
+      },
+    })
+
+    console.log(
+      `Payment confirmed for company ${companyId}, subscription created`,
+    )
+
+    return {
+      subscriptionId: subscription.id,
+      transactionId,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+    }
+  }
+
+  /**
+   * Gets plan price ID from Stripe
+   * @param planId - Plan ID
+   * @returns Stripe price ID
+   */
+  private async getPlanPriceId(planId: string): Promise<string> {
+    const plan = await this.prisma.plan.findUnique({
+      where: { id: planId },
+      select: { stripePriceId: true },
+    })
+
+    if (!plan?.stripePriceId) {
+      throw new Error(`Plan ${planId} does not have a Stripe price ID`)
+    }
+
+    return plan.stripePriceId
   }
 
   // Helper method to construct success or cancel URLs for checkout sessions

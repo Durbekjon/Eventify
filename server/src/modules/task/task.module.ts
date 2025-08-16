@@ -8,7 +8,7 @@ import { SheetService } from '@sheet/sheet.service'
 import { SheetRepository } from '@sheet/sheet.repository'
 import { WorkspaceService } from '@workspace/workspace.service'
 import { WorkspaceRepository } from '@workspace/workspace.repository'
-import { LogRepository } from '@log/log.repository'
+import { LogRepository } from '../log/log.repository'
 import { ColumnRepository } from '@column/column.repository'
 import { MemberService } from '@member/member.service'
 import { MemberRepository } from '@member/member.repository'
@@ -19,6 +19,10 @@ import { UtilsModule } from '@core/utils/utils.module'
 import { EmailService } from '@core/email/email.service'
 import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 import { SubscriptionValidationModule } from '@core/subscription-validation/subscription-validation.module'
+import { TaskAuditService } from './services/task-audit.service'
+import { TaskAuditHelper } from './utils/audit-helper'
+import { FileStorageService } from '@core/file-storage/file-storage.service'
+import { FileRepository } from '../file/file.repository'
 
 @Module({
   imports: [UserModule, UtilsModule, SubscriptionValidationModule],
@@ -39,7 +43,11 @@ import { SubscriptionValidationModule } from '@core/subscription-validation/subs
     NotificationRepository,
     PrismaService,
     EmailService,
-    SubscriptionValidationService, // Assuming this service is used in TaskModule
+    SubscriptionValidationService,
+    TaskAuditService,
+    TaskAuditHelper,
+    FileStorageService,
+    FileRepository,
   ],
 })
 export class TaskModule {}
