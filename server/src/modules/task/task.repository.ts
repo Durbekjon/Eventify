@@ -120,7 +120,21 @@ export class TaskRepository {
     companyId: string,
     userId: string,
   ): Promise<Task> {
-    const { sheetId, name, members, status, priority, link, price, paid } = body
+    const {
+      links = [],
+      sheetId,
+      name,
+      members,
+      status,
+      priority,
+      price,
+      paid,
+      duedate1,
+      duedate2,
+      duedate3,
+      duedate4,
+      duedate5,
+    } = body
 
     // Find the sheet and retrieve workspaceId, validate existence
     const sheet = await this.prisma.sheet.findUnique({
@@ -130,6 +144,15 @@ export class TaskRepository {
 
     if (!sheet) {
       throw new Error(`Sheet with ID ${sheetId} not found.`)
+    }
+
+    // Process due date arrays
+    const processedDueDates = {
+      duedate1: duedate1?.map((date) => this.toIsoStringIfExists(date)),
+      duedate2: duedate2?.map((date) => this.toIsoStringIfExists(date)),
+      duedate3: duedate3?.map((date) => this.toIsoStringIfExists(date)),
+      duedate4: duedate4?.map((date) => this.toIsoStringIfExists(date)),
+      duedate5: duedate5?.map((date) => this.toIsoStringIfExists(date)),
     }
 
     // Construct task creation data
@@ -151,9 +174,10 @@ export class TaskRepository {
       members: members ? { connect: members.map((id) => ({ id })) } : undefined,
       status,
       priority,
-      link,
+      links,
       price,
       paid,
+      ...processedDueDates,
     }
 
     try {
@@ -173,6 +197,22 @@ export class TaskRepository {
       for (const field of dateFields) {
         if (updateData[field]) {
           updateData[field] = this.toIsoStringIfExists(updateData[field])
+        }
+      }
+
+      // Transform due date array fields to ISO-8601 if present
+      const dueDateFields = [
+        'duedate1',
+        'duedate2',
+        'duedate3',
+        'duedate4',
+        'duedate5',
+      ]
+      for (const field of dueDateFields) {
+        if (updateData[field] && Array.isArray(updateData[field])) {
+          updateData[field] = (updateData[field] as string[]).map((date) =>
+            this.toIsoStringIfExists(date),
+          )
         }
       }
 

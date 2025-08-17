@@ -114,7 +114,7 @@ export const TASK_FIELD_LABELS: Record<string, string> = {
   name: 'Task Name',
   status: 'Status',
   priority: 'Priority',
-  link: 'Main Link',
+  links: 'Links',
   price: 'Price',
   paid: 'Payment Status',
   members: 'Assigned Members',
@@ -143,11 +143,12 @@ export const TASK_FIELD_LABELS: Record<string, string> = {
   date3: 'Date Field 3',
   date4: 'Date Field 4',
   date5: 'Date Field 5',
-  link1: 'Link Field 1',
-  link2: 'Link Field 2',
-  link3: 'Link Field 3',
-  link4: 'Link Field 4',
-  link5: 'Link Field 5',
+  duedate1: 'Due Date 1',
+  duedate2: 'Due Date 2',
+  duedate3: 'Due Date 3',
+  duedate4: 'Due Date 4',
+  duedate5: 'Due Date 5',
+  files: 'Files',
 }
 
 /**

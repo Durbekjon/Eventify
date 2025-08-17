@@ -19,10 +19,9 @@ import { UtilsModule } from '@core/utils/utils.module'
 import { EmailService } from '@core/email/email.service'
 import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 import { SubscriptionValidationModule } from '@core/subscription-validation/subscription-validation.module'
-import { TaskAuditService } from './services/task-audit.service'
-import { TaskAuditHelper } from './utils/audit-helper'
 import { FileStorageService } from '@core/file-storage/file-storage.service'
 import { FileRepository } from '../file/file.repository'
+import { TaskAuditService } from './services/task-audit.service'
 
 @Module({
   imports: [UserModule, UtilsModule, SubscriptionValidationModule],
@@ -45,7 +44,6 @@ import { FileRepository } from '../file/file.repository'
     EmailService,
     SubscriptionValidationService,
     TaskAuditService,
-    TaskAuditHelper,
     FileStorageService,
     FileRepository,
   ],

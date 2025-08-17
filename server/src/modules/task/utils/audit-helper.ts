@@ -43,7 +43,7 @@ export class TaskAuditHelper {
       'name',
       'status',
       'priority',
-      'link',
+      'links',
       'price',
       'paid',
     ]
@@ -64,7 +64,6 @@ export class TaskAuditHelper {
         `checkbox${i}`,
         `select${i}`,
         `date${i}`,
-        `link${i}`,
       ]
 
       for (const field of customFields) {
@@ -112,7 +111,6 @@ export class TaskAuditHelper {
         `checkbox${i}`,
         `select${i}`,
         `date${i}`,
-        `link${i}`,
       ]
 
       for (const field of fields) {
@@ -193,14 +191,8 @@ export class TaskAuditHelper {
     complexity += customFieldsUsed * 0.3
 
     // Link complexity
-    if (task.link) complexity += 0.5
-    const additionalLinks = [
-      task.link1,
-      task.link2,
-      task.link3,
-      task.link4,
-      task.link5,
-    ].filter(Boolean).length
+    if (task.links) complexity += 0.5
+    const additionalLinks = task.links.filter(Boolean).length
     complexity += additionalLinks * 0.2
 
     return Math.round(complexity * 10) / 10
@@ -351,7 +343,6 @@ export class TaskAuditHelper {
         `checkbox${i}`,
         `select${i}`,
         `date${i}`,
-        `link${i}`,
       ]
 
       for (const field of fields) {
