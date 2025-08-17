@@ -47,7 +47,7 @@ export class CreateTaskDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
+  @IsArray()
   links?: string[]
 
   @ApiPropertyOptional({

@@ -40,7 +40,7 @@ export class UpdateTaskDto {
 
   @ApiProperty({ description: 'A link related to the task', required: false })
   @IsOptional()
-  @IsString()
+  @IsArray()
   links?: string[]
 
   @ApiProperty({
