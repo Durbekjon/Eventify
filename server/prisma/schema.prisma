@@ -490,7 +490,7 @@ enum ColumnType {
   SELECT
   TEXT
   NUMBER
-  LINK
+  LINKS
   MEMBERS
   DATE
   DUEDATE

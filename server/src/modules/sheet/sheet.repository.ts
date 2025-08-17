@@ -36,7 +36,7 @@ export class SheetRepository {
         'name',
         'status',
         'priority',
-        'link',
+        'links',
         'price',
         'paid',
         'members',
