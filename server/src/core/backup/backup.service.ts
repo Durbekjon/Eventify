@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { Cron } from '@nestjs/schedule'
+import { Cron, CronExpression } from '@nestjs/schedule'
 import { BackupStatus } from '@prisma/client'
 import { exec } from 'child_process'
 import * as fs from 'fs'
@@ -32,9 +32,9 @@ export class BackupService {
   /**
    * Run every day at 05:00 UTC
    */
-  @Cron('* * * * *', {
+  @Cron('0 5 * * *', {
     timeZone: 'UTC',
-  }) 
+  })
   async backup(): Promise<void> {
     this.logger.log('⏳ Starting daily backup...')
 
