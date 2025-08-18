@@ -444,6 +444,24 @@ model File {
 
   @@map("files")
 }
+model Backup {
+  id           String        @id @default(uuid())
+  createdAt    DateTime      @default(now()) @map("created_at")
+  status       BackupStatus  @default(PENDING)
+  startedAt    DateTime?     @default(now()) @map("started_at")
+  endedAt      DateTime?     @map("ended_at")
+  s3Key        String?       @map("backup_key")
+  s3Url        String?       @map("backup_url")
+  errorMessage String?       @map("error_message")
+
+  @@map("backups")
+}
+
+enum BackupStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
 
 enum RoleTypes {
   AUTHOR
