@@ -41,6 +41,28 @@ export class MemberRepository {
   async getInvitations(companyId: string) {
     return this.prisma.member.findMany({
       where: { companyId, status: { not: 'ACTIVE' } },
+      include: {
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatar: {
+              select: {
+                id: true,
+                path: true,
+              },
+            },
+          },
+        },
+        notification: {
+          select: {
+            isRead: true,
+          },
+        },
+
+        workspaces: true,
+      },
     })
   }
 
