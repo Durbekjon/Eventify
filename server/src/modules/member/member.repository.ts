@@ -48,6 +48,7 @@ export class MemberRepository {
     const { type, status, view } = filter
     const where: Prisma.MemberWhereInput = {
       companyId,
+      status: 'ACTIVE',
     }
     if (type) where.type = type
     if (status) where.status = status
