@@ -178,7 +178,7 @@ export class MemberService {
 
     return this.repository.getActiveMembersInReverseOrder(
       selectedRole.companyId,
-      filter
+      filter,
     )
   }
 
@@ -218,6 +218,8 @@ export class MemberService {
 
     if (body.status === MemberStatus.ACTIVE)
       await this.createRoleForMember(member)
+    else if (body.status === MemberStatus.CANCELLED)
+      await this.repository.cancelMember(memberId)
 
     return {
       status: 'OK',
