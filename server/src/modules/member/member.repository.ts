@@ -38,6 +38,12 @@ export class MemberRepository {
     }
   }
 
+  async getInvitations(companyId: string) {
+    return this.prisma.member.findMany({
+      where: { companyId, status: { not: 'ACTIVE' } },
+    })
+  }
+
   getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
     const { type, status, view } = filter
     const where: Prisma.MemberWhereInput = {
@@ -87,9 +93,8 @@ export class MemberRepository {
   }
 
   cancelMember(memberId: string) {
-    return this.prisma.member.update({
+    return this.prisma.member.delete({
       where: { id: memberId },
-      data: { status: 'CANCELLED' },
     })
   }
 

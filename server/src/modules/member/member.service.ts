@@ -75,6 +75,11 @@ export class MemberService {
     }
   }
 
+  async getInvitations(user: IUser) {
+    const selectedRole = await this.validateUserRole(user)
+    return this.repository.getInvitations(selectedRole.companyId)
+  }
+
   /**
    * Creates a member and associated user if needed
    * @param dto - Member creation data

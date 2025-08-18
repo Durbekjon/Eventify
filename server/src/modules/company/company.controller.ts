@@ -12,7 +12,7 @@ import { CompanyService } from './company.service'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { CreateCompanyDto } from './dto/create-company.dto'
 import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
-import { UpdateCompanyDto } from './dto/update-company.dto'
+import { UpdateSelfCompanyDto } from './dto/update-company.dto'
 import { User } from '@decorators/user.decorator'
 import { IUser } from '@/modules/user/dto/IUser'
 
@@ -51,7 +51,7 @@ export class CompanyController {
   updateCompany(
     @User() user: IUser,
     @Param('id') id: string,
-    @Body() body: UpdateCompanyDto,
+    @Body() body: UpdateSelfCompanyDto,
   ) {
     return this.service.update(id, body, user)
   }

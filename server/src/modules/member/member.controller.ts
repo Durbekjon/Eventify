@@ -32,6 +32,12 @@ export class MemberController {
     return this.service.getMembers(user, filter)
   }
 
+  @Get('invitations')
+  @ApiOperation({ summary: 'Get invitations' })
+  getInvitations(@User() user: IUser) {
+    return this.service.getInvitations(user)
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get member' })
   getMember(@User() user: IUser, @Param('id') id: string) {

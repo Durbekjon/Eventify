@@ -11,7 +11,7 @@ import { IUser } from '@/modules/user/dto/IUser'
 import { RoleService } from '@role/role.service'
 import { Company, MemberTypes, Prisma, RoleTypes } from '@prisma/client'
 import { HTTP_MESSAGES } from '@consts/http-messages'
-import { UpdateCompanyDto } from './dto/update-company.dto'
+import { UpdateSelfCompanyDto } from './dto/update-company.dto'
 import { LogRepository } from '@log/log.repository'
 import { LOG_MESSAGES } from '@consts/log.messages'
 import { UserService } from '@user/user.service'
@@ -188,7 +188,7 @@ export class CompanyService {
     return company
   }
 
-  async update(id: string, body: UpdateCompanyDto, user: IUser) {
+  async update(id: string, body: UpdateSelfCompanyDto, user: IUser) {
     await this.validateUserRole(user)
 
     const company = await this.findOne(id, user.id)
@@ -209,6 +209,24 @@ export class CompanyService {
     await this.validateUserRole(user)
 
     await this.findOne(id, user.id)
+
+    await this.prisma.$transaction([
+      this.prisma.transaction.deleteMany({ where: { companyId: id } }),
+      this.prisma.log.deleteMany({ where: { companyId: id } }),
+      this.prisma.task.deleteMany({ where: { sheet: { companyId: id } } }),
+      this.prisma.member.deleteMany({ where: { companyId: id } }),
+      this.prisma.notification.deleteMany({ where: { companyId: id } }),
+      this.prisma.workspace.deleteMany({ where: { companyId: id } }),
+      this.prisma.sheet.deleteMany({ where: { companyId: id } }),
+      this.prisma.select.deleteMany({ where: { companyId: id } }),
+      this.prisma.column.deleteMany({ where: { companyId: id } }),
+      this.prisma.companySubscription.deleteMany({ where: { companyId: id } }),
+      this.prisma.role.deleteMany({ where: { companyId: id } }),
+      this.prisma.log.deleteMany({ where: { companyId: id } }),
+      this.prisma.file.deleteMany({ where: { companyId: id } }),
+      this.prisma.paymentLog.deleteMany({ where: { companyId: id } }),
+      this.prisma.companySubscription.deleteMany({ where: { companyId: id } }),
+    ])
 
     await this.prisma.company.delete({ where: { id } })
 
