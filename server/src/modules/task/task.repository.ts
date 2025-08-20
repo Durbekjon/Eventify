@@ -92,7 +92,7 @@ export class TaskRepository {
           },
           skip: (parsedPage - 1) * parsedLimit,
           take: parsedLimit,
-          orderBy: { createdAt: order || 'desc' },
+          orderBy: { order: 'desc' },
         }),
         this.prisma.task.count({
           where: whereConditions,
@@ -247,7 +247,7 @@ export class TaskRepository {
   async reorder(body: TaskReorderDto) {
     await this.prisma
       .$transaction(
-        body.taskId.map((id, index) =>
+        body.taskId.reverse().map((id, index) =>
           this.prisma.task.update({
             where: { id },
             data: { order: body.orders[index] },

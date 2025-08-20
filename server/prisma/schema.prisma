@@ -206,6 +206,7 @@ model Plan {
   order                Int                   @default(autoincrement())
   stripePriceId        String?               @map("stripe_price_id")
   stripeProductId      String?               @map("stripe_product_id")
+  tags                 String?             
   companies            Company[]
   companySubscriptions CompanySubscription[]
   transactions         Transaction[]

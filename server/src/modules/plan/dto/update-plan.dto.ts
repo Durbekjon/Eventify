@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsString,
 } from 'class-validator'
 
 export class UpdatePlanDto {
@@ -53,4 +54,9 @@ export class UpdatePlanDto {
   @IsOptional()
   @IsArray()
   customizedPlanFor: string[]
+
+  @ApiProperty({ description: 'Plan tag' })
+  @IsOptional()
+  @IsString()
+  tags?: string | null
 }
