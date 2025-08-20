@@ -247,7 +247,7 @@ export class TaskRepository {
   async reorder(body: TaskReorderDto) {
     await this.prisma
       .$transaction(
-        body.taskId.reverse().map((id, index) =>
+        body.taskId.map((id, index) =>
           this.prisma.task.update({
             where: { id },
             data: { order: body.orders[index] },
