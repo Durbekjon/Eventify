@@ -92,7 +92,7 @@ export class TaskRepository {
           },
           skip: (parsedPage - 1) * parsedLimit,
           take: parsedLimit,
-          orderBy: { createdAt: order },
+          orderBy: { createdAt: order || 'desc' },
         }),
         this.prisma.task.count({
           where: whereConditions,
