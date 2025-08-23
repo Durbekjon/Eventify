@@ -222,8 +222,6 @@ export class TaskService {
 
   // TASK REORDERING
   async reorderTasks(user: IUser, body: TaskReorderDto) {
-    const startTime = Date.now()
-
     try {
       const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
 
@@ -236,7 +234,6 @@ export class TaskService {
       ) as TaskWithRelations[]
 
       const result = await this.repository.reorder(body)
-      const endTime = Date.now()
 
       // Simple reorder logging
       await this.logUserAction(
