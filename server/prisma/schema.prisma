@@ -252,7 +252,10 @@ model Column {
   company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   sheet     Sheet      @relation(fields: [sheetId], references: [id], onDelete: Cascade)
   selects   Select[]
-
+  order     Int       @default(autoincrement())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  
   @@map("columns")
 }
 
