@@ -173,7 +173,7 @@ export class MemberService {
     await emailMessage
   }
 
-  async getMembers(user: IUser, filter: FilterDto) {
+  async getMembers(user: IUser, filter: FilterDto | null) {
     const selectedRole = await this.validateUserRole(user)
 
     return this.repository.getActiveMembersInReverseOrder(

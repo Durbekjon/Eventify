@@ -28,7 +28,13 @@ export class MemberController {
 
   @Get()
   @ApiOperation({ summary: 'Get members' })
-  getUser(@User() user: IUser, @Query() filter: FilterDto) {
+  getUser(@User() user: IUser) {
+    return this.service.getMembers(user, null)
+  }
+
+  @Get('paginated')
+  @ApiOperation({ summary: 'Get paginated members' })
+  getPaginatedMembers(@User() user: IUser, @Query() filter: FilterDto) {
     return this.service.getMembers(user, filter)
   }
 
