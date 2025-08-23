@@ -88,13 +88,16 @@ export class MemberRepository {
     })
   }
 
-  async getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
-    const { type, status, page, limit } = filter
+  async getActiveMembersInReverseOrder(
+    companyId: string,
+    filter: FilterDto | null,
+  ) {
     const where: Prisma.MemberWhereInput = {
       companyId,
       status: 'ACTIVE',
     }
     if (filter) {
+      const { type, status, page, limit } = filter
       if (type) where.type = type
       if (status) where.status = status
 
