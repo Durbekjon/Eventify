@@ -180,14 +180,7 @@ export class TaskLoggingUtil {
     complexity += customFieldsUsed * 0.3
 
     // Link complexity
-    const links = [
-      task.link,
-      task.link1,
-      task.link2,
-      task.link3,
-      task.link4,
-      task.link5,
-    ].filter(Boolean).length
+    const links = task.links.filter(Boolean).length
     complexity += links * 0.2
 
     return Math.round(complexity * 10) / 10
@@ -205,7 +198,7 @@ export class TaskLoggingUtil {
         `checkbox${i}`,
         `select${i}`,
         `date${i}`,
-        `link${i}`,
+        `duedate${i}`,
       ]
       for (const field of fields) {
         if (

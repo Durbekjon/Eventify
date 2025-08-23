@@ -40,8 +40,8 @@ export class UpdateTaskDto {
 
   @ApiProperty({ description: 'A link related to the task', required: false })
   @IsOptional()
-  @IsString()
-  link?: string
+  @IsArray()
+  links?: string[]
 
   @ApiProperty({
     description: 'The price associated with the task',
@@ -261,42 +261,57 @@ export class UpdateTaskDto {
   date5?: string
 
   @ApiProperty({
-    description: 'Link field 1 for additional information',
+    description: 'Due date field 1 - array of dates for task deadlines',
     required: false,
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z', '2025-01-15T12:00:00.000Z'],
   })
   @IsOptional()
-  @IsString()
-  link1?: string
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate1?: string[]
 
   @ApiProperty({
-    description: 'Link field 2 for additional information',
+    description: 'Due date field 2 - array of dates for task deadlines',
     required: false,
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
   })
   @IsOptional()
-  @IsString()
-  link2?: string
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate2?: string[]
 
   @ApiProperty({
-    description: 'Link field 3 for additional information',
+    description: 'Due date field 3 - array of dates for task deadlines',
     required: false,
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
   })
   @IsOptional()
-  @IsString()
-  link3?: string
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate3?: string[]
 
   @ApiProperty({
-    description: 'Link field 4 for additional information',
+    description: 'Due date field 4 - array of dates for task deadlines',
     required: false,
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
   })
   @IsOptional()
-  @IsString()
-  link4?: string
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate4?: string[]
 
   @ApiProperty({
-    description: 'Link field 5 for additional information',
+    description: 'Due date field 5 - array of dates for task deadlines',
     required: false,
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
   })
   @IsOptional()
-  @IsString()
-  link5?: string
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate5?: string[]
 }

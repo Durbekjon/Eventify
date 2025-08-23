@@ -36,7 +36,7 @@ export class SheetRepository {
         'name',
         'status',
         'priority',
-        'link',
+        'links',
         'price',
         'paid',
         'members',
@@ -121,7 +121,10 @@ export class SheetRepository {
     return this.prisma.sheet.findUnique({
       where: { id },
       include: {
-        columns: { include: { selects: { include: { options: true } } } },
+        columns: {
+          include: { selects: { include: { options: true } } },
+          orderBy: { order: 'asc' },
+        },
         tasks: true,
       },
     })

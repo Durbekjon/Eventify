@@ -75,6 +75,11 @@ export class MemberService {
     }
   }
 
+  async getInvitations(user: IUser) {
+    const selectedRole = await this.validateUserRole(user)
+    return this.repository.getInvitations(selectedRole.companyId)
+  }
+
   /**
    * Creates a member and associated user if needed
    * @param dto - Member creation data
@@ -168,12 +173,15 @@ export class MemberService {
     await emailMessage
   }
 
-  async getMembers(user: IUser, filter: FilterDto) {
+  async getMembers(
+    user: IUser,
+    filter: FilterDto,
+  ): Promise<{ members: Member[]; count: number }> {
     const selectedRole = await this.validateUserRole(user)
 
     return this.repository.getActiveMembersInReverseOrder(
       selectedRole.companyId,
-      filter
+      filter,
     )
   }
 
@@ -213,6 +221,8 @@ export class MemberService {
 
     if (body.status === MemberStatus.ACTIVE)
       await this.createRoleForMember(member)
+    else if (body.status === MemberStatus.CANCELLED)
+      await this.repository.cancelMember(memberId)
 
     return {
       status: 'OK',
@@ -225,9 +235,7 @@ export class MemberService {
 
     await this.findMemberById(memberId, selectedRole.companyId)
 
-    const member = await this.repository.updateMember(memberId, body)
-
-    return { status: 'OK', result: member }
+    return await this.repository.updateMember(memberId, body)
   }
 
   deleteManyMembersByCompany(companyId: string) {

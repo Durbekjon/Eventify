@@ -5,8 +5,8 @@ import {
   IsNumber,
   IsArray,
   IsUUID,
-  IsUrl,
   IsPositive,
+  IsDateString,
 } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
@@ -47,8 +47,8 @@ export class CreateTaskDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
-  link?: string
+  @IsArray()
+  links?: string[]
 
   @ApiPropertyOptional({
     description: 'Price associated with the task',
@@ -67,4 +67,54 @@ export class CreateTaskDto {
   @ApiProperty({ description: 'ID of the sheet to which the task belongs' })
   @IsUUID()
   sheetId: string
+
+  @ApiPropertyOptional({
+    description: 'Due date field 1 - array of dates for task deadlines',
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z', '2025-01-15T12:00:00.000Z'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate1?: string[]
+
+  @ApiPropertyOptional({
+    description: 'Due date field 2 - array of dates for task deadlines',
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate2?: string[]
+
+  @ApiPropertyOptional({
+    description: 'Due date field 3 - array of dates for task deadlines',
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate3?: string[]
+
+  @ApiPropertyOptional({
+    description: 'Due date field 4 - array of dates for task deadlines',
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate4?: string[]
+
+  @ApiPropertyOptional({
+    description: 'Due date field 5 - array of dates for task deadlines',
+    type: [String],
+    example: ['2024-12-31T23:59:59.000Z'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsDateString({}, { each: true })
+  duedate5?: string[]
 }

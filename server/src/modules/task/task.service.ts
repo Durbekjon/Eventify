@@ -30,10 +30,6 @@ import { TaskWithRelations } from './types/task.types'
 import { SubscriptionValidationService } from '@core/subscription-validation/subscription-validation.service'
 import { FileStorageService } from '@core/file-storage/file-storage.service'
 import { FileRepository } from '../file/file.repository'
-import {
-  TaskAuditService,
-  TaskAuditContext,
-} from './services/task-audit.service'
 
 @Injectable()
 export class TaskService {
@@ -47,7 +43,6 @@ export class TaskService {
     private readonly subscriptionValidationService: SubscriptionValidationService,
     private readonly fileStorage: FileStorageService,
     private readonly fileRepository: FileRepository,
-    private readonly taskAuditService: TaskAuditService,
   ) {}
 
   // TASK RETRIEVAL
@@ -81,24 +76,7 @@ export class TaskService {
       )
       const endTime = Date.now()
 
-      // Create audit context
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: role.companyId,
-        workspaceId: task.workspaceId,
-        sheetId: task.sheetId,
-        taskId: task.id,
-      }
-
-      // Log comprehensive audit trail
-      await this.taskAuditService.logTaskCreation(
-        body,
-        task as TaskWithRelations,
-        auditContext,
-        { startTime, endTime },
-      )
-
-      // Keep legacy logging for backward compatibility
+      // Simple logging (preferred format)
       await this.logUserAction(
         user.id,
         role.companyId,
@@ -113,16 +91,13 @@ export class TaskService {
       const endTime = Date.now()
 
       // Log creation failure
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: await this.getCompanyIdFromUser(user),
-      }
-
-      await this.taskAuditService.logTaskOperationError(
-        'CREATE' as any,
-        error,
-        auditContext,
-        { taskData: body, duration: endTime - startTime },
+      await this.logUserAction(
+        user.id,
+        await this.getCompanyIdFromUser(user),
+        `Failed to create task: ${error.message}`,
+        null,
+        null,
+        null,
       )
 
       throw error
@@ -135,8 +110,6 @@ export class TaskService {
     body: UpdateTaskDto,
     user: IUser,
   ): Promise<Task> {
-    const startTime = Date.now()
-
     try {
       const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
       const originalTask = await this.findById(id, role.companyId)
@@ -153,6 +126,7 @@ export class TaskService {
       // Process regular fields
       for (const field of fieldsToCheck) {
         if (body[field] !== undefined && originalTask[field] !== body[field]) {
+          console.log(field, originalTask[field], body[field])
           changes.push({
             updatedKey: field,
             oldValue: originalTask[field],
@@ -164,11 +138,17 @@ export class TaskService {
 
       // Handle members separately
       if (body.members !== undefined) {
-        changes.push({
-          updatedKey: 'members',
-          oldValue: originalTask.members,
-          newValue: body.members,
-        })
+        const oldMemberIds = originalTask.members?.map((m) => m.id).sort() || []
+        const newMemberIds = body.members.sort()
+
+        // Only log change if members actually changed
+        if (JSON.stringify(oldMemberIds) !== JSON.stringify(newMemberIds)) {
+          changes.push({
+            updatedKey: 'members',
+            oldValue: originalTask.members,
+            newValue: body.members,
+          })
+        }
 
         if (body.members.length > 0) {
           await this.validateBodyMembers(body)
@@ -196,45 +176,42 @@ export class TaskService {
         originalTask.id,
         updateData,
       )
-      const endTime = Date.now()
 
-      // Create audit context
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: role.companyId,
-        workspaceId: originalTask.workspaceId,
-        sheetId: originalTask.sheetId,
-        taskId: originalTask.id,
+      // Detailed logging for updates - log each field change
+      if (changes.length > 0) {
+        // First log a general update message
+        await this.logUserAction(
+          user.id,
+          role.companyId,
+          `Updated task: ${originalTask.name}`,
+          originalTask.id,
+          originalTask.workspaceId,
+          originalTask.sheetId,
+        )
+
+        // Then log individual field changes with old/new values
+        await this.logTaskChanges(
+          changes,
+          role.companyId,
+          user.id,
+          originalTask.id,
+          originalTask.workspaceId,
+          originalTask.sheetId,
+        )
       }
-
-      // Log comprehensive audit trail
-      await this.taskAuditService.logTaskUpdate(
-        originalTask,
-        body,
-        updatedTask as TaskWithRelations,
-        auditContext,
-        { startTime, endTime },
-      )
-
-      // Keep legacy logging for backward compatibility
-      await this.logTaskChanges(changes, role.companyId, user.id)
 
       return updatedTask
     } catch (error) {
       const endTime = Date.now()
 
       // Log update failure
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: await this.getCompanyIdFromUser(user),
-        taskId: id,
-      }
-
-      await this.taskAuditService.logTaskOperationError(
-        'UPDATE' as any,
-        error,
-        auditContext,
-        { updateData: body, duration: endTime - startTime },
+      await this.logUserAction(
+        user.id,
+        await this.getCompanyIdFromUser(user),
+        `Failed to update task: ${error.message}`,
+        id,
+        null,
+        null,
       )
 
       throw error
@@ -243,8 +220,6 @@ export class TaskService {
 
   // TASK REORDERING
   async reorderTasks(user: IUser, body: TaskReorderDto) {
-    const startTime = Date.now()
-
     try {
       const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
 
@@ -257,29 +232,12 @@ export class TaskService {
       ) as TaskWithRelations[]
 
       const result = await this.repository.reorder(body)
-      const endTime = Date.now()
 
-      // Create audit context
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: role.companyId,
-        workspaceId: result.workspaceId,
-        sheetId: result.sheetId,
-      }
-
-      // Log comprehensive audit trail
-      await this.taskAuditService.logTaskReorder(
-        body,
-        validTasks,
-        auditContext,
-        { startTime, endTime },
-      )
-
-      // Keep legacy logging for backward compatibility
+      // Simple reorder logging
       await this.logUserAction(
         user.id,
         role.companyId,
-        'Reordered tasks',
+        `Reordered ${validTasks.length} tasks`,
         null,
         result.workspaceId,
         result.sheetId,
@@ -290,16 +248,13 @@ export class TaskService {
       const endTime = Date.now()
 
       // Log reorder failure
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: await this.getCompanyIdFromUser(user),
-      }
-
-      await this.taskAuditService.logTaskOperationError(
-        'REORDER' as any,
-        error,
-        auditContext,
-        { reorderData: body, duration: endTime - startTime },
+      await this.logUserAction(
+        user.id,
+        await this.getCompanyIdFromUser(user),
+        `Failed to reorder tasks: ${error.message}`,
+        null,
+        null,
+        null,
       )
 
       throw error
@@ -324,23 +279,14 @@ export class TaskService {
       await this.repository.move(body, targetSheet.workspaceId)
       const endTime = Date.now()
 
-      // Create audit context
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: role.companyId,
-        taskId: body.taskId,
-        workspaceId: targetSheet.workspaceId,
-        sheetId: body.sheetId,
-      }
-
-      // Log comprehensive audit trail
-      await this.taskAuditService.logTaskMove(
-        taskToMove,
-        body,
-        sourceSheetId,
+      // Simple move logging
+      await this.logUserAction(
+        user.id,
+        role.companyId,
+        `Moved task: ${taskToMove.name}`,
+        body.taskId,
         targetSheet.workspaceId,
-        auditContext,
-        { startTime, endTime },
+        body.sheetId,
       )
 
       return this.createResponse(HTTP_MESSAGES.TASK.MOVE_SUCCESS)
@@ -348,17 +294,13 @@ export class TaskService {
       const endTime = Date.now()
 
       // Log move failure
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: await this.getCompanyIdFromUser(user),
-        taskId: body.taskId,
-      }
-
-      await this.taskAuditService.logTaskOperationError(
-        'MOVE' as any,
-        error,
-        auditContext,
-        { moveData: body, duration: endTime - startTime },
+      await this.logUserAction(
+        user.id,
+        await this.getCompanyIdFromUser(user),
+        `Failed to move task: ${error.message}`,
+        body.taskId,
+        null,
+        null,
       )
 
       throw error
@@ -373,26 +315,11 @@ export class TaskService {
       const role = await this.validateUserAccess(user, MemberPermissions.DELETE)
       const taskToDelete = await this.findById(id, role.companyId)
 
-      // Create audit context before deletion
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: role.companyId,
-        taskId: taskToDelete.id,
-        workspaceId: taskToDelete.workspaceId,
-        sheetId: taskToDelete.sheetId,
-      }
-
-      // Log deletion BEFORE actually deleting to preserve task data
-      await this.taskAuditService.logTaskDeletion(taskToDelete, auditContext, {
-        startTime,
-        endTime: Date.now(),
-      })
-
-      // Keep legacy logging for backward compatibility
+      // Simple deletion logging
       await this.logUserAction(
         user.id,
         role.companyId,
-        `Task deleted: ${taskToDelete.name}`,
+        `Deleted task: ${taskToDelete.name}`,
         taskToDelete.id,
         taskToDelete.workspaceId,
         taskToDelete.sheetId,
@@ -406,17 +333,13 @@ export class TaskService {
       const endTime = Date.now()
 
       // Log deletion failure
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: await this.getCompanyIdFromUser(user),
-        taskId: id,
-      }
-
-      await this.taskAuditService.logTaskOperationError(
-        'DELETE' as any,
-        error,
-        auditContext,
-        { taskId: id, duration: endTime - startTime },
+      await this.logUserAction(
+        user.id,
+        await this.getCompanyIdFromUser(user),
+        `Failed to delete task: ${error.message}`,
+        id,
+        null,
+        null,
       )
 
       throw error
@@ -530,25 +453,7 @@ export class TaskService {
       )
       const endTime = Date.now()
 
-      // Create audit context
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: role.companyId,
-        workspaceId: originalTask.workspaceId,
-        sheetId: originalTask.sheetId,
-        taskId: taskId,
-      }
-
-      // Log comprehensive audit trail for file upload + update
-      await this.taskAuditService.logTaskUpdate(
-        originalTask,
-        updateData,
-        updatedTask as TaskWithRelations,
-        auditContext,
-        { startTime, endTime },
-      )
-
-      // Keep legacy logging for backward compatibility
+      // Simple logging for file upload + update
       await this.logUserAction(
         user.id,
         role.companyId,
@@ -566,22 +471,13 @@ export class TaskService {
       const endTime = Date.now()
 
       // Log file upload failure
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: await this.getCompanyIdFromUser(user),
-        taskId: taskId,
-      }
-
-      await this.taskAuditService.logTaskOperationError(
-        'UPDATE' as any,
-        error,
-        auditContext,
-        {
-          operation: 'FILE_UPLOAD_AND_UPDATE',
-          fileCount: files.length,
-          updateData,
-          duration: endTime - startTime,
-        },
+      await this.logUserAction(
+        user.id,
+        await this.getCompanyIdFromUser(user),
+        `Failed to upload files and update task: ${error.message}`,
+        taskId,
+        null,
+        null,
       )
 
       throw error
@@ -724,37 +620,19 @@ export class TaskService {
 
       await this.fileRepository.deleteFiles(fileIds)
 
-      // Log file deletion for each affected task
-      for (const taskId of taskIds) {
-        if (taskId) {
-          await this.logUserAction(
-            user.id,
-            role.companyId,
-            `Deleted ${files.filter((f) => f.taskId === taskId).length} file(s) from task`,
-            taskId,
-            null,
-            null,
-          )
-        }
-      }
+      // File deletion is already logged by the audit service
+      // No need for additional logging here
     } catch (error) {
       const endTime = Date.now()
 
       // Log file deletion failure
-      const auditContext: TaskAuditContext = {
-        userId: user.id,
-        companyId: await this.getCompanyIdFromUser(user),
-      }
-
-      await this.taskAuditService.logTaskOperationError(
-        'UPDATE' as any,
-        error,
-        auditContext,
-        {
-          operation: 'FILE_DELETE',
-          fileIds,
-          duration: endTime - startTime,
-        },
+      await this.logUserAction(
+        user.id,
+        await this.getCompanyIdFromUser(user),
+        `Failed to delete files: ${error.message}`,
+        null,
+        null,
+        null,
       )
 
       throw error
@@ -799,16 +677,39 @@ export class TaskService {
     changes: Array<{ updatedKey: string; oldValue: any; newValue: any }>,
     companyId: string,
     userId: string,
+    taskId?: string,
+    workspaceId?: string,
+    sheetId?: string,
   ) {
-    const logs = changes.map((change) => ({
-      message: `Task ${change.updatedKey} changed from ${change.oldValue} to ${change.newValue}`,
-      companyId,
-      userId,
-      updatedKey: change.updatedKey,
-      oldValue: change.oldValue?.toString(),
-      newValue: change.newValue?.toString(),
-    }))
-    await this.prisma.log.createMany({ data: logs })
+    const logs = changes.map((change) => {
+      // Format values properly for logging
+      const formatValue = (value: any): string => {
+        if (value === null || value === undefined) return 'null'
+        if (Array.isArray(value)) {
+          // For members array, show member IDs
+          if (change.updatedKey === 'members') {
+            return value.map((m) => m.id || m).join(', ') || 'empty'
+          }
+          return value.join(', ') || 'empty'
+        }
+        return String(value)
+      }
+
+      return {
+        message: `Field "${change.updatedKey}" changed from "${formatValue(change.oldValue)}" to "${formatValue(change.newValue)}"`,
+        user: { connect: { id: userId } },
+        company: { connect: { id: companyId } },
+        task: taskId ? { connect: { id: taskId } } : undefined,
+        workspace: workspaceId ? { connect: { id: workspaceId } } : undefined,
+        sheet: sheetId ? { connect: { id: sheetId } } : undefined,
+        updatedKey: change.updatedKey,
+        oldValue: formatValue(change.oldValue),
+        newValue: formatValue(change.newValue),
+      }
+    })
+
+    // Create individual logs for each change
+    await Promise.all(logs.map((log) => this.prisma.log.create({ data: log })))
   }
 
   private async ensureTaskExists(taskId: string) {

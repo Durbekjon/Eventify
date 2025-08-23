@@ -206,6 +206,7 @@ model Plan {
   order                Int                   @default(autoincrement())
   stripePriceId        String?               @map("stripe_price_id")
   stripeProductId      String?               @map("stripe_product_id")
+  tags                 String?             
   companies            Company[]
   companySubscriptions CompanySubscription[]
   transactions         Transaction[]
@@ -251,7 +252,10 @@ model Column {
   company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   sheet     Sheet      @relation(fields: [sheetId], references: [id], onDelete: Cascade)
   selects   Select[]
-
+  order     Int       @default(autoincrement())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  
   @@map("columns")
 }
 
@@ -259,7 +263,7 @@ model Task {
   id          String    @id @default(uuid())
   status      String?
   priority    String?
-  link        String?
+  links       String[]
   price       Int?
   paid        Boolean?
   text1       String?
@@ -287,11 +291,7 @@ model Task {
   date3       DateTime?
   date4       DateTime?
   date5       DateTime?
-  link1       String?
-  link2       String?
-  link3       String?
-  link4       String?
-  link5       String?
+
   duedate1    DateTime[]
   duedate2    DateTime[]
   duedate3    DateTime[]
@@ -448,6 +448,24 @@ model File {
 
   @@map("files")
 }
+model Backup {
+  id           String        @id @default(uuid())
+  createdAt    DateTime      @default(now()) @map("created_at")
+  status       BackupStatus  @default(PENDING)
+  startedAt    DateTime?     @default(now()) @map("started_at")
+  endedAt      DateTime?     @map("ended_at")
+  s3Key        String?       @map("backup_key")
+  s3Url        String?       @map("backup_url")
+  errorMessage String?       @map("error_message")
+
+  @@map("backups")
+}
+
+enum BackupStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
 
 enum RoleTypes {
   AUTHOR
@@ -494,7 +512,7 @@ enum ColumnType {
   SELECT
   TEXT
   NUMBER
-  LINK
+  LINKS
   MEMBERS
   DATE
   DUEDATE

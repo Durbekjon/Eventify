@@ -6,6 +6,28 @@ import { UpdateMemberDto } from './dto/update-member.dto'
 import { Prisma } from '@prisma/client'
 import { FilterDto } from './dto/filter.dto'
 
+const memberInclude = {
+  user: {
+    select: {
+      email: true,
+      firstName: true,
+      lastName: true,
+      avatar: {
+        select: {
+          id: true,
+          path: true,
+        },
+      },
+    },
+  },
+  notification: {
+    select: {
+      isRead: true,
+    },
+  },
+  workspaces: true,
+}
+      
 @Injectable()
 export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -38,18 +60,9 @@ export class MemberRepository {
     }
   }
 
-  getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
-    const { type, status, view } = filter
-    const where: Prisma.MemberWhereInput = {
-      companyId,
-    }
-    if (type) where.type = type
-    if (status) where.status = status
-    if (view) where.view = view
-
+  async getInvitations(companyId: string) {
     return this.prisma.member.findMany({
-      where,
-      orderBy: { id: 'desc' },
+      where: { companyId, status: { not: 'ACTIVE' } },
       include: {
         user: {
           select: {
@@ -75,6 +88,31 @@ export class MemberRepository {
     })
   }
 
+  async getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
+    const { type, status, page, limit } = filter
+    const where: Prisma.MemberWhereInput = {
+      companyId,
+      status: 'ACTIVE',
+    }
+    if (type) where.type = type
+    if (status) where.status = status
+
+    const skip = (page - 1) * limit
+
+    const [members, count] = await this.prisma.$transaction([
+      this.prisma.member.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip,
+        take: limit,
+        include: memberInclude,
+      }),
+      this.prisma.member.count({ where }),
+    ])
+
+    return { members, count }
+  }
+
   getMember(memberId: string) {
     return this.prisma.member.findUnique({
       where: { id: memberId },
@@ -87,9 +125,8 @@ export class MemberRepository {
   }
 
   cancelMember(memberId: string) {
-    return this.prisma.member.update({
+    return this.prisma.member.delete({
       where: { id: memberId },
-      data: { status: 'CANCELLED' },
     })
   }
 
@@ -101,9 +138,19 @@ export class MemberRepository {
   }
 
   updateMember(memberId: string, body: UpdateMemberDto) {
+    const { type, permissions, view, workspaces } = body
+    const data: Prisma.MemberUpdateInput = {}
+
+    if (type) data.type = type
+    if (permissions) data.permissions = permissions
+    if (view) data.view = view
+    if (workspaces)
+      data.workspaces = { connect: workspaces.map((id) => ({ id })) }
+
     return this.prisma.member.update({
       where: { id: memberId },
-      data: { type: body.type, permissions: body.permissions, view: body.view },
+      data,
+      include: memberInclude,
     })
   }
 

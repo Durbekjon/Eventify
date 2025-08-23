@@ -27,7 +27,7 @@ export class TaskResponseDto {
     type: String,
     nullable: true,
   })
-  link: string | null
+  links: string[]
 
   @ApiProperty({
     description: 'The price related to the task',

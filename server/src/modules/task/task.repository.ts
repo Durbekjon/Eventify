@@ -19,168 +19,6 @@ export class TaskRepository {
     })
   }
 
-  // Helper method to validate search filters
-  private validateSearchFilters(search: any[]): {
-    isValid: boolean
-    errors: string[]
-  } {
-    const errors: string[] = []
-    const validFields = [
-      'name',
-      'status',
-      'priority',
-      'link',
-      'price',
-      'paid',
-      'text1',
-      'text2',
-      'text3',
-      'text4',
-      'text5',
-      'number1',
-      'number2',
-      'number3',
-      'number4',
-      'number5',
-      'checkbox1',
-      'checkbox2',
-      'checkbox3',
-      'checkbox4',
-      'checkbox5',
-      'select1',
-      'select2',
-      'select3',
-      'select4',
-      'select5',
-      'date1',
-      'date2',
-      'date3',
-      'date4',
-      'date5',
-      'link1',
-      'link2',
-      'link3',
-      'link4',
-      'link5',
-    ]
-
-    if (!Array.isArray(search)) {
-      errors.push('Search must be an array')
-      return { isValid: false, errors }
-    }
-
-    for (const filter of search) {
-      if (!filter || typeof filter !== 'object') {
-        errors.push('Each search filter must be an object')
-        continue
-      }
-
-      const { key, value } = filter
-
-      if (!key || typeof key !== 'string') {
-        errors.push('Search filter key must be a non-empty string')
-        continue
-      }
-
-      if (!validFields.includes(key)) {
-        errors.push(
-          `Invalid search field: ${key}. Valid fields are: ${validFields.join(', ')}`,
-        )
-        continue
-      }
-
-      if (value === undefined || value === null || value === '') {
-        errors.push(`Search filter value for ${key} cannot be empty`)
-        continue
-      }
-    }
-
-    return { isValid: errors.length === 0, errors }
-  }
-
-  // Simplified method to build search conditions with smart type detection
-  private buildSearchCondition(key: string, value: string): any {
-    // Define field types
-    const stringFields = [
-      'name',
-      'status',
-      'priority',
-      'link',
-      'text1',
-      'text2',
-      'text3',
-      'text4',
-      'text5',
-      'select1',
-      'select2',
-      'select3',
-      'select4',
-      'select5',
-      'link1',
-      'link2',
-      'link3',
-      'link4',
-      'link5',
-    ]
-
-    const numberFields = [
-      'price',
-      'number1',
-      'number2',
-      'number3',
-      'number4',
-      'number5',
-    ]
-    const booleanFields = [
-      'paid',
-      'checkbox1',
-      'checkbox2',
-      'checkbox3',
-      'checkbox4',
-      'checkbox5',
-    ]
-    const dateFields = ['date1', 'date2', 'date3', 'date4', 'date5']
-
-    // Smart type detection and condition building
-    if (stringFields.includes(key)) {
-      return {
-        contains: value,
-        mode: 'insensitive' as const,
-      }
-    }
-
-    if (numberFields.includes(key)) {
-      const numValue = Number(value)
-      if (isNaN(numValue)) {
-        throw new Error(`Invalid number value for field ${key}: ${value}`)
-      }
-      return numValue
-    }
-
-    if (booleanFields.includes(key)) {
-      const boolValue =
-        value === 'true' ||
-        value === '1' ||
-        (typeof value === 'boolean' && value) ||
-        (typeof value === 'number' && value === 1)
-      return Boolean(boolValue)
-    }
-
-    if (dateFields.includes(key)) {
-      const dateValue = new Date(value)
-      if (isNaN(dateValue.getTime())) {
-        throw new Error(`Invalid date value for field ${key}: ${value}`)
-      }
-      return dateValue
-    }
-
-    // Default to string search
-    return {
-      contains: value,
-      mode: 'insensitive' as const,
-    }
-  }
-
   async getTasksBySheet(
     options: { sheetId: string; memberId: string | null },
     reqQuery: TaskQueryDto,
@@ -254,7 +92,7 @@ export class TaskRepository {
           },
           skip: (parsedPage - 1) * parsedLimit,
           take: parsedLimit,
-          orderBy: { createdAt: order },
+          orderBy: { order: 'desc' },
         }),
         this.prisma.task.count({
           where: whereConditions,
@@ -282,7 +120,21 @@ export class TaskRepository {
     companyId: string,
     userId: string,
   ): Promise<Task> {
-    const { sheetId, name, members, status, priority, link, price, paid } = body
+    const {
+      links = [],
+      sheetId,
+      name,
+      members,
+      status,
+      priority,
+      price,
+      paid,
+      duedate1,
+      duedate2,
+      duedate3,
+      duedate4,
+      duedate5,
+    } = body
 
     // Find the sheet and retrieve workspaceId, validate existence
     const sheet = await this.prisma.sheet.findUnique({
@@ -292,6 +144,15 @@ export class TaskRepository {
 
     if (!sheet) {
       throw new Error(`Sheet with ID ${sheetId} not found.`)
+    }
+
+    // Process due date arrays
+    const processedDueDates = {
+      duedate1: duedate1?.map((date) => this.toIsoStringIfExists(date)),
+      duedate2: duedate2?.map((date) => this.toIsoStringIfExists(date)),
+      duedate3: duedate3?.map((date) => this.toIsoStringIfExists(date)),
+      duedate4: duedate4?.map((date) => this.toIsoStringIfExists(date)),
+      duedate5: duedate5?.map((date) => this.toIsoStringIfExists(date)),
     }
 
     // Construct task creation data
@@ -313,9 +174,10 @@ export class TaskRepository {
       members: members ? { connect: members.map((id) => ({ id })) } : undefined,
       status,
       priority,
-      link,
+      links,
       price,
       paid,
+      ...processedDueDates,
     }
 
     try {
@@ -338,12 +200,43 @@ export class TaskRepository {
         }
       }
 
+      // Transform due date array fields to ISO-8601 if present
+      const dueDateFields = [
+        'duedate1',
+        'duedate2',
+        'duedate3',
+        'duedate4',
+        'duedate5',
+      ]
+      for (const field of dueDateFields) {
+        if (updateData[field] && Array.isArray(updateData[field])) {
+          updateData[field] = (updateData[field] as string[]).map((date) =>
+            this.toIsoStringIfExists(date),
+          )
+        }
+      }
+
       return await this.prisma.task.update({
         where: { id: taskId },
         data: updateData,
         include: {
           members: true,
           chat: true,
+          lastUpdatedByUser: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          files: {
+            select: {
+              id: true,
+              path: true,
+            },
+          },
         },
       })
     } catch (error) {
@@ -352,6 +245,7 @@ export class TaskRepository {
   }
 
   async reorder(body: TaskReorderDto) {
+    body.orders = body.orders.reverse()
     await this.prisma
       .$transaction(
         body.taskId.map((id, index) =>
