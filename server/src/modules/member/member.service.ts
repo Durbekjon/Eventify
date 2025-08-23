@@ -173,7 +173,14 @@ export class MemberService {
     await emailMessage
   }
 
+<<<<<<< HEAD
   async getMembers(user: IUser, filter: FilterDto | null) {
+=======
+  async getMembers(
+    user: IUser,
+    filter: FilterDto,
+  ): Promise<{ members: Member[]; count: number }> {
+>>>>>>> refs/remotes/origin/main
     const selectedRole = await this.validateUserRole(user)
 
     return this.repository.getActiveMembersInReverseOrder(
@@ -232,9 +239,7 @@ export class MemberService {
 
     await this.findMemberById(memberId, selectedRole.companyId)
 
-    const member = await this.repository.updateMember(memberId, body)
-
-    return { status: 'OK', result: member }
+    return await this.repository.updateMember(memberId, body)
   }
 
   deleteManyMembersByCompany(companyId: string) {

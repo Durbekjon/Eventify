@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { StatusUpdateDto } from './dto/status-update.dto'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { FilterDto } from './dto/filter.dto'
+import { Member } from '@prisma/client'
 
 @ApiBearerAuth()
 @ApiTags('Member')
@@ -28,6 +29,7 @@ export class MemberController {
 
   @Get()
   @ApiOperation({ summary: 'Get members' })
+<<<<<<< HEAD
   getUser(@User() user: IUser) {
     return this.service.getMembers(user, null)
   }
@@ -35,6 +37,12 @@ export class MemberController {
   @Get('paginated')
   @ApiOperation({ summary: 'Get paginated members' })
   getPaginatedMembers(@User() user: IUser, @Query() filter: FilterDto) {
+=======
+  getMembers(
+    @User() user: IUser,
+    @Query() filter: FilterDto,
+  ): Promise<{ members: Member[]; count: number }> {
+>>>>>>> refs/remotes/origin/main
     return this.service.getMembers(user, filter)
   }
 
@@ -72,13 +80,13 @@ export class MemberController {
     return this.service.updateMemberStatus(id, user, body)
   }
 
-  @Put()
+  @Put(':id')
   @ApiOperation({ summary: 'Update member' })
   updateMember(
     @Param('id') id: string,
     @User() user: IUser,
     @Body() body: UpdateMemberDto,
-  ) {
+  ): Promise<Member> {
     return this.service.updateMember(id, user, body)
   }
 }

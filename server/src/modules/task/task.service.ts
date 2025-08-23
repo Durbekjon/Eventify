@@ -110,8 +110,6 @@ export class TaskService {
     body: UpdateTaskDto,
     user: IUser,
   ): Promise<Task> {
-    const startTime = Date.now()
-
     try {
       const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
       const originalTask = await this.findById(id, role.companyId)
@@ -128,6 +126,7 @@ export class TaskService {
       // Process regular fields
       for (const field of fieldsToCheck) {
         if (body[field] !== undefined && originalTask[field] !== body[field]) {
+          console.log(field, originalTask[field], body[field])
           changes.push({
             updatedKey: field,
             oldValue: originalTask[field],
@@ -177,7 +176,6 @@ export class TaskService {
         originalTask.id,
         updateData,
       )
-      const endTime = Date.now()
 
       // Detailed logging for updates - log each field change
       if (changes.length > 0) {
