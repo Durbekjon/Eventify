@@ -6,6 +6,28 @@ import { UpdateMemberDto } from './dto/update-member.dto'
 import { Prisma } from '@prisma/client'
 import { FilterDto } from './dto/filter.dto'
 
+const memberInclude = {
+  user: {
+    select: {
+      email: true,
+      firstName: true,
+      lastName: true,
+      avatar: {
+        select: {
+          id: true,
+          path: true,
+        },
+      },
+    },
+  },
+  notification: {
+    select: {
+      isRead: true,
+    },
+  },
+  workspaces: true,
+}
+      
 @Injectable()
 export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -83,28 +105,7 @@ export class MemberRepository {
         orderBy: { id: 'desc' },
         skip,
         take: limit,
-        include: {
-          user: {
-            select: {
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: {
-                select: {
-                  id: true,
-                  path: true,
-                },
-              },
-            },
-          },
-          notification: {
-            select: {
-              isRead: true,
-            },
-          },
-
-          workspaces: true,
-        },
+        include: memberInclude,
       }),
       this.prisma.member.count({ where }),
     ])
@@ -137,9 +138,19 @@ export class MemberRepository {
   }
 
   updateMember(memberId: string, body: UpdateMemberDto) {
+    const { type, permissions, view, workspaces } = body
+    const data: Prisma.MemberUpdateInput = {}
+
+    if (type) data.type = type
+    if (permissions) data.permissions = permissions
+    if (view) data.view = view
+    if (workspaces)
+      data.workspaces = { connect: workspaces.map((id) => ({ id })) }
+
     return this.prisma.member.update({
       where: { id: memberId },
-      data: { type: body.type, permissions: body.permissions, view: body.view },
+      data,
+      include: memberInclude,
     })
   }
 

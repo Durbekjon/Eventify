@@ -235,9 +235,7 @@ export class MemberService {
 
     await this.findMemberById(memberId, selectedRole.companyId)
 
-    const member = await this.repository.updateMember(memberId, body)
-
-    return { status: 'OK', result: member }
+    return await this.repository.updateMember(memberId, body)
   }
 
   deleteManyMembersByCompany(companyId: string) {

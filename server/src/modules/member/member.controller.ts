@@ -70,13 +70,13 @@ export class MemberController {
     return this.service.updateMemberStatus(id, user, body)
   }
 
-  @Put()
+  @Put(':id')
   @ApiOperation({ summary: 'Update member' })
   updateMember(
     @Param('id') id: string,
     @User() user: IUser,
     @Body() body: UpdateMemberDto,
-  ) {
+  ): Promise<Member> {
     return this.service.updateMember(id, user, body)
   }
 }
