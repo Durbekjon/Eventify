@@ -95,4 +95,9 @@ export const HTTP_MESSAGES = {
     NOT_FOUND: 'Option not found',
     DELETE_SUCCESS: 'Option deleted successfully',
   },
+
+  // Transaction Messages
+  TRANSACTION: {
+    NOT_FOUND: 'Transaction not found',
+  },
 }
