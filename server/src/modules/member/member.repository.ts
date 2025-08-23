@@ -27,7 +27,7 @@ const memberInclude = {
   },
   workspaces: true,
 }
-      
+
 @Injectable()
 export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -88,29 +88,37 @@ export class MemberRepository {
     })
   }
 
-  async getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
-    const { type, status, page, limit } = filter
+  async getActiveMembersInReverseOrder(
+    companyId: string,
+    filter: FilterDto | null,
+  ) {
     const where: Prisma.MemberWhereInput = {
       companyId,
       status: 'ACTIVE',
     }
-    if (type) where.type = type
-    if (status) where.status = status
+    if (filter) {
+      const { type, status, page, limit } = filter
+      if (type) where.type = type
+      if (status) where.status = status
 
-    const skip = (page - 1) * limit
-
-    const [members, count] = await this.prisma.$transaction([
-      this.prisma.member.findMany({
-        where,
-        orderBy: { id: 'desc' },
-        skip,
-        take: limit,
-        include: memberInclude,
-      }),
-      this.prisma.member.count({ where }),
-    ])
-
-    return { members, count }
+      const skip = (page - 1) * limit
+      const [members, count] = await this.prisma.$transaction([
+        this.prisma.member.findMany({
+          where,
+          orderBy: { id: 'desc' },
+          skip,
+          take: limit,
+          include: memberInclude,
+        }),
+        this.prisma.member.count({ where }),
+      ])
+      return { members, count }
+    }
+    return this.prisma.member.findMany({
+      where,
+      orderBy: { id: 'desc' },
+      include: memberInclude,
+    })
   }
 
   getMember(memberId: string) {
