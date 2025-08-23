@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { StatusUpdateDto } from './dto/status-update.dto'
 import { UpdateMemberDto } from './dto/update-member.dto'
 import { FilterDto } from './dto/filter.dto'
+import { Member } from '@prisma/client'
 
 @ApiBearerAuth()
 @ApiTags('Member')
@@ -28,7 +29,10 @@ export class MemberController {
 
   @Get()
   @ApiOperation({ summary: 'Get members' })
-  getUser(@User() user: IUser, @Query() filter: FilterDto) {
+  getMembers(
+    @User() user: IUser,
+    @Query() filter: FilterDto,
+  ): Promise<{ members: Member[]; count: number }> {
     return this.service.getMembers(user, filter)
   }
 

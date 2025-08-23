@@ -66,42 +66,50 @@ export class MemberRepository {
     })
   }
 
-  getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
-    const { type, status, view } = filter
+  async getActiveMembersInReverseOrder(companyId: string, filter: FilterDto) {
+    const { type, status, page, limit } = filter
     const where: Prisma.MemberWhereInput = {
       companyId,
       status: 'ACTIVE',
     }
     if (type) where.type = type
     if (status) where.status = status
-    if (view) where.view = view
 
-    return this.prisma.member.findMany({
-      where,
-      orderBy: { id: 'desc' },
-      include: {
-        user: {
-          select: {
-            email: true,
-            firstName: true,
-            lastName: true,
-            avatar: {
-              select: {
-                id: true,
-                path: true,
+    const skip = (page - 1) * limit
+
+    const [members, count] = await this.prisma.$transaction([
+      this.prisma.member.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+              avatar: {
+                select: {
+                  id: true,
+                  path: true,
+                },
               },
             },
           },
-        },
-        notification: {
-          select: {
-            isRead: true,
+          notification: {
+            select: {
+              isRead: true,
+            },
           },
-        },
 
-        workspaces: true,
-      },
-    })
+          workspaces: true,
+        },
+      }),
+      this.prisma.member.count({ where }),
+    ])
+
+    return { members, count }
   }
 
   getMember(memberId: string) {
