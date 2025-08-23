@@ -27,7 +27,7 @@ const memberInclude = {
   },
   workspaces: true,
 }
-      
+
 @Injectable()
 export class MemberRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -94,23 +94,28 @@ export class MemberRepository {
       companyId,
       status: 'ACTIVE',
     }
-    if (type) where.type = type
-    if (status) where.status = status
+    if (filter) {
+      if (type) where.type = type
+      if (status) where.status = status
 
-    const skip = (page - 1) * limit
-
-    const [members, count] = await this.prisma.$transaction([
-      this.prisma.member.findMany({
-        where,
-        orderBy: { id: 'desc' },
-        skip,
-        take: limit,
-        include: memberInclude,
-      }),
-      this.prisma.member.count({ where }),
-    ])
-
-    return { members, count }
+      const skip = (page - 1) * limit
+      const [members, count] = await this.prisma.$transaction([
+        this.prisma.member.findMany({
+          where,
+          orderBy: { id: 'desc' },
+          skip,
+          take: limit,
+          include: memberInclude,
+        }),
+        this.prisma.member.count({ where }),
+      ])
+      return { members, count }
+    }
+    return this.prisma.member.findMany({
+      where,
+      orderBy: { id: 'desc' },
+      include: memberInclude,
+    })
   }
 
   getMember(memberId: string) {

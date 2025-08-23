@@ -173,14 +173,7 @@ export class MemberService {
     await emailMessage
   }
 
-<<<<<<< HEAD
   async getMembers(user: IUser, filter: FilterDto | null) {
-=======
-  async getMembers(
-    user: IUser,
-    filter: FilterDto,
-  ): Promise<{ members: Member[]; count: number }> {
->>>>>>> refs/remotes/origin/main
     const selectedRole = await this.validateUserRole(user)
 
     return this.repository.getActiveMembersInReverseOrder(
