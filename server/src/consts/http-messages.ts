@@ -80,6 +80,7 @@ export const HTTP_MESSAGES = {
     DELETE_SUCCESS: 'Column deleted successfully',
     INVALID_TYPE: 'Invalid column type or type limit exceeded',
     LIMIT: 'No available space for this column type in the sheet.',
+    REORDER_SUCCESS: 'Columns reordered successfully',
   },
 
   // Task Messages

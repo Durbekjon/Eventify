@@ -26,6 +26,7 @@ import {
   DeleteColumnResponseDto,
   UpdateColumnResponseDto,
 } from './dto/column-response.dto'
+import { ReorderColumnDto } from './dto/reorder-column.dto'
 
 @ApiBearerAuth()
 @ApiTags('Column')
@@ -44,6 +45,13 @@ export class ColumnController {
   @ApiOperation({ summary: 'Create column' })
   createColumn(@Body() body: CreateColumnDto, @User() user: IUser) {
     return this.service.createColumn(body, user)
+  }
+
+  @Put('reorder')
+  @ApiOperation({ summary: 'Reorder columns' })
+  @ApiResponse({ status: 200, description: 'Columns reordered successfully' })
+  reorderColumns(@Body() body: ReorderColumnDto, @User() user: IUser) {
+    return this.service.reorderColumns(body, user)
   }
 
   @Put(':id')
