@@ -3,6 +3,7 @@ import { PrismaService } from '@core/prisma/prisma.service'
 import { Column, Prisma } from '@prisma/client'
 import { CreateColumnDto } from './dto/create-column.dto'
 import { UpdateColumnDto } from './dto/update-column.dto'
+import { ReorderColumnDto } from './dto/reorder-column.dto'
 
 @Injectable()
 export class ColumnRepository {
@@ -100,6 +101,19 @@ export class ColumnRepository {
 
   async deleteColumn(id: string): Promise<Column> {
     return this.prisma.column.delete({ where: { id } })
+  }
+
+  async reorderColumns(body: ReorderColumnDto): Promise<Column[]> {
+    return this.prisma.$transaction(async (tx) => {
+      const updatePromises = body.columnIds.map((columnId, index) => 
+        tx.column.update({
+          where: { id: columnId },
+          data: { order: body.orders[index] },
+        })
+      )
+      
+      return Promise.all(updatePromises)
+    })
   }
 
   async getSheetById(sheetId: string, companyId: string): Promise<boolean> {
