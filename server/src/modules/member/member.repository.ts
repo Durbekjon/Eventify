@@ -97,7 +97,9 @@ export class MemberRepository {
       status: 'ACTIVE',
     }
     if (filter) {
-      const { type, status, page, limit } = filter
+      let { type, status, page, limit } = filter
+      page = Number(page)
+      limit = Number(limit)
       if (type) where.type = type
       if (status) where.status = status
 
