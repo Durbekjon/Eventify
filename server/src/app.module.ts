@@ -23,12 +23,31 @@ import { ChatModule } from './modules/chat/chat.module'
 import { FileModule } from './modules/file/file.module'
 import { AdminModule } from './modules/admin/admin.module'
 import { CompanyModule } from './modules/company/company.module'
-import { TransactionModule } from './modules/transaction/transaction.module';
+import { TransactionModule } from './modules/transaction/transaction.module'
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-
+    // Throttler Module
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 10,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 30,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     // Core and Auth modules
     CoreModule,
     AuthModule,
@@ -70,6 +89,12 @@ import { TransactionModule } from './modules/transaction/transaction.module';
     AdminModule,
 
     TransactionModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
