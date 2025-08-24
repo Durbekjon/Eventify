@@ -54,8 +54,6 @@ export class TaskService {
 
   // TASK CREATION
   async createTask(body: CreateTaskDto, user: IUser): Promise<Task> {
-    const startTime = Date.now()
-
     try {
       const role = await this.validateUserAccess(user, MemberPermissions.CREATE)
       if (role.type === RoleTypes.MEMBER) {
@@ -74,7 +72,6 @@ export class TaskService {
         role.companyId,
         user.id,
       )
-      const endTime = Date.now()
 
       // Simple logging (preferred format)
       await this.logUserAction(
@@ -88,8 +85,6 @@ export class TaskService {
 
       return task
     } catch (error) {
-      const endTime = Date.now()
-
       // Log creation failure
       await this.logUserAction(
         user.id,
@@ -125,14 +120,22 @@ export class TaskService {
 
       // Process regular fields
       for (const field of fieldsToCheck) {
-        if (body[field] !== undefined && originalTask[field] !== body[field]) {
-          console.log(field, originalTask[field], body[field])
-          changes.push({
-            updatedKey: field,
-            oldValue: originalTask[field],
-            newValue: body[field],
-          })
-          updateData[field] = body[field]
+        // Only consider fields that are actually present in the update body
+        if (Object.prototype.hasOwnProperty.call(body, field)) {
+          const oldValue = originalTask[field]
+          const newValue = body[field]
+
+          // Deep comparison for arrays and objects, simple comparison for primitives
+          const hasChanged = this.hasValueChanged(oldValue, newValue)
+
+          if (hasChanged) {
+            changes.push({
+              updatedKey: field,
+              oldValue,
+              newValue,
+            })
+            updateData[field] = newValue
+          }
         }
       }
 
@@ -179,15 +182,16 @@ export class TaskService {
 
       // Detailed logging for updates - log each field change
       if (changes.length > 0) {
+        console.log(changes)
         // First log a general update message
-        await this.logUserAction(
-          user.id,
-          role.companyId,
-          `Updated task: ${originalTask.name}`,
-          originalTask.id,
-          originalTask.workspaceId,
-          originalTask.sheetId,
-        )
+        // await this.logUserAction(
+        //   user.id,
+        //   role.companyId,
+        //   `Updated task: ${originalTask.name}`,
+        //   originalTask.id,
+        //   originalTask.workspaceId,
+        //   originalTask.sheetId,
+        // )
 
         // Then log individual field changes with old/new values
         await this.logTaskChanges(
@@ -202,8 +206,6 @@ export class TaskService {
 
       return updatedTask
     } catch (error) {
-      const endTime = Date.now()
-
       // Log update failure
       await this.logUserAction(
         user.id,
@@ -245,8 +247,6 @@ export class TaskService {
 
       return this.createResponse(HTTP_MESSAGES.TASK.REORDER_SUCCESS)
     } catch (error) {
-      const endTime = Date.now()
-
       // Log reorder failure
       await this.logUserAction(
         user.id,
@@ -263,8 +263,6 @@ export class TaskService {
 
   // TASK MOVING
   async moveTask(user: IUser, body: MoveTaskDto) {
-    const startTime = Date.now()
-
     try {
       const role = await this.validateUserAccess(user, MemberPermissions.UPDATE)
       const targetSheet = await this.sheet.findOne(body.sheetId)
@@ -274,10 +272,8 @@ export class TaskService {
 
       // Get the task before moving to capture source information
       const taskToMove = await this.findById(body.taskId, role.companyId)
-      const sourceSheetId = taskToMove.sheetId
 
       await this.repository.move(body, targetSheet.workspaceId)
-      const endTime = Date.now()
 
       // Simple move logging
       await this.logUserAction(
@@ -291,8 +287,6 @@ export class TaskService {
 
       return this.createResponse(HTTP_MESSAGES.TASK.MOVE_SUCCESS)
     } catch (error) {
-      const endTime = Date.now()
-
       // Log move failure
       await this.logUserAction(
         user.id,
@@ -320,7 +314,7 @@ export class TaskService {
         user.id,
         role.companyId,
         `Deleted task: ${taskToDelete.name}`,
-        taskToDelete.id,
+        null,
         taskToDelete.workspaceId,
         taskToDelete.sheetId,
       )
@@ -682,6 +676,7 @@ export class TaskService {
     sheetId?: string,
   ) {
     const logs = changes.map((change) => {
+      console.log(change)
       // Format values properly for logging
       const formatValue = (value: any): string => {
         if (value === null || value === undefined) return 'null'
@@ -750,6 +745,48 @@ export class TaskService {
       sheet: sheetId ? { connect: { id: sheetId } } : undefined,
     }
     await this.prisma.log.create({ data: logData })
+  }
+
+  /**
+   * Helper method to deeply compare two values to determine if they have changed
+   */
+  private hasValueChanged(oldValue: any, newValue: any): boolean {
+    // Handle null and undefined cases
+    if (oldValue === null && newValue === null) return false
+    if (oldValue === undefined && newValue === undefined) return false
+    if (oldValue === null && newValue === undefined) return false
+    if (oldValue === undefined && newValue === null) return false
+
+    // Handle primitive types
+    if (typeof oldValue !== 'object' && typeof newValue !== 'object') {
+      return oldValue !== newValue
+    }
+
+    // Handle arrays
+    if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+      if (oldValue.length !== newValue.length) return true
+
+      // For arrays, use JSON.stringify for deep comparison
+      return JSON.stringify(oldValue.sort()) !== JSON.stringify(newValue.sort())
+    }
+
+    // Handle one being array, other not
+    if (Array.isArray(oldValue) !== Array.isArray(newValue)) {
+      return true
+    }
+
+    // Handle objects (including dates)
+    if (oldValue instanceof Date && newValue instanceof Date) {
+      return oldValue.getTime() !== newValue.getTime()
+    }
+
+    // For other objects, use JSON.stringify
+    if (typeof oldValue === 'object' && typeof newValue === 'object') {
+      return JSON.stringify(oldValue) !== JSON.stringify(newValue)
+    }
+
+    // Different types
+    return oldValue !== newValue
   }
 
   /**

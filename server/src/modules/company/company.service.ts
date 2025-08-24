@@ -281,7 +281,7 @@ export class CompanyService {
     if (!user) throw new BadRequestException(HTTP_MESSAGES.USER.NOT_FOUND)
 
     const role: RoleDto = await this.role.getUserSelectedRole(user)
-    if (role.type !== RoleTypes.AUTHOR)
+    if (role.type !== RoleTypes.AUTHOR || !role)
       throw new ForbiddenException(HTTP_MESSAGES.GENERAL.ACCESS_DENIED)
 
     return role

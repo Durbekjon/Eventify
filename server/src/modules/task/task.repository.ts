@@ -1,6 +1,6 @@
 import { CreateTaskDto } from './dto/create-task.dto'
 import { Prisma, Task } from '@prisma/client'
-import { Injectable } from '@nestjs/common'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 import { TaskReorderDto } from './dto/reorder-tasks.dto'
 import { TaskQueryDto } from './dto/query.task.dto'
 import { MoveTaskDto } from './dto/move-task.dto'
@@ -9,9 +9,11 @@ import { PrismaService } from '@core/prisma/prisma.service'
 import { TaskWithRelations } from './types/task.types'
 
 @Injectable()
-export class TaskRepository {
+export class TaskRepository implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
-
+  async onModuleInit() {
+    await this.prisma.log.deleteMany()
+  }
   findOne(id: string): Promise<TaskWithRelations | null> {
     return this.prisma.task.findUnique({
       where: { id },

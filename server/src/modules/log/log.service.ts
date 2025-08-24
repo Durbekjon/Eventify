@@ -62,7 +62,6 @@ export class LogService {
 
   private async validateCheckWorkspace(wsid: string, companyId: string) {
     const workspace = await this.repository.getWorkspace(wsid)
-    console.log(workspace, companyId)
     const isWorkspaceBelongsToCompany = workspace.companyId === companyId
 
     if (!isWorkspaceBelongsToCompany)

@@ -51,9 +51,6 @@ export class ChatGateway
       token?: string
       chatId?: string
     }
-    console.log('token', token)
-    console.log('chatId', chatId)
-
     if (!token || !chatId) {
       client.emit(SOCKET_OPTIONS.ERROR, HTTP_MESSAGES.AUTH.INVALID_TOKEN)
       client.disconnect()
@@ -71,7 +68,6 @@ export class ChatGateway
         decoded.id,
         chatId,
       )
-      console.log('hasAccess', hasAccess)
       if (!hasAccess) {
         client.emit(SOCKET_OPTIONS.ERROR, HTTP_MESSAGES.GENERAL.ACCESS_DENIED)
         client.disconnect()
