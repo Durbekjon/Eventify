@@ -13,7 +13,7 @@ import { HTTP_MESSAGES } from '@consts/http-messages'
 import { UpdateColumnDto } from './dto/update-column.dto'
 import { RoleDto } from '@role/dto/role.dto'
 import { fieldMapping } from '@consts/fields'
-
+import { ReorderColumnDto } from './dto/reorder-column.dto'
 @Injectable()
 export class ColumnService {
   constructor(
@@ -66,6 +66,17 @@ export class ColumnService {
     return {
       status: 'OK',
       result: HTTP_MESSAGES.COLUMN.DELETE_SUCCESS,
+    }
+  }
+
+  async reorderColumns(body: ReorderColumnDto, user: IUser) {
+    const { role } = await this.validateUser(user)
+    await this.validateUserRole(role.type, true)
+
+    await this.repository.reorderColumns(body)
+    return {
+      status: 'OK',
+      result: HTTP_MESSAGES.COLUMN.REORDER_SUCCESS,
     }
   }
 
