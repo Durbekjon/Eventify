@@ -308,6 +308,18 @@ export class TaskRepository implements OnModuleInit {
     return this.prisma.task.updateMany(args)
   }
 
+  async bulkDelete(taskIds: string[], companyId: string) {
+    const existTasks = await this.prisma.task.findMany({
+      where: { id: { in: taskIds }, companyId },
+    })
+
+    taskIds = existTasks.map((task) => task.id)
+
+    return this.prisma.task.deleteMany({
+      where: { id: { in: taskIds } },
+    })
+  }
+
   private toIsoStringIfExists(date) {
     return date ? new Date(date).toISOString() : undefined
   }

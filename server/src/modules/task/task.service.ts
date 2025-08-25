@@ -581,6 +581,12 @@ export class TaskService {
     return this.fileRepository.getFilesBySheet(sheetId)
   }
 
+  async bulkDelete(taskIds: string[], user: IUser) {
+    const role = await this.validateUserAccess(user, MemberPermissions.DELETE)
+    await this.repository.bulkDelete(taskIds, role.companyId)
+    return this.createResponse(HTTP_MESSAGES.TASK.DELETE_SUCCESS)
+  }
+
   // Delete files from a task
   async deleteTaskFiles(fileIds: string[], user: IUser): Promise<void> {
     const startTime = Date.now()
