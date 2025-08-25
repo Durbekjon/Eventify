@@ -35,6 +35,7 @@ import { MoveTaskDto } from './dto/move-task.dto'
 import { FileResponseDto } from '../file/dto/file-response.dto'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { TaskAuditInterceptor } from './interceptors/task-audit.interceptor'
+import { BulkDeleteDto } from './dto/bulk-delete.dto'
 
 @ApiBearerAuth()
 @ApiTags('Task')
@@ -106,6 +107,15 @@ export class TaskController {
     return this.service.uploadFilesAndUpdateTask(body.taskId, files, {}, user)
   }
 
+  @Post('bulk-delete')
+  @ApiOperation({ summary: 'Bulk delete tasks' })
+  @ApiResponse({
+    example: { status: 'OK', result: 'Tasks deleted successfully' },
+  })
+  bulkDelete(@User() user: IUser, @Body() body: BulkDeleteDto) {
+    return this.service.bulkDelete(body.taskIds, user)
+  }
+
   @Patch('move')
   @ApiOperation({ summary: 'Move task to another workspace' })
   moveTask(@User() user: IUser, @Body() body: MoveTaskDto) {
@@ -168,7 +178,8 @@ export class TaskController {
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', description: 'Success message' },
+        status: { type: 'string', description: 'Status' },
+        result: { type: 'string', description: 'Result' },
       },
     },
   })
@@ -190,6 +201,6 @@ export class TaskController {
     }
 
     await this.service.deleteTaskFiles(body.fileIds, user)
-    return { message: 'Files deleted successfully' }
+    return { status: 'OK', result: 'Files deleted successfully' }
   }
 }
